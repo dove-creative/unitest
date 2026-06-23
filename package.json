@@ -1,0 +1,29 @@
+{
+  "name": "com.blackthunder.unitest",
+  "version": "0.1.0",
+  "displayName": "UniTest",
+  "description": "State-driven unit test generation and execution framework for Unity and C#.",
+  "unity": "6000.0",
+  "license": "MIT",
+  "author": {
+    "name": "BlackThunder"
+  },
+  "keywords": [
+    "testing",
+    "unit-test",
+    "state-testing",
+    "automation"
+  ],
+  "samples": [
+    {
+      "displayName": "Unity Usage",
+      "description": "Unity scene sample for UniTest single-state and multi-state workflows.",
+      "path": "Samples~/Unity"
+    },
+    {
+      "displayName": "Native C# Usage",
+      "description": "Native C# console samples for UniTest.",
+      "path": "Samples~/NativeCSharp"
+    }
+  ]
+}

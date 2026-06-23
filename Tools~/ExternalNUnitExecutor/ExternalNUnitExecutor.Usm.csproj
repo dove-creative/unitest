@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net9.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <Nullable>disable</Nullable>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <DefineConstants>BLACKBOX_TESTS</DefineConstants>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="Program.cs" />
+    <Compile
+      Include="..\..\..\com.blackthunder.blackbox-system\Runtime\**\*.cs"
+      LinkBase="Blackbox\Runtime" />
+    <Compile
+      Include="..\..\..\..\Assets\UniEngine\Services\StateMachines\Usm\**\*.cs"
+      LinkBase="StateMachines\Usm" />
+    <Reference Include="nunit.framework">
+      <HintPath>..\..\..\..\Library\PackageCache\com.unity.ext.nunit@031a54704bff\net40\unity-custom\nunit.framework.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+</Project>

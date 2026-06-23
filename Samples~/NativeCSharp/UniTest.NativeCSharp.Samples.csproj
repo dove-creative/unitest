@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net9.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <Nullable>disable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="..\..\Runtime\Infrastructure\**\*.cs" LinkBase="UniTest\Infrastructure" />
+    <Compile Include="..\..\Runtime\Lab\**\*.cs" LinkBase="UniTest\Lab" />
+    <Compile Include="..\..\Runtime\Model\**\*.cs" LinkBase="UniTest\Model" />
+    <Compile Include="..\..\Runtime\Project\**\*.cs" LinkBase="UniTest\Project" />
+    <Compile Include="..\..\Runtime\Tools\**\*.cs" LinkBase="UniTest\Tools" />
+    <Compile Include="..\..\Runtime\Node.cs" Link="UniTest\Node.cs" />
+    <Compile Include="..\..\Runtime\TestCase.cs" Link="UniTest\TestCase.cs" />
+  </ItemGroup>
+</Project>

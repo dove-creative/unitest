@@ -1,0 +1,20 @@
+{
+    "name": "UniTest.Samples.Unity",
+    "rootNamespace": "",
+    "references": [
+        "GUID:164f6e76bbebb9848a796deb2696a645"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": true,
+    "precompiledReferences": [
+        "nunit.framework.dll"
+    ],
+    "autoReferenced": true,
+    "defineConstraints": [
+        "UNITEST"
+    ],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
