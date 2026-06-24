@@ -88,15 +88,15 @@ namespace UniTest
         }
 
 
-        public readonly bool Confineable(int index, out TestCase confied, object definition)
+        public readonly bool Confineable(int index, out TestCase confined, object definition)
         {
             if (!Confineable(index, definition))
             {
-                confied = default;
+                confined = default;
                 return false;
             }
 
-            confied = Confine(index, definition);
+            confined = Confine(index, definition);
             return true;
         }
 

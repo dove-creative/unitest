@@ -2,9 +2,9 @@
 
 [Korean README](README.ko.md)
 
-UniTest is a Unity/C# testing framework that automatically generates and verifies executable test paths from model and state-action combinations.
+UniTest is a Unity/C# testing framework for verifying systems where each action changes which tests can run next.
 
-Where normal unit tests focus on manually listing individual test cases, UniTest generates available `Lab`s from the current `Model` and expands subsequent states from the execution history.
+Define each action as a `Lab`, and UniTest automatically expands executable test paths from the current `Model` state and execution history.
 
 ## Agent-Assisted CLI Automation
 
@@ -26,6 +26,14 @@ AI agents first check the `Documentation~/Workflow.en` entry in [Documentation](
 UniTest can be used as a folder-based Unity package in Unity projects, or by directly including the runtime source in Native C# projects.
 
 ### Use In Unity
+
+In Package Manager, use `Add package from git URL` with the following URL.
+
+```text
+https://github.com/dove-creative/unitest.git#v0.1.0
+```
+
+For local development or embedded package usage, place the package directly.
 
 1. Place this folder at `Packages/com.blackthunder.unitest` in a Unity project.
 2. Add `UNITEST` to Player Settings > Scripting Define Symbols.
