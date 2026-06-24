@@ -30,7 +30,7 @@ UniTest can be used as a folder-based Unity package in Unity projects, or by dir
 In Package Manager, use `Add package from git URL` with the following URL.
 
 ```text
-https://github.com/dove-creative/unitest.git#v0.1.0
+https://github.com/dove-creative/unitest.git
 ```
 
 For local development or embedded package usage, place the package directly.
