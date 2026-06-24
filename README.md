@@ -4,7 +4,11 @@
 
 UniTest is a Unity/C# testing framework that automatically generates and verifies executable test paths from model and state-action combinations.
 
-Where normal unit tests focus on manually listing individual test cases, UniTest generates available `Lab`s from the current `Model` and expands subsequent states from the execution history. It also provides test authoring and CLI execution automation workflows for agents.
+Where normal unit tests focus on manually listing individual test cases, UniTest generates available `Lab`s from the current `Model` and expands subsequent states from the execution history.
+
+## Agent-Assisted CLI Automation
+
+UniTest provides test authoring and external execution automation workflows so agent-assisted test writing and repeated CLI verification can continue on the same model structure.
 
 ---
 
