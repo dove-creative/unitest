@@ -10,6 +10,8 @@ Where normal unit tests focus on manually listing individual test cases, UniTest
 
 UniTest provides test authoring and external execution automation workflows so agent-assisted test writing and repeated CLI verification can continue on the same model structure.
 
+AI agents first check the `Documentation~/Workflow.en` entry in [Documentation](#documentation) for the actual working procedure when they are responsible for UniTest-based test authoring or repeated CLI verification.
+
 ## Features
 
 - State-based test generation: creates test flows for the current state in `Project<TModel>.CreateLabs(...)`.
@@ -182,7 +184,7 @@ Detailed documentation is available in `Documentation~/Wiki.en`.
 - [03-Uni-Test-Extensions.md](Documentation~/Wiki.en/03-Uni-Test-Extensions.md): extension APIs and composition patterns
 - [04-Usage.md](Documentation~/Wiki.en/04-Usage.md): usage examples and call guidelines
 
-When an agent writes UniTest-based tests or organizes domain-owned POCO test execution paths outside Unity, it follows the workflow documents in `Documentation~/Workflow.en`.
+AI agents follow the workflow documents in `Documentation~/Workflow.en` when they write UniTest-based tests or organize domain-owned POCO test execution paths outside Unity. They first check the test authoring mode and documentation record flow, then apply the External NUnit Executor flow only to tests that do not require the Unity execution environment.
 
 - [01-Test-Authoring-Workflow.md](Documentation~/Workflow.en/01-Test-Authoring-Workflow.md): test authoring, planning, and result recording flow
 - [02-External-NUnit-Executor-Workflow.md](Documentation~/Workflow.en/02-External-NUnit-Executor-Workflow.md): domain-owned external NUnit executor setup flow
