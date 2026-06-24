@@ -10,8 +10,6 @@ Where normal unit tests focus on manually listing individual test cases, UniTest
 
 UniTest provides test authoring and external execution automation workflows so agent-assisted test writing and repeated CLI verification can continue on the same model structure.
 
----
-
 ## Features
 
 - State-based test generation: creates test flows for the current state in `Project<TModel>.CreateLabs(...)`.
@@ -20,8 +18,6 @@ UniTest provides test authoring and external execution automation workflows so a
 - Multi-state composition: combines multiple state axes hierarchically with `TestCase`, `Merge(...)`, and `Extend(...)`.
 - Replay and continuous execution: selects full paths, long single paths, or failed path replay with `Run(...)`, `RunContinuously(...)`, and `Execute(ids)`.
 - XML reports: saves and reviews execution results and failed paths as XML.
-
----
 
 ## Installation
 
@@ -61,8 +57,6 @@ dotnet run --project UniTest.NativeCSharp.Samples.csproj
 ```
 
 After running it, enter one of `single`, `single-replay`, `multi`, `single-continuous`, `multi-continuous`, `help`, or `exit` at the `sample>` prompt. Reports are saved under `UniTest/Samples/NativeCSharp` in the sample app output folder.
-
----
 
 ## Quick Start
 
@@ -164,8 +158,6 @@ This example shows the following flow.
 
 In a Unity project, the same pattern can be called from a MonoBehaviour or Editor test entry point.
 
----
-
 ## Main APIs
 
 - `Model`: stores the test target `Subject`, execution history, sustainability status, and state string to write into reports.
@@ -179,8 +171,6 @@ In a Unity project, the same pattern can be called from a MonoBehaviour or Edito
 - `Run(...)`: executes a full path or a specified execution history and outputs an XML report.
 - `RunContinuously(...)`: deterministically selects one available path and runs a long continuous execution.
 - `Execute(ids)`: re-executes only the execution history separated by `/`.
-
----
 
 ## Documentation
 
@@ -199,15 +189,11 @@ When an agent writes UniTest-based tests or organizes domain-owned POCO test exe
 
 Korean documentation is available in `Documentation~/Wiki.ko`.
 
----
-
 ## Tests
 
 Test code is in the `Tests` folder and uses Unity Test Framework with NUnit.
 
 To run the package's own tests in Unity, enable `UNITEST`, `UNITY_INCLUDE_TESTS`, and the target test asmdef symbol, either `UNITEST_TEST_UT` or `UNITEST_TEST_RT`. If the package is used as a separated package, also check the Unity project's testables settings and test asmdef references.
-
----
 
 ## License
 

@@ -2,15 +2,11 @@
 
 A framework for automatically generating and executing continuous unit tests
 
----
-
 ## Table of Contents
 
 1. Uni Test Overview
 2. Tests for Tests with a Single State
 3. Tests for Tests with Multiple Independent States
-
----
 
 ## 1. Uni Test Overview
 
@@ -40,8 +36,6 @@ State-based test support
 Test design automation
 - Automatically generate every possible test case
 - Automatically transition to the next test after a test ends
-
----
 
 ## 2. Tests for Tests with a Single State
 ### 2-1. Components
@@ -119,7 +113,6 @@ Functions
 - Execute: receives input and executes the full test process
 - Create Labs (virtual method): creates executable Labs for the given Node.Model during the Design process
 
----
 ## 3. Tests for Tests with Multiple Independent States
 ### 3-1. Overview
 

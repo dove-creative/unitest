@@ -2,7 +2,6 @@
 
 An effective unit testing methodology for ensuring system reliability
 
----
 ## Table of Contents
 
 1. Unit Test Overview
@@ -22,8 +21,6 @@ An effective unit testing methodology for ensuring system reliability
 
 5. Closing
 
----
-
 ## 1. Unit Test Overview
 
 Unit tests detect errors at the module level in advance, improve system stability, make debugging easier, and serve as an existing principle when the system expands later.
@@ -37,8 +34,6 @@ Uni Test is designed to solve these problems by clarifying the test scope and pr
 | Overview | Introduces the unit testing concept assumed by Uni Test |
 | Purpose | Secures system reliability through systematic and efficient tests |
 | Implementation | Test design based on state - operation tables |
-
----
 
 ## 2. State - Operation Table
 
@@ -195,7 +190,6 @@ For example, in a kickboard without additional state types, all operations conne
 | Battery    | -   | Mount | Ride | -        | X      | X         | X             | Dispose |
 | Charge State | -   | Mount | Ride | -        | Charge | Do Charge | Stop Charging | Dispose |
 
----
 ## 3. Test Principles
 
 When designing unit tests, the following principles must be followed.
@@ -225,8 +219,6 @@ In this case, when the test fails, it is difficult to clearly identify which fun
 >ex) Check whether Ride() succeeds only when the state is Mounted
 
 This makes the cause clear when the test fails and ensures that test success means the corresponding function worked as intended.
-
----
 
 ## 4. Test Methods
 
@@ -421,8 +413,6 @@ To overcome the limits of continuous tests, the following methods can be used.
 - Test automation: automate tests to reduce authoring time, and use a multithreaded environment to reduce test execution time.
 - Test prioritization: assign priorities according to test importance. For example, key scenarios can be tested first, while less important scenarios can be omitted or run fewer times.
 - Omit extreme cases: exclude scenarios that are too extreme or cases that are extremely unlikely to occur from tests.
-
----
 
 ## 5. Closing
 

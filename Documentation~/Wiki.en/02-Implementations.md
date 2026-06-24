@@ -20,7 +20,6 @@
 	5.1 Test Design for Systems with a Single State
 	5.2 Test Design for Systems with Multiple Independent States
 
----
 ## 1. Uni Test Structure
 
 Uni Test has the following structure.
@@ -76,8 +75,6 @@ Components
 
 **TestCase: test execution information**
 - `TestCases`: step-by-step execution information for the test
-
----
 
 ## 2. Lab Behavior
 
@@ -331,8 +328,6 @@ Combining Labs using Composite Lab and combining Labs using Merge have the follo
 | Optional execution of upper Lab | Not possible: every Lab runs in a fixed order | Possible: unnecessary steps can be skipped when generating derived Labs |
 | State-unit report | Supported: the report shows which step the failed Lab belongs to | Not supported: the report does not show whether the failure occurred in the template or derived step |
 
----
-
 ## 3. Node Behavior
 
 ### 3-1. Node Behavior
@@ -382,8 +377,6 @@ Users can selectively retrieve experiment information using the following extens
 - Count(Node) => int : the number of Nodes created after the corresponding Node
 - All Succeed(Node) => bool : whether every test after the corresponding Node succeeded
 - Get Failed Nodes(Node) => XmlNode : returns Xml information for every failed test Node after the corresponding Node
-
----
 
 ## 4.Project Behavior
 
@@ -481,7 +474,6 @@ Test Case also implements the following methods that can concretize itself.
 - `Include(int index, object[] definitions)`: concretizes the item at a specific stage so that it includes all input list items
 - `Exclude(int index, object[] definitions)`: concretizes the item at a specific stage so that it does not include all input list items
 
----
 ## 5. Test Design
 
 ### 5-1. Test Design for Systems with a Single State

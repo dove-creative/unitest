@@ -7,8 +7,6 @@
 5. Tutorial 2. Combining Multi-State Tests
 6. Running and Reading Results
 
----
-
 This document does not re-explain the implementation structure of Uni Test. Instead, it covers the usage flow for moving state-operation tables and Uni Test components into actual test code.
 
 Therefore, the explanation order follows the table and model that a test author must prepare first, the shortest execution flow, and then single-state and multi-state examples, rather than the detailed implementation of internal classes.
@@ -73,8 +71,6 @@ The examples in this document are based on the actual test code under `Samples~/
 | Actual operation template | [GetTemplates.cs](../../Samples~/Unity/Scripts/MultiStateTest/GetTemplates.cs) | Actual Act definition by `MainTestCase` |
 | Test target objects | [SingleStatedKickboard.cs](../../Samples~/Unity/Scripts/Kickboard/SingleStatedKickboard.cs), [MultiStatedKickboard.cs](../../Samples~/Unity/Scripts/Kickboard/MultiStatedKickboard.cs) | Actual state transitions of the test target |
 
----
-
 ## 2. Shortest Start Flow
 
 The simplest usage flow is the following six steps.
@@ -133,8 +129,6 @@ await new SingleState.Project()
 
 With only this flow, tests can start from `Ignite` and automatically expand every possible subsequent test from the current state to a fixed depth.
 
----
-
 ## 3. Criteria for Choosing Classes and Methods
 
 At first glance, Uni Test code may look like it has many types, but there are not many axes that the user must directly hold.
@@ -158,8 +152,6 @@ In practice, it is convenient to think as follows.
 - Start simple tests with `CompactLab`.
 - Expand to `Lab` when expected exceptions, metadata, or composition becomes necessary.
 - In multi-state tests, divide test generators with `TestCase`, `Merge`, and `Extend`.
-
----
 
 ## 4. Tutorial 1. Testing a Single-State Object
 
@@ -293,8 +285,6 @@ labs.Add(new("Dispose")
 ```
 
 This allows follow-up verification to continue only as much as needed after dispose, then stops path expansion afterward.
-
----
 
 ## 5. Tutorial 2. Combining Multi-State Tests
 
@@ -573,8 +563,6 @@ The result of `Extend` is `CompositeLab`. The execution order can be understood 
 
 In other words, the actual operation is executed in only one place, while surrounding state layers add preparation and verification.
 
----
-
 ## 6. Running and Reading Results
 
 ### 6-1. Run All Paths
@@ -653,8 +641,6 @@ The three parts to focus on in the report are as follows.
 - `Model`: a string used to read the test target and expected state at that point.
 
 Therefore, it is important to write `Model.ToString()` in an easy-to-read form. This is because the XML report is ultimately a tool for reading "what state it was in and which Lab was executed" on the failed path.
-
----
 
 In summary, the Uni Test usage flow is as follows.
 

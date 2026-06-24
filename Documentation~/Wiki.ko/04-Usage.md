@@ -7,8 +7,6 @@
 5. 튜토리얼 2. 다중 상태 테스트 조합하기
 6. 실행과 결과 읽기
 
----
-
 이 문서는 Uni Test의 구현 구조를 다시 설명하는 문서가 아니라, 상태-동작 표와 Uni Test 구성 요소를 실제 테스트 코드로 옮기는 사용 흐름을 다룬다.
 
 따라서 설명 순서는 내부 클래스의 상세 구현보다, 테스트 작성자가 먼저 준비해야 할 표와 모델, 가장 짧은 실행 흐름, 단일 상태와 다중 상태 예제 순서를 따른다.
@@ -73,8 +71,6 @@ public class Model : UniTest.Model
 | 실제 동작 template | [GetTemplates.cs](../../Samples~/Unity/Scripts/MultiStateTest/GetTemplates.cs)                                                                                                                                                                                                                     | `MainTestCase`별 실제 Act 정의              |
 | 테스트 대상 객체      | [SingleStatedKickboard.cs](../../Samples~/Unity/Scripts/Kickboard/SingleStatedKickboard.cs), [MultiStatedKickboard.cs](../../Samples~/Unity/Scripts/Kickboard/MultiStatedKickboard.cs)                                                                                             | 테스트 대상의 실제 상태 전환                       |
 
----
-
 ## 2. 가장 짧은 시작 흐름
 
 가장 단순한 사용 흐름은 아래 여섯 단계이다.
@@ -133,8 +129,6 @@ await new SingleState.Project()
 
 이 흐름만으로도 `Ignite`에서 시작해, 현재 상태에서 가능한 모든 후속 테스트를 일정 깊이까지 자동으로 전개할 수 있다.
 
----
-
 ## 3. 클래스와 메서드 선택 기준
 
 Uni Test 코드는 처음 보면 타입이 많아 보이지만, 사용자가 직접 잡아야 하는 축은 많지 않다.
@@ -158,8 +152,6 @@ Uni Test 코드는 처음 보면 타입이 많아 보이지만, 사용자가 직
 - 단순 테스트는 `CompactLab`으로 시작한다.
 - 예상 예외, metadata, 조합이 필요해지면 `Lab`으로 넓힌다.
 - 다중 상태에서는 `TestCase`, `Merge`, `Extend`로 테스트 생성기를 나눈다.
-
----
 
 ## 4. 튜토리얼 1. 단일 상태 객체 테스트하기
 
@@ -293,8 +285,6 @@ labs.Add(new("Dispose")
 ```
 
 이렇게 하면 dispose 이후에도 필요한 만큼만 후속 검증을 이어가고, 그 뒤에는 경로 확장을 멈출 수 있다.
-
----
 
 ## 5. 튜토리얼 2. 다중 상태 테스트 조합하기
 
@@ -573,8 +563,6 @@ labs.AddRange(new Lab<Model>("available", asserter: Check)
 
 즉 실제 동작은 한 곳에서만 실행하고, 주변 상태 계층은 준비와 검증을 덧붙인다.
 
----
-
 ## 6. 실행과 결과 읽기
 
 ### 6-1. 전체 경로 실행
@@ -653,8 +641,6 @@ restored.Execute();
 - `Model`: 그 시점의 테스트 대상과 예상 상태를 읽기 위한 문자열이다.
 
 따라서 `Model.ToString()`을 보기 좋게 작성해 두는 것이 중요하다. XML 리포트는 결국 실패한 경로에서 "어떤 상태였고, 어떤 Lab을 실행했는가"를 읽기 위한 도구이기 때문이다.
-
----
 
 정리하면 Uni Test 사용 흐름은 아래와 같다.
 

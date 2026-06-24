@@ -4,8 +4,6 @@ This document defines the operational flow for configuring each domain or framew
 
 This document is not intended to replace the Unity Test Runner. Tests that depend on the Unity lifecycle, Scene, AssetDatabase, PlayMode, or Editor API use the Unity Test Runner or Unity batchmode. Conversely, tests for pure C# logic, NUnit Assert, and code separated from Unity dependencies run quickly from the CLI through a domain-owned external test project.
 
----
-
 ## Table of Contents
 
 1. Position of CLI Test Automation
@@ -13,8 +11,6 @@ This document is not intended to replace the Unity Test Runner. Tests that depen
 3. Test Project Configuration
 4. Execution Flow
 5. Operating Principles
-
----
 
 ## 1. Position of CLI Test Automation
 
@@ -30,8 +26,6 @@ CLI test automation is placed in the following flow.
 4. Link the required runtime sources and test sources into the external test project.
 5. Run tests from the CLI and record the results.
 6. If a failure occurs, analyze the cause and return to the implementation step or verification step.
-
----
 
 ## 2. External NUnit Executor Ownership
 
@@ -50,8 +44,6 @@ Packages/
 ```
 
 `ExternalNUnitExecutor.csproj` connects test target files with `Link` instead of copying them. This keeps the test code in its original location, while the external executor project is responsible only for the CLI build and test execution path.
-
----
 
 ## 3. Test Project Configuration
 
@@ -98,8 +90,6 @@ The NUnit framework is restored through the NuGet `NUnit` 3.14.0 package. Theref
 
 `NUnit`, `NUnit3TestAdapter`, and `Microsoft.NET.Test.Sdk` are MIT-licensed packages restored from NuGet. This repository does not vendor those DLLs and only declares project references.
 
----
-
 ## 4. Execution Flow
 
 The external executor does not have its own `Program.cs`. Tests are discovered by `NUnit3TestAdapter` and executed by `dotnet test`.
@@ -115,8 +105,6 @@ dotnet test --no-restore Packages\domain-package\Tests\ExternalNUnitExecutor\Ext
 ```
 
 In the test authoring workflow, include this execution result in the test execution result summary in `03-Results.md`.
-
----
 
 ## 5. Operating Principles
 

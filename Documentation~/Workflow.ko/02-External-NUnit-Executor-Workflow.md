@@ -4,8 +4,6 @@
 
 이 문서는 Unity Test Runner를 대체하기 위한 문서가 아니다. Unity 생명주기, Scene, AssetDatabase, PlayMode, Editor API에 의존하는 테스트는 Unity Test Runner 또는 Unity batchmode를 사용한다. 반대로 순수 C# 로직, NUnit Assert, Unity 의존성을 분리한 테스트는 도메인 소유 external test project를 통해 CLI에서 빠르게 실행한다.
 
----
-
 ## 목차
 
 1. CLI 테스트 자동화의 위치
@@ -13,8 +11,6 @@
 3. 테스트 프로젝트 구성
 4. 실행 흐름
 5. 운영 원칙
-
----
 
 ## 1. CLI 테스트 자동화의 위치
 
@@ -30,8 +26,6 @@ CLI 테스트 자동화는 다음 흐름에 배치한다.
 4. 필요한 런타임 소스와 테스트 소스를 external test project에 `Link`로 연결한다.
 5. CLI에서 테스트를 실행하고 결과를 기록한다.
 6. 실패가 발생하면 원인 분석 후 구현 단계 또는 검증 단계로 되돌아간다.
-
----
 
 ## 2. External NUnit Executor 소유권
 
@@ -50,8 +44,6 @@ Packages/
 ```
 
 `ExternalNUnitExecutor.csproj`는 테스트 대상 파일을 복사하지 않고 `Link`로 연결한다. 이렇게 하면 테스트 코드는 원래 위치에 남고, 외부 실행기 프로젝트는 CLI용 빌드와 테스트 실행 경로만 담당한다.
-
----
 
 ## 3. 테스트 프로젝트 구성
 
@@ -98,8 +90,6 @@ NUnit framework는 NuGet `NUnit` 3.14.0 패키지로 복원한다. 따라서 Ext
 
 `NUnit`, `NUnit3TestAdapter`, `Microsoft.NET.Test.Sdk`는 NuGet에서 복원되는 MIT 라이선스 패키지이다. 이 저장소는 해당 DLL을 vendoring하지 않고 프로젝트 참조만 선언한다.
 
----
-
 ## 4. 실행 흐름
 
 외부 실행기는 자체 `Program.cs`를 갖지 않는다. 테스트는 `NUnit3TestAdapter`가 발견하고 `dotnet test`가 실행한다.
@@ -115,8 +105,6 @@ dotnet test --no-restore Packages\domain-package\Tests\ExternalNUnitExecutor\Ext
 ```
 
 테스트 작성 워크플로에서는 이 실행 결과를 `03-Results.md`의 테스트 실행 결과 요약에 포함한다.
-
----
 
 ## 5. 운영 원칙
 

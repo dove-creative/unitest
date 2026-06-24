@@ -2,8 +2,6 @@
 
 This document defines the workflow an agent follows when writing or reinforcing UniTest-based tests.
 
----
-
 ## Table of Contents
 
 1. Select Mode
@@ -13,8 +11,6 @@ This document defines the workflow an agent follows when writing or reinforcing 
 5. Write Test Code
 6. Build and Run
 7. Record Results and Integration Tests
-
----
 
 ## 1. Select Mode
 
@@ -28,8 +24,6 @@ When starting test authoring work, first check the mode specified by the designe
 
 Mode is the criterion that determines the scope of failure response. The basic flow for writing state-operation tables, test plans, test code, and execution result records remains the same in every mode.
 
----
-
 ## 2. Prepare the Test Documentation Folder
 
 Create a `UniTests` folder in the corresponding module folder of the wiki. If the module already has a `Tests` folder, continue managing test documents under that folder.
@@ -42,15 +36,11 @@ Test documents are basically split into the following files.
 | `02-Plans.md` | Test plans that move state-operation tables into code |
 | `03-Results.md` | Records of major issues and results found during execution |
 
----
-
 ## 3. Write the State-Operation Table
 
 Write the state-operation table for each module or unit in `01-Tables.md`. If an existing `01-Tables.md` file exists, review and reinforce its content based on the current implementation and public API.
 
 The format and meaning of the state-operation table follow the [UniTest State-Operation Guideline](../Wiki.en/00-Unit-Test-Guideline.md).
-
----
 
 ## 4. Write the Test Plan
 
@@ -64,8 +54,6 @@ Write the test plan according to the following criteria.
 - When using the UniTest framework, write a high-level plan for how the test steps and file structure will be authored.
 - When not using the UniTest framework, write a high-level plan and list of tests to execute based on the table.
 - Separate unit tests and integration tests, and plan integration tests around representative use cases and failure scenarios.
-
----
 
 ## 5. Write Test Code
 
@@ -85,8 +73,6 @@ After writing tests, compare the completed tests with the plan document.
 - If tests were added or changed during implementation, reflect them in `02-Plans.md`.
 - If the test code does not match the current table, first update the standard in the table or plan, then align the code.
 
----
-
 ## 6. Build and Run
 
 Build and run the test code. If automatic build is impossible or the current environment requires Unity Test Runner execution, ask the designer to run the tests.
@@ -101,8 +87,6 @@ Choose the execution path according to the following criteria.
 When a failure occurs during test execution, first check which cell of the table and which item of the plan the failed test corresponds to.
 
 After a failure, report, fix, or wait according to the mode selected in section 1.
-
----
 
 ## 7. Record Results and Integration Tests
 
