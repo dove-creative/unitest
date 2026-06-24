@@ -18,7 +18,7 @@ The format follows Keep a Changelog, and version numbers follow Semantic Version
 - Moved UniTest runtime code from the legacy Assets plugin location to `Runtime`.
 - Moved UniTest framework tests from the legacy Assets plugin location to `Tests`.
 - Moved Unity and Native C# samples to `Samples~`.
-- Clarified the README introduction and Git URL installation guidance.
+- Added README Git URL installation guidance.
 
 ### Fixed
 
