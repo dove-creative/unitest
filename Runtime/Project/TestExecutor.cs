@@ -9,28 +9,28 @@ namespace UniTest
         class TestExecutor
         {
             // Internal
-            Project<TModel> parent;
-            Node<TModel> node;
+            Project<TModel> _parent;
+            Node<TModel> _node;
 
-            volatile bool executed = false;
+            volatile bool _executed = false;
 
 
             // Content
             public TestExecutor(Project<TModel> parent, Node<TModel> node)
             {
-                this.parent = parent;
-                this.node = node;
+                this._parent = parent;
+                this._node = node;
             }
 
             public async Task Execute(CancellationToken ct)
             {
-                if (executed)
+                if (_executed)
                 {
                     throw new InvalidOperationException(
                         "Test Designer cannot be executed multiple times.");
                 }
 
-                executed = true;
+                _executed = true;
 
 #if UNITEST_SINGLETHREAD
                 await Task.Yield();
@@ -52,36 +52,36 @@ namespace UniTest
                 {
                     ct.ThrowIfCancellationRequested();
 
-                    node.Execute();
+                    _node.Execute();
 
                     ct.ThrowIfCancellationRequested();
 
-                    if (node.Continuable && node.Depth < parent.targetDepth)
+                    if (_node.Continuable && _node.Depth < _parent._targetDepth)
                     {
-                        lock (parent.idleLock)
-                            parent.idleNodes.Enqueue(node);
+                        lock (_parent._idleLock)
+                            _parent._idleNodes.Enqueue(_node);
                     }
-                    else if (node.Status == Node<TModel>.NodeStatus.Failure)
+                    else if (_node.Status == Node<TModel>.NodeStatus.Failure)
                     {
-                        parent.failureOccurred = true;
+                        _parent._failureOccurred = true;
                     }
                 }
                 catch (OperationCanceledException ex)
                 {
-                    node.SetCancellationException(ex);
+                    _node.SetCancellationException(ex);
                 }
                 catch (Exception ex)
                 {
                     ex = new ExecutionException(
-                        $"Test Executor failed at node '{node}'.", ex);
+                        $"Test Executor failed at node '{_node}'.", ex);
 
-                    node.SetExternalException(ex, Node<TModel>.NodeStatus.Failure);
+                    _node.SetExternalException(ex, Node<TModel>.NodeStatus.Failure);
                     throw ex;
                 }
                 finally
                 {
-                    Interlocked.Increment(ref parent._processCount);
-                    parent.completedExecutors.Enqueue(this);
+                    Interlocked.Increment(ref _parent._processCount);
+                    _parent._completedExecutors.Enqueue(this);
                 }
             }
         }

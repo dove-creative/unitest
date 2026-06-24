@@ -240,7 +240,7 @@ namespace UniTest_Test.MultiState
                             m.rider = null;
                             m.isDisposed = true;
 
-                            md.RemainingExecutionCount = postExecutionCount;
+                            md.RemainingExecutionCount = _postExecutionCount;
                         },
                         Asserter = Check,
                     }.Merge(GetTemplates(tc)));
@@ -255,7 +255,7 @@ namespace UniTest_Test.MultiState
                             m.rider = null;
                             m.isDisposed = true;
 
-                            md.RemainingExecutionCount = postExecutionCount;
+                            md.RemainingExecutionCount = _postExecutionCount;
                         },
                         Asserter = Check,
                     }.Merge(GetTemplates(tc)));

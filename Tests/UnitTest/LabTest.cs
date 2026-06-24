@@ -6,19 +6,19 @@ using UniTest;
 
 public class LabTest
 {
-    Lab<Model> lab;
+    Lab<Model> _lab;
 
-    Model model;
-    object metadata;
+    Model _model;
+    object _metadata;
 
 
     [TearDown]
     public void TearDown()
     {
-        lab = null;
+        _lab = null;
 
-        model = null;
-        metadata = null;
+        _model = null;
+        _metadata = null;
     }
 
     public enum Condition
@@ -62,7 +62,7 @@ public class LabTest
     }
     void CreateLab(bool setMetadataByConstructor, Condition setMetadata, Condition arranger, Condition actor, Condition asserter)
     {
-        lab = setMetadataByConstructor
+        _lab = setMetadataByConstructor
             ? new Lab<Model>(
             expectedExceptionType: typeof(ProbeException),
             toUnsustainable: true,
@@ -70,48 +70,48 @@ public class LabTest
             remainingExecutionCount: 10)
             : new Lab<Model>();
 
-        model = new Model();
+        _model = new Model();
         
 
         if (setMetadata != Condition.None)
         {
-            metadata = new object();
-            lab.SetMetadata = m =>
+            _metadata = new object();
+            _lab.SetMetadata = m =>
             {
-                Assert.AreSame(model, m);
+                Assert.That(m, Is.SameAs(_model));
 
                 if (setMetadata == Condition.Failure)
                     throw new ProbeException("Set Metadata Failure");
 
-                return metadata;
+                return _metadata;
             };
         }
 
         if (arranger != Condition.None)
-            lab.Arranger = (m, md) =>
+            _lab.Arranger = (m, md) =>
             {
-                Assert.AreSame(model, m);
-                Assert.AreSame(metadata, md.Metadata);
+                Assert.That(m, Is.SameAs(_model));
+                Assert.That(md.Metadata, Is.SameAs(_metadata));
 
                 if (arranger == Condition.Failure)
                     throw new ProbeException("Arranger Failure");
             };
 
         if (actor != Condition.None)
-            lab.Actor = (m, md) =>
+            _lab.Actor = (m, md) =>
             {
-                Assert.AreSame(model, m);
-                Assert.AreSame(metadata, md.Metadata);
+                Assert.That(m, Is.SameAs(_model));
+                Assert.That(md.Metadata, Is.SameAs(_metadata));
 
                 if (actor == Condition.Failure)
                     throw new ProbeException("Actor Failure");
             };
 
         if (asserter != Condition.None)
-            lab.Asserter = (m, md) =>
+            _lab.Asserter = (m, md) =>
             {
-                Assert.AreSame(model, m);
-                Assert.AreSame(metadata, md.Metadata);
+                Assert.That(m, Is.SameAs(_model));
+                Assert.That(md.Metadata, Is.SameAs(_metadata));
 
                 if (asserter == Condition.Failure)
                     throw new ProbeException("Asserter Failure");
@@ -124,14 +124,14 @@ public class LabTest
     public void Execute_NullModel()
     {
         // Arrange
-        lab = new Lab<Model>();
+        _lab = new Lab<Model>();
 
         // Act
-        lab.Execute(null, out var ex);
+        _lab.Execute(null, out var ex);
 
         // Assert
-        Assert.IsAssignableFrom<ExecutionException>(ex);
-        Assert.AreEqual("Model setting failed", ex.Message);
+        Assert.That(ex, Is.AssignableTo<ExecutionException>());
+        Assert.That(ex.Message, Is.EqualTo("Model setting failed"));
     }
 
     [TestCaseSource(nameof(GetTestCases))]
@@ -142,71 +142,71 @@ public class LabTest
         Exception ex;
 
         // Act
-        lab.Execute(model, out var _ex);
+        _lab.Execute(_model, out var _ex);
         ex = _ex;
 
         // Assert
         if (setMetadata == Condition.Failure)
         {
-            Assert.IsAssignableFrom<ExecutionException>(ex);
-            Assert.AreEqual("Arrange failed", ex.Message);
+            Assert.That(ex, Is.AssignableTo<ExecutionException>());
+            Assert.That(ex.Message, Is.EqualTo("Arrange failed"));
 
             ex = ex.InnerException;
-            Assert.IsAssignableFrom<ProbeException>(ex, ex?.Message ?? "-");
-            Assert.AreEqual("Set Metadata Failure", ex.Message);
+            Assert.That(ex, Is.AssignableTo<ProbeException>(), ex?.Message ?? "-");
+            Assert.That(ex.Message, Is.EqualTo("Set Metadata Failure"));
 
-            Assert.IsFalse(model.Continuable);
+            Assert.That(_model.Continuable, Is.False);
             return;
         }
         if (arranger == Condition.Failure)
         {
-            Assert.IsAssignableFrom<ExecutionException>(ex);
-            Assert.AreEqual("Arrange failed", ex.Message);
+            Assert.That(ex, Is.AssignableTo<ExecutionException>());
+            Assert.That(ex.Message, Is.EqualTo("Arrange failed"));
 
             ex = ex.InnerException;
-            Assert.IsAssignableFrom<ProbeException>(ex, ex?.Message ?? "-");
-            Assert.AreEqual("Arranger Failure", ex.Message);
+            Assert.That(ex, Is.AssignableTo<ProbeException>(), ex?.Message ?? "-");
+            Assert.That(ex.Message, Is.EqualTo("Arranger Failure"));
 
-            Assert.IsFalse(model.Continuable);
+            Assert.That(_model.Continuable, Is.False);
             return;
         }
         if (actor == Condition.Failure && !setMetadataByConstructor)
         {
-            Assert.IsAssignableFrom<ExecutionException>(ex);
-            Assert.AreEqual("Act failed", ex.Message);
+            Assert.That(ex, Is.AssignableTo<ExecutionException>());
+            Assert.That(ex.Message, Is.EqualTo("Act failed"));
 
             ex = ex.InnerException;
-            Assert.IsAssignableFrom<ProbeException>(ex, ex?.Message ?? "-");
-            Assert.AreEqual("Actor Failure", ex.Message);
+            Assert.That(ex, Is.AssignableTo<ProbeException>(), ex?.Message ?? "-");
+            Assert.That(ex.Message, Is.EqualTo("Actor Failure"));
 
-            Assert.IsFalse(model.Continuable);
+            Assert.That(_model.Continuable, Is.False);
             return;
         }
         if (actor != Condition.Failure && setMetadataByConstructor)
         {
-            Assert.IsAssignableFrom<ExecutionException>(ex);
-            Assert.AreEqual("Act failed", ex.Message);
+            Assert.That(ex, Is.AssignableTo<ExecutionException>());
+            Assert.That(ex.Message, Is.EqualTo("Act failed"));
 
-            Assert.IsFalse(model.Continuable);
+            Assert.That(_model.Continuable, Is.False);
             return;
         }
         if (asserter == Condition.Failure)
         {
-            Assert.IsAssignableFrom<ExecutionException>(ex);
-            Assert.AreEqual("Assert failed", ex.Message);
+            Assert.That(ex, Is.AssignableTo<ExecutionException>());
+            Assert.That(ex.Message, Is.EqualTo("Assert failed"));
 
             ex = ex.InnerException;
-            Assert.IsAssignableFrom<ProbeException>(ex, ex?.Message ?? "-");
-            Assert.AreEqual("Asserter Failure", ex.Message);
+            Assert.That(ex, Is.AssignableTo<ProbeException>(), ex?.Message ?? "-");
+            Assert.That(ex.Message, Is.EqualTo("Asserter Failure"));
 
-            Assert.IsFalse(model.Continuable);
+            Assert.That(_model.Continuable, Is.False);
             return;
         }
          
-        Assert.IsNull(ex);
+        Assert.That(ex, Is.Null);
 
-        Assert.AreEqual(setMetadataByConstructor, !model.Continuable);
-        Assert.AreEqual(setMetadataByConstructor ? 10 : null, model.RemainingExecutionCount);
+        Assert.That(!_model.Continuable, Is.EqualTo(setMetadataByConstructor));
+        Assert.That(_model.RemainingExecutionCount, Is.EqualTo(setMetadataByConstructor ? 10 : null));
     }
 
 
@@ -223,7 +223,7 @@ public class LabTest
         };
         SubjectMetadata metadata = null;
 
-        lab = new Lab<Model>(
+        _lab = new Lab<Model>(
             expectedExceptionType: template.ExpectedExceptionType,
             toUncontinuable: template.ToUncontinuable,
             remainingExecutionCount: template.RemainingExecutionCount)
@@ -233,15 +233,15 @@ public class LabTest
 
 
         // Act
-        lab.Execute(new Model(), out var ex);
+        _lab.Execute(new Model(), out var ex);
 
         // Assert
-        Assert.IsAssignableFrom<ExecutionException>(ex);
-        Assert.AreNotSame(template, metadata);
+        Assert.That(ex, Is.AssignableTo<ExecutionException>());
+        Assert.That(metadata, Is.Not.SameAs(template));
 
-        Assert.AreEqual(template.ExpectedExceptionType, metadata.ExpectedExceptionType);
-        Assert.AreEqual(template.ToUncontinuable, metadata.ToUncontinuable);
-        Assert.AreEqual(template.RemainingExecutionCount, metadata.RemainingExecutionCount);
+        Assert.That(metadata.ExpectedExceptionType, Is.EqualTo(template.ExpectedExceptionType));
+        Assert.That(metadata.ToUncontinuable, Is.EqualTo(template.ToUncontinuable));
+        Assert.That(metadata.RemainingExecutionCount, Is.EqualTo(template.RemainingExecutionCount));
     }
     [Test]
     public void SetMetadata_ByDelegate()
@@ -256,7 +256,7 @@ public class LabTest
         };
         SubjectMetadata metadata = null;
 
-        lab = new Lab<Model>()
+        _lab = new Lab<Model>()
         {
             Arranger = (_, md) =>
             {
@@ -270,16 +270,16 @@ public class LabTest
 
         
         // Act
-        lab.Execute(new Model(), out var ex);
+        _lab.Execute(new Model(), out var ex);
 
         // Assert
-        Assert.IsAssignableFrom<ExecutionException>(ex);
-        Assert.AreNotSame(template, metadata);
+        Assert.That(ex, Is.AssignableTo<ExecutionException>());
+        Assert.That(metadata, Is.Not.SameAs(template));
 
-        Assert.AreSame(template.Metadata, metadata.Metadata);
-        Assert.AreEqual(template.ExpectedExceptionType, metadata.ExpectedExceptionType);
-        Assert.AreEqual(template.ToUncontinuable, metadata.ToUncontinuable);
-        Assert.AreEqual(template.RemainingExecutionCount, metadata.RemainingExecutionCount);
+        Assert.That(metadata.Metadata, Is.SameAs(template.Metadata));
+        Assert.That(metadata.ExpectedExceptionType, Is.EqualTo(template.ExpectedExceptionType));
+        Assert.That(metadata.ToUncontinuable, Is.EqualTo(template.ToUncontinuable));
+        Assert.That(metadata.RemainingExecutionCount, Is.EqualTo(template.RemainingExecutionCount));
     }
 
 
@@ -308,7 +308,7 @@ public class LabTest
         current.Merge(template);
 
         // Assert
-        Assert.AreEqual(expectedRemainingExecutionCount, current.RemainingExecutionCount);
+        Assert.That(current.RemainingExecutionCount, Is.EqualTo(expectedRemainingExecutionCount));
     }
 
 
@@ -321,21 +321,21 @@ public class LabTest
         CreateLab(setMetadataByConstructor, setMetadata, arranger, actor, asserter);
 
         // Act
-        var copied = lab.Copy(copiedID);
+        var copied = _lab.Copy(copiedID);
 
         // Assert
-        Assert.AreEqual(copiedID, copied.ID);
-        Assert.AreSame(lab.SetMetadata, copied.SetMetadata);
-        Assert.AreSame(lab.Arranger, copied.Arranger);
-        Assert.AreSame(lab.Actor, copied.Actor);
-        Assert.AreSame(lab.Asserter, copied.Asserter);
+        Assert.That(copied.ID, Is.EqualTo(copiedID));
+        Assert.That(copied.SetMetadata, Is.SameAs(_lab.SetMetadata));
+        Assert.That(copied.Arranger, Is.SameAs(_lab.Arranger));
+        Assert.That(copied.Actor, Is.SameAs(_lab.Actor));
+        Assert.That(copied.Asserter, Is.SameAs(_lab.Asserter));
 
-        var metadataTemplate_original = lab.MetadataTemplate;
+        var metadataTemplate_original = _lab.MetadataTemplate;
         var metadataTemplate_copied = copied.MetadataTemplate;
 
-        Assert.AreEqual(metadataTemplate_original.ExpectedExceptionType, metadataTemplate_copied.ExpectedExceptionType);
-        Assert.AreEqual(metadataTemplate_original.ToUnsustainable, metadataTemplate_copied.ToUnsustainable);
-        Assert.AreEqual(metadataTemplate_original.ToUncontinuable, metadataTemplate_copied.ToUncontinuable);
-        Assert.AreEqual(metadataTemplate_original.RemainingExecutionCount, metadataTemplate_copied.RemainingExecutionCount);
+        Assert.That(metadataTemplate_copied.ExpectedExceptionType, Is.EqualTo(metadataTemplate_original.ExpectedExceptionType));
+        Assert.That(metadataTemplate_copied.ToUnsustainable, Is.EqualTo(metadataTemplate_original.ToUnsustainable));
+        Assert.That(metadataTemplate_copied.ToUncontinuable, Is.EqualTo(metadataTemplate_original.ToUncontinuable));
+        Assert.That(metadataTemplate_copied.RemainingExecutionCount, Is.EqualTo(metadataTemplate_original.RemainingExecutionCount));
     }
 }

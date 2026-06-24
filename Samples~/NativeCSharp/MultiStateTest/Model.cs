@@ -28,27 +28,27 @@ namespace UniTest_Test.MultiState
 
         public class Charger : IObservable<object>
         {
-            List<IObserver<object>> observers = new();
+            List<IObserver<object>> _observers = new();
 
             public IDisposable Subscribe(IObserver<object> observer)
             {
-                observers.Add(observer);
-                return new Token(() => observers.Remove(observer));
+                _observers.Add(observer);
+                return new Token(() => _observers.Remove(observer));
             }
 
-            public void DoCharge() => observers.ForEach(o => o.OnNext(null));
+            public void DoCharge() => _observers.ForEach(o => o.OnNext(null));
 
             class Token : IDisposable
             {
-                Action onDispose;
+                Action _onDispose;
 
                 public Token(Action onDispose)
-                    => this.onDispose = onDispose;
+                    => _onDispose = onDispose;
 
                 public void Dispose()
                 {
-                    onDispose?.Invoke();
-                    onDispose = null;
+                    _onDispose?.Invoke();
+                    _onDispose = null;
                 }
             }
         }

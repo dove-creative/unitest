@@ -7,7 +7,7 @@ namespace UniTest_Test.MultiState
 {
     public partial class Project : Project<Model>
     {
-        readonly int postExecutionCount = 2;
+        readonly int _postExecutionCount = 2;
 
         public enum MainTestCase
         {
@@ -24,16 +24,16 @@ namespace UniTest_Test.MultiState
 
         void Check(Model model, SubjectMetadata _ = default)
         {
-            Assert.IsNotNull(model, "Kickboard is Null");
+            Assert.That(model, Is.Not.Null, "Kickboard is Null");
 
-            Assert.AreEqual(model.isDisposed, model.Kickboard.IsDisposed, "Dispose state mismatched");
-            Assert.AreSame(model.rider, model.Kickboard.Rider, "Rider mismatched");
-            Assert.AreEqual(model.charging, model.Kickboard.Charging, "Charging State Mismatched");
-            Assert.AreEqual(model.battery, model.Kickboard.Battery, "Battery Mismatched");
+            Assert.That(model.Kickboard.IsDisposed, Is.EqualTo(model.isDisposed), "Dispose state mismatched");
+            Assert.That(model.Kickboard.Rider, Is.SameAs(model.rider), "Rider mismatched");
+            Assert.That(model.Kickboard.Charging, Is.EqualTo(model.charging), "Charging State Mismatched");
+            Assert.That(model.Kickboard.Battery, Is.EqualTo(model.battery), "Battery Mismatched");
 
             if (model.isDisposed) return;
 
-            Assert.AreEqual(model.battery > 10, model.Kickboard.Available, "Available State Mismatched");
+            Assert.That(model.Kickboard.Available, Is.EqualTo(model.battery > 10), "Available State Mismatched");
         }
 
 

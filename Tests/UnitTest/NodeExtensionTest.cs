@@ -11,36 +11,36 @@ public class NodeExtensionTest
      *     └ [6]
      */
 
-    Node<Model>[] nodes;
+    Node<Model>[] _nodes;
 
 
     [SetUp]
     public void SetUp()
     {
-        nodes = new Node<Model>[7];
+        _nodes = new Node<Model>[7];
 
         var lab = new Lab<Model>();
         var ct = new CancellationToken();
 
 
-        nodes[0] = new Node<Model>(null);
+        _nodes[0] = new Node<Model>(null);
 
-        nodes[1] = nodes[0].Append(lab, ct);
-        nodes[1].Execute();
-        nodes[2] = nodes[1].Append(lab, ct);
+        _nodes[1] = _nodes[0].Append(lab, ct);
+        _nodes[1].Execute();
+        _nodes[2] = _nodes[1].Append(lab, ct);
 
-        nodes[3] = nodes[0].Append(lab, ct);
-        nodes[3].Execute();
-        nodes[4] = nodes[3].Append(lab, ct);
-        nodes[5] = nodes[3].Append(lab, ct);
+        _nodes[3] = _nodes[0].Append(lab, ct);
+        _nodes[3].Execute();
+        _nodes[4] = _nodes[3].Append(lab, ct);
+        _nodes[5] = _nodes[3].Append(lab, ct);
 
-        nodes[6] = nodes[0].Append(lab, ct);
+        _nodes[6] = _nodes[0].Append(lab, ct);
     }
 
     [TearDown]
     public void Teardown()
     {
-        nodes = null;
+        _nodes = null;
     }
 
 
@@ -49,28 +49,28 @@ public class NodeExtensionTest
     public void Count_Root()
     {
         // Act
-        var count = nodes[0].GetCount();
+        var count = _nodes[0].GetCount();
 
         // Assert
-        Assert.AreEqual(7, count);
+        Assert.That(count, Is.EqualTo(7));
     }
     [Test]
     public void Count_NotRoot()
     {
         // Act
-        var count = nodes[3].GetCount();
+        var count = _nodes[3].GetCount();
 
         // Assert
-        Assert.AreEqual(3, count);
+        Assert.That(count, Is.EqualTo(3));
     }
     [Test]
     public void Count_Every()
     {
         // Act
-        var counts = nodes.Select(n => n.GetCount());
+        var counts = _nodes.Select(n => n.GetCount());
 
         // Assert
-        CollectionAssert.AreEqual(new[] { 7, 2, 1, 3, 1, 1, 1 }, counts);
+        Assert.That(counts, Is.EqualTo(new[] { 7, 2, 1, 3, 1, 1, 1 }));
     }
 
 
@@ -79,36 +79,36 @@ public class NodeExtensionTest
     public void AllSucceed_Succeed_NotCancelled()
     {
         // Act
-        var succeed = nodes[0].AllSucceed(out var cancelled);
+        var succeed = _nodes[0].AllSucceed(out var cancelled);
 
         // Assert
-        Assert.IsFalse(cancelled);
-        Assert.IsTrue(succeed);
+        Assert.That(cancelled, Is.False);
+        Assert.That(succeed, Is.True);
     }
     [Test]
     public void AllSucceed_Succeded_Cancelled()
     {
         // Arrange
-        nodes[3].SetExternalException(new ProbeException(), Node<Model>.NodeStatus.Cancelled);
+        _nodes[3].SetExternalException(new ProbeException(), Node<Model>.NodeStatus.Cancelled);
 
         // Act
-        var succeed = nodes[0].AllSucceed(out var cancelled);
+        var succeed = _nodes[0].AllSucceed(out var cancelled);
 
         // Assert
-        Assert.IsTrue(cancelled);
-        Assert.IsTrue(succeed);
+        Assert.That(cancelled, Is.True);
+        Assert.That(succeed, Is.True);
     }
     [Test]
     public void AllSucceed_Failed()
     {
         // Arrange
-        nodes[3].SetExternalException(new ProbeException(), Node<Model>.NodeStatus.Failure);
+        _nodes[3].SetExternalException(new ProbeException(), Node<Model>.NodeStatus.Failure);
 
         // Act
-        var succeed = nodes[0].AllSucceed(out _);
+        var succeed = _nodes[0].AllSucceed(out _);
 
         // Assert
-        Assert.IsFalse(succeed);
+        Assert.That(succeed, Is.False);
     }
 
 
@@ -117,44 +117,43 @@ public class NodeExtensionTest
     public void GetFailedReports_None()
     {
         // Act
-        var failedReport = nodes[0].GetFailedReports();
+        var failedReport = _nodes[0].GetFailedReports();
         var failedReports = failedReport.ChildNodes
             .OfType<System.Xml.XmlElement>();
 
         // Assert
-        CollectionAssert.IsEmpty(failedReports);
+        Assert.That(failedReports, Is.Empty);
     }
     [Test]
     public void GetFailedReports_Single()
     {
         // Arrange
-        nodes[3].SetExternalException(new ProbeException(), Node<Model>.NodeStatus.Failure);
+        _nodes[3].SetExternalException(new ProbeException(), Node<Model>.NodeStatus.Failure);
 
         // Act
-        var failedReport = nodes[0].GetFailedReports();
+        var failedReport = _nodes[0].GetFailedReports();
         var failedReports = failedReport.ChildNodes
             .OfType<System.Xml.XmlElement>()
             .Select(n => n.OuterXml);
 
         // Assert
-        CollectionAssert.AreEquivalent(new[] { nodes[3].Report.OuterXml }, failedReports);
+        Assert.That(failedReports, Is.EquivalentTo(new[] { _nodes[3].Report.OuterXml }));
     }
     [Test]
     public void GetFailedReports_Multiple()
     {
         // Arrange
-        nodes[3].SetExternalException(new ProbeException(), Node<Model>.NodeStatus.Failure);
-        nodes[5].SetExternalException(new ProbeException(), Node<Model>.NodeStatus.Failure);
-        nodes[6].SetExternalException(new ProbeException(), Node<Model>.NodeStatus.Failure);
+        _nodes[3].SetExternalException(new ProbeException(), Node<Model>.NodeStatus.Failure);
+        _nodes[5].SetExternalException(new ProbeException(), Node<Model>.NodeStatus.Failure);
+        _nodes[6].SetExternalException(new ProbeException(), Node<Model>.NodeStatus.Failure);
 
         // Act
-        var failedReport = nodes[0].GetFailedReports();
+        var failedReport = _nodes[0].GetFailedReports();
         var failedReports = failedReport.ChildNodes
             .OfType<System.Xml.XmlElement>()
             .Select(n => n.OuterXml);
 
         // Assert
-        CollectionAssert.AreEquivalent(
-            new[] { nodes[3], nodes[6] }.Select(n => n.Report.OuterXml), failedReports);
+        Assert.That(failedReports, Is.EquivalentTo(new[] { _nodes[3], _nodes[6] }.Select(n => n.Report.OuterXml)));
     }
 }

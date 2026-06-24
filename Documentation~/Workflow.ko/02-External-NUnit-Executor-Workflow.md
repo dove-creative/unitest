@@ -48,10 +48,9 @@ Packages/
         ExternalNUnitExecutor.csproj
         ExternalNUnitExecutor.NoBlackbox.csproj
         ExternalNUnitExecutor.Usm.csproj
-        Program.cs
 ```
 
-`ExternalNUnitExecutor*.csproj`는 테스트 대상 파일을 복사하지 않고 `Link`로 연결한다. 이렇게 하면 테스트 코드는 원래 위치에 남고, 외부 실행기는 CLI 실행 경로만 담당한다.
+`ExternalNUnitExecutor*.csproj`는 테스트 대상 파일을 복사하지 않고 `Link`로 연결한다. 이렇게 하면 테스트 코드는 원래 위치에 남고, 외부 실행기 프로젝트는 CLI용 빌드와 테스트 실행 경로만 담당한다.
 
 현재 이 작업공간에서는 다음 실행기 변형을 사용한다.
 
@@ -74,14 +73,14 @@ Packages/
 ```xml
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <OutputType>Exe</OutputType>
     <TargetFramework>net9.0</TargetFramework>
     <LangVersion>latest</LangVersion>
+    <Nullable>disable</Nullable>
     <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <IsTestProject>true</IsTestProject>
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Include="Program.cs" />
     <Compile Include="..\..\Runtime\Node.cs" LinkBase="UniTest" />
     <Compile Include="..\..\Runtime\TestCase.cs" LinkBase="UniTest" />
     <Compile Include="..\..\Runtime\Infrastructure\*.cs" LinkBase="UniTest\Infrastructure" />
@@ -95,6 +94,8 @@ Packages/
     <Reference Include="nunit.framework">
       <HintPath>..\..\..\..\Library\PackageCache\com.unity.ext.nunit@031a54704bff\net40\unity-custom\nunit.framework.dll</HintPath>
     </Reference>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.6.0" />
+    <PackageReference Include="NUnit3TestAdapter" Version="6.2.0" />
   </ItemGroup>
 </Project>
 ```
@@ -107,31 +108,24 @@ USM처럼 별도 POCO 프레임워크를 실행하는 경우에는 테스트 대
 <Compile Include="..\..\..\..\Assets\UniEngine\Services\StateMachines\Usm\**\*.cs" LinkBase="StateMachines\Usm" />
 ```
 
-NUnit은 현재 Unity 프로젝트의 `PackageCache`에 있는 DLL을 직접 참조한다. 장기 운영에서 패키지 복원이 안정적으로 가능한 환경이라면 `NUnit`, `NUnit3TestAdapter`, `Microsoft.NET.Test.Sdk`를 명시적으로 참조하고 `dotnet test`로 실행하는 구성을 사용할 수 있다.
+NUnit framework는 Unity Test Runner와의 소스 호환성을 위해 Unity 프로젝트의 `PackageCache`에 있는 `com.unity.ext.nunit` DLL을 직접 참조한다. `NUnit` NuGet 패키지는 추가하지 않는다.
+
+`Microsoft.NET.Test.Sdk`와 `NUnit3TestAdapter`는 `dotnet test`가 이 테스트 프로젝트를 발견하고 실행하기 위한 test platform 패키지이다. 테스트 코드가 사용하는 NUnit API의 기준은 Unity의 커스텀 NUnit DLL이며, 외부 실행기는 같은 테스트 소스를 다른 runner에서 실행하는 역할만 한다.
 
 ---
 
 ## 4. 실행 흐름
 
-외부 실행기가 자체 `Program.cs`에서 NUnit 테스트 메서드를 찾아 실행하는 경우, 다음 명령으로 테스트를 실행한다.
-
-```powershell
-dotnet run --project Packages\com.blackthunder.unitest\Tools~\ExternalNUnitExecutor\ExternalNUnitExecutor.csproj
-```
-
-실행기는 `[Test]`가 붙은 메서드를 찾아 호출하고, 각 테스트의 성공 또는 실패를 CLI 출력으로 남긴다.
-
-예상 출력 형식은 다음과 같다.
-
-```text
-PASS TestRunner.Test
-SUMMARY total=1 passed=1 failed=0
-```
-
-`NUnit3TestAdapter`를 사용하는 정식 테스트 프로젝트로 구성한 경우에는 다음 명령을 사용한다.
+외부 실행기는 자체 `Program.cs`를 갖지 않는다. 테스트는 `NUnit3TestAdapter`가 발견하고 `dotnet test`가 실행한다.
 
 ```powershell
 dotnet test Packages\com.blackthunder.unitest\Tools~\ExternalNUnitExecutor\ExternalNUnitExecutor.csproj
+```
+
+복원이 이미 끝난 상태에서 빌드와 실행만 반복해야 한다면 다음처럼 실행한다.
+
+```powershell
+dotnet test --no-restore Packages\com.blackthunder.unitest\Tools~\ExternalNUnitExecutor\ExternalNUnitExecutor.csproj
 ```
 
 테스트 작성 워크플로에서는 이 실행 결과를 `03-Results.md`의 테스트 실행 결과 요약에 포함한다.
@@ -143,5 +137,8 @@ dotnet test Packages\com.blackthunder.unitest\Tools~\ExternalNUnitExecutor\Exter
 - 외부 실행기는 Unity Editor 실행 여부를 검증하는 도구가 아니라, Unity에 의존하지 않는 테스트 코드를 빠르게 반복 실행하기 위한 도구이다.
 - 테스트 파일은 가능하면 Unity 전용 코드와 순수 .NET 코드를 명확히 분기한다.
 - `ExternalNUnitExecutor`는 테스트 코드를 소유하지 않는다. 테스트 코드는 원래 모듈 또는 테스트 폴더에 남기고, 실행기 프로젝트는 해당 파일을 연결해서 실행한다.
+- 테스트 코드는 Unity의 NUnit 3.5 기반 커스텀 DLL과 외부 `dotnet test` 경로가 함께 컴파일할 수 있는 공통 NUnit API만 사용한다.
+- 일반 값 검증 Assert는 `Assert.That(..., Is/Has/Does/Contains...)` 중심으로 작성하되, NUnit 4 전용 API나 `NUnit.Framework.Legacy`는 사용하지 않는다.
+- 예외 검증은 Unity의 NUnit 3.5 커스텀 DLL과 외부 실행기 양쪽에서 지원되는 `Assert.Throws` / `Assert.ThrowsAsync`를 허용한다.
 - CLI에서 실패한 테스트는 테스트 결과 문서에 포함하고, 원인에 따라 구현 단계, 검증 단계, 또는 테스트 단계로 되돌아간다.
 - Unity API, Scene, AssetDatabase, PlayMode 동작이 필요한 테스트는 이 경로로 억지로 실행하지 않고 Unity Test Runner 또는 Unity batchmode 검증으로 분리한다.

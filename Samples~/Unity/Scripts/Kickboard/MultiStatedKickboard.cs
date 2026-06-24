@@ -13,7 +13,7 @@ namespace UniTest_Test.Subject
         public bool Available => Battery > 10;
 
         // Inner
-        IDisposable handle;
+        IDisposable _handle;
 
 
         // Content
@@ -65,26 +65,26 @@ namespace UniTest_Test.Subject
             if (Charging) return;
             Charging = true;
 
-            handle = charger.Subscribe(new Charger(this));
+            _handle = charger.Subscribe(new Charger(this));
         }
         public void StopCharging()
         {
             if (!Charging) return;
             Charging = false;
 
-            handle.Dispose();
-            handle = null;
+            _handle.Dispose();
+            _handle = null;
         }
 
         class Charger : IObserver<object>
         {
-            MultiStatedKickboard parent;
+            MultiStatedKickboard _parent;
 
-            public Charger(MultiStatedKickboard parent) => this.parent = parent;
+            public Charger(MultiStatedKickboard parent) => _parent = parent;
 
             public void OnCompleted() { }
             public void OnError(Exception _) { }
-            public void OnNext(object _) => parent.DoCharge();
+            public void OnNext(object _) => _parent.DoCharge();
         }
         void DoCharge()
         {

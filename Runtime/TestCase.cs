@@ -7,7 +7,7 @@ namespace UniTest
     public readonly struct TestCase
     {
         // Internal
-        readonly (bool include, object[] definitions)[] testCases => _testCases ?? Array.Empty<(bool, object[])>();
+        readonly (bool include, object[] definitions)[] TestCases => _testCases ?? Array.Empty<(bool, object[])>();
         readonly (bool, object[])[] _testCases;
 
 
@@ -16,10 +16,10 @@ namespace UniTest
         {
             get
             {
-                if (testCases.Length <= i)
-                    throw new ArgumentOutOfRangeException(nameof(i), $"Index must be in range [0..{testCases.Length - 1}] but was {i}");
+                if (TestCases.Length <= i)
+                    throw new ArgumentOutOfRangeException(nameof(i), $"Index must be in range [0..{TestCases.Length - 1}] but was {i}");
 
-                var (include, defs) = testCases[i];
+                var (include, defs) = TestCases[i];
 
                 if (!include || defs.Length != 1)
                     throw new InvalidOperationException("Test case at index must be a single confined definition");
@@ -27,7 +27,7 @@ namespace UniTest
                 return defs[0];
             }
         }
-        public int Count => testCases.Length;
+        public int Count => TestCases.Length;
 
 
         // Content
@@ -39,20 +39,20 @@ namespace UniTest
 
         public readonly TestCase Append(object definition, bool include = true)
         {
-            return new TestCase(testCases.Append((include, new object[] { definition })));
+            return new TestCase(TestCases.Append((include, new object[] { definition })));
         }
         public readonly TestCase Confine(int index, object definition)
         {
-            if (index < 0 || index > testCases.Length)
-                throw new ArgumentOutOfRangeException(nameof(index), $"Index must be in range [0..{testCases.Length}] but was {index}");
+            if (index < 0 || index > TestCases.Length)
+                throw new ArgumentOutOfRangeException(nameof(index), $"Index must be in range [0..{TestCases.Length}] but was {index}");
             if (definition == null)
                 throw new ArgumentNullException(nameof(definition), "The definition must not be null.");
 
-            if (index == testCases.Length)
+            if (index == TestCases.Length)
                 return Append(definition, true);
 
-            var tc = new TestCase(testCases.Select(tc => (tc.include, tc.definitions.ToArray())));
-            tc.testCases[index] = (true, new object[] { definition });
+            var tc = new TestCase(TestCases.Select(tc => (tc.include, tc.definitions.ToArray())));
+            tc.TestCases[index] = (true, new object[] { definition });
 
             return tc;
         }
@@ -61,18 +61,18 @@ namespace UniTest
         public readonly TestCase Exclude(int index, params object[] definitions) => Set(index, definitions, false);
         TestCase Set(int index, object[] definitions, bool include)
         {
-            if (index < 0 || index > testCases.Length)
-                throw new ArgumentOutOfRangeException(nameof(index), $"Index must be in range [0..{testCases.Length}] but was {index}");
+            if (index < 0 || index > TestCases.Length)
+                throw new ArgumentOutOfRangeException(nameof(index), $"Index must be in range [0..{TestCases.Length}] but was {index}");
             if (definitions.Length == 0 || definitions.Any(d => d == null))
                 throw new ArgumentNullException(nameof(definitions), "Definitions must not be empty or contain null elements.");
 
-            var updatedTestCases = testCases.Select(tc => (tc.include, tc.definitions.ToArray()));
+            var updatedTestCases = TestCases.Select(tc => (tc.include, tc.definitions.ToArray()));
 
-            if (index == testCases.Length)
+            if (index == TestCases.Length)
                 return new TestCase(updatedTestCases.Append((include, definitions)));
 
             var tc = new TestCase(updatedTestCases);
-            var (currentInclude, currentDefs) = tc.testCases[index];
+            var (currentInclude, currentDefs) = tc.TestCases[index];
 
             var updatedDefs = currentInclude switch
             {
@@ -83,7 +83,7 @@ namespace UniTest
                 _ => throw new Exception()
             };
 
-            tc.testCases[index] = (currentInclude, updatedDefs.ToArray());
+            tc.TestCases[index] = (currentInclude, updatedDefs.ToArray());
             return tc;
         }
 
@@ -110,7 +110,7 @@ namespace UniTest
             if (Count <= index)
                 return true;
 
-            var (include, defs) = testCases[index];
+            var (include, defs) = TestCases[index];
 
             if (include)
                 return definitions.All(d => defs.Contains(d));
@@ -120,28 +120,28 @@ namespace UniTest
 
         public readonly bool ConfineableExcept(int index, out TestCase confined, params object[] definitions)
         {
-            if (index < 0 || index > testCases.Length)
-                throw new ArgumentOutOfRangeException(nameof(index), $"Index must be in range [0..{testCases.Length}] but was {index}");
+            if (index < 0 || index > TestCases.Length)
+                throw new ArgumentOutOfRangeException(nameof(index), $"Index must be in range [0..{TestCases.Length}] but was {index}");
             if (definitions.Length == 0 || definitions.Any(d => d == null))
                 throw new ArgumentException("Definitions must not be empty or contain null elements.", nameof(definitions));
 
-            if (index == testCases.Length)
+            if (index == TestCases.Length)
             {
-                confined = new TestCase(testCases
+                confined = new TestCase(TestCases
                     .Select(tc => (tc.include, tc.definitions.ToArray()))
                     .Append((false, definitions)));
 
                 return true;
             }
 
-            var (include, defs) = testCases[index];
+            var (include, defs) = TestCases[index];
 
             if (include)
             {
                 if (defs.Any(d => !definitions.Contains(d)))
                 {
-                    confined = new TestCase(testCases.Select(tc => (tc.include, tc.definitions.ToArray())));
-                    confined.testCases[index] = (true, confined.testCases[index].definitions.Except(definitions).ToArray());
+                    confined = new TestCase(TestCases.Select(tc => (tc.include, tc.definitions.ToArray())));
+                    confined.TestCases[index] = (true, confined.TestCases[index].definitions.Except(definitions).ToArray());
 
                     return true;
                 }
@@ -151,8 +151,8 @@ namespace UniTest
             }
             else
             {
-                confined = new TestCase(testCases.Select(tc => (tc.include, tc.definitions.ToArray())));
-                confined.testCases[index] = (false, confined.testCases[index].definitions.Union(definitions).ToArray());
+                confined = new TestCase(TestCases.Select(tc => (tc.include, tc.definitions.ToArray())));
+                confined.TestCases[index] = (false, confined.TestCases[index].definitions.Union(definitions).ToArray());
 
                 return true;
             }    

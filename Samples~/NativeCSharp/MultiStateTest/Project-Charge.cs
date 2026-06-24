@@ -57,7 +57,7 @@ namespace UniTest_Test.MultiState
                             Arranger = (_, md) =>
                             {
                                 md.ExpectedExceptionType = typeof(ObjectDisposedException);
-                                md.RemainingExecutionCount = postExecutionCount;
+                                md.RemainingExecutionCount = _postExecutionCount;
                             }
                         }.Merge(GetTemplates(_tc)));
                     }

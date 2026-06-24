@@ -10,14 +10,14 @@ namespace UniTest
         public string ID { get; private set; }
 
         // Internal
-        List<Lab<TModel>> labs;
+        List<Lab<TModel>> _labs;
 
 
         // Content
         CompositeLab() { }
         public CompositeLab(Lab<TModel> original, Lab<TModel> extension) : this()
         {
-            labs = new() { original, extension };
+            _labs = new() { original, extension };
             ID = string.Join(Lab<TModel>.Separator, extension.ID, original.ID);
         }
 
@@ -25,10 +25,10 @@ namespace UniTest
         {
             var result = new CompositeLab<TModel>()
             {
-                labs = labs.ToList(),
+                _labs = _labs.ToList(),
             };
 
-            result.labs.Add(extension);
+            result._labs.Add(extension);
             result.ID = string.Join(Lab<TModel>.Separator, extension.ID, ID);
 
             return result;
@@ -51,7 +51,7 @@ namespace UniTest
                 return;
             }
 
-            foreach (var lab in labs)
+            foreach (var lab in _labs)
             {
                 try
                 {
@@ -69,13 +69,13 @@ namespace UniTest
 
             try
             {
-                labs[0].DoAct(model);
+                _labs[0].DoAct(model);
             }
             catch (Exception ex)
             {
                 if (!model.MetadataGroup.Values.Any(md => md.ExpectedExceptionType?.IsAssignableFrom(ex.GetType()) ?? false))
                 {
-                    exception = new($"Act failed at '{labs[0].ID}'", ex);
+                    exception = new($"Act failed at '{_labs[0].ID}'", ex);
                     model.Continuable = false;
                     return;
                 }
@@ -86,13 +86,13 @@ namespace UniTest
             if (!expectedExceptionThrown)
             {
                 var missingExpectedException = model.MetadataGroup
-                    .Where(pair => !ReferenceEquals(pair.Key, labs[0]))
+                    .Where(pair => !ReferenceEquals(pair.Key, _labs[0]))
                     .Select(pair => pair.Value.ExpectedExceptionType)
                     .FirstOrDefault(type => type != null);
 
                 if (missingExpectedException != null)
                 {
-                    exception = new($"Act failed at '{labs[0].ID}'",
+                    exception = new($"Act failed at '{_labs[0].ID}'",
                         new MissingExpectedException(
                             $"Expected exception '{missingExpectedException.Name}' was not thrown.",
                             missingExpectedException));
@@ -112,7 +112,7 @@ namespace UniTest
             }
 
 
-            foreach (var lab in labs.Reverse<Lab<TModel>>())
+            foreach (var lab in _labs.Reverse<Lab<TModel>>())
             {
                 try
                 {

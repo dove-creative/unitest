@@ -5,21 +5,21 @@ using UniTest;
 
 public class ProjectTest
 {
-    SampleProject project;
-    int MaxDepth = 100;
+    SampleProject _project;
+    int _maxDepth = 100;
 
 
     [SetUp]
     public void SetUp()
     {
-        project = new SampleProject();
+        _project = new SampleProject();
     }
 
     [TearDown]
     public void TearDown()
     {
-        project.Cancel();
-        project = null;
+        _project.Cancel();
+        _project = null;
     }
 
 
@@ -28,7 +28,7 @@ public class ProjectTest
     public async Task Execute(int depth)
     {
         // Act
-        var result = await project.Execute(depth, true);
+        var result = await _project.Execute(depth, true);
 
 
         // Assert
@@ -36,17 +36,17 @@ public class ProjectTest
 
         while (last.Afters.Count > 0)
         {
-            Assert.IsNull(last.Exception);
+            Assert.That(last.Exception, Is.Null);
             last = last.Afters[0];
         }
 
-        Assert.AreEqual(Math.Max(depth, 1), last.Model.ExecutionCount);
+        Assert.That(last.Model.ExecutionCount, Is.EqualTo(Math.Max(depth, 1)));
     }
     [Test]
     public async Task Execute_Targeted()
     {
         // Act
-        var result = await project.Execute(string.Join(Model.Separator, "pass", "pass", "pass"));
+        var result = await _project.Execute(string.Join(Model.Separator, "pass", "pass", "pass"));
 
 
         // Assert
@@ -54,11 +54,11 @@ public class ProjectTest
 
         while (last.Afters.Count > 0)
         {
-            Assert.IsNull(last.Exception);
+            Assert.That(last.Exception, Is.Null);
             last = last.Afters[0];
         }
 
-        Assert.AreEqual(3, last.Model.ExecutionCount); 
+        Assert.That(last.Model.ExecutionCount, Is.EqualTo(3));
     }
     [Test]
     public async Task Execute_Targeted_StopOnFailure()
@@ -82,32 +82,32 @@ public class ProjectTest
 
 
         // Assert
-        Assert.IsFalse(LabCreatedAfterFailure);
-        Assert.AreEqual(1, result.Afters.Count);
+        Assert.That(LabCreatedAfterFailure, Is.False);
+        Assert.That(result.Afters.Count, Is.EqualTo(1));
 
         var failed = result.Afters[0];
-        Assert.AreEqual(Node<Model>.NodeStatus.Failure, failed.Status);
-        Assert.IsAssignableFrom<ExecutionException>(failed.Exception);
-        Assert.IsAssignableFrom<ProbeException>(failed.Exception?.InnerException);
-        Assert.IsEmpty(failed.Afters);
+        Assert.That(failed.Status, Is.EqualTo(Node<Model>.NodeStatus.Failure));
+        Assert.That(failed.Exception, Is.AssignableTo<ExecutionException>());
+        Assert.That(failed.Exception?.InnerException, Is.AssignableTo<ProbeException>());
+        Assert.That(failed.Afters, Is.Empty);
     }
     [Test]
     public async Task Execute_Continuous()
     {
         // Act
-        var result = await project.ExecuteContinuously(100);
+        var result = await _project.ExecuteContinuously(100);
 
 
         // Assert
-        Assert.IsTrue(result.AllSucceed(out var cancelled));
-        Assert.IsFalse(cancelled);
+        Assert.That(result.AllSucceed(out var cancelled), Is.True);
+        Assert.That(cancelled, Is.False);
 
         var last = result;
 
         while (last.Afters.Count > 0)
             last = last.Afters[0];
 
-        Assert.AreEqual(100, last.Model.ExecutionCount);
+        Assert.That(last.Model.ExecutionCount, Is.EqualTo(100));
     }
 
 
@@ -115,10 +115,10 @@ public class ProjectTest
     public async Task FailureAt(int failureAt)
     {
         // Arrange
-        project.FailureAt = failureAt;
+        _project.FailureAt = failureAt;
 
         // Act
-        var result = await project.Execute(MaxDepth, true);
+        var result = await _project.Execute(_maxDepth, true);
 
 
         // Assert
@@ -127,10 +127,10 @@ public class ProjectTest
         while (last.Afters.Count > 0)
             last = last.Afters[0];
 
-        Assert.AreEqual(Math.Max(failureAt, 1), last.Model.ExecutionCount);
+        Assert.That(last.Model.ExecutionCount, Is.EqualTo(Math.Max(failureAt, 1)));
 
-        Assert.IsAssignableFrom<ExecutionException>(last.Exception, "Act failed");
-        Assert.IsAssignableFrom<ProbeException>(last.Exception?.InnerException);
+        Assert.That(last.Exception, Is.AssignableTo<ExecutionException>(), "Act failed");
+        Assert.That(last.Exception?.InnerException, Is.AssignableTo<ProbeException>());
     }
 
 
@@ -139,10 +139,10 @@ public class ProjectTest
     public async Task Rerun_Idle()
     {
         // Arrange
-        project.FailureAt = 3;
+        _project.FailureAt = 3;
 
         // Act
-        var result = await project.Execute(MaxDepth, true);
+        var result = await _project.Execute(_maxDepth, true);
 
 
         // Assert
@@ -154,16 +154,16 @@ public class ProjectTest
         var restored = last.DetachAndRestore();
         restored.Execute();
 
-        Assert.IsAssignableFrom<ExecutionException>(restored.Exception);
+        Assert.That(restored.Exception, Is.AssignableTo<ExecutionException>());
     }
     [Test]
     public async Task Rerun_Root()
     {
         // Arrange
-        project.FailureAt = 0;
+        _project.FailureAt = 0;
 
         // Act
-        var result = await project.Execute(MaxDepth, true);
+        var result = await _project.Execute(_maxDepth, true);
 
         // Assert
         Assert.Throws<InvalidOperationException>(() => result.DetachAndRestore());

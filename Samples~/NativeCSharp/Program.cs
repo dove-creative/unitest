@@ -32,8 +32,7 @@ namespace UniTest.Samples.NativeCSharp
                 await RunCommand(command);
             }
         }
-
-        private static async Task RunCommand(string input)
+        static async Task RunCommand(string input)
         {
             var command = input.Trim().ToLowerInvariant();
             if (command.Length == 0)
@@ -80,8 +79,7 @@ namespace UniTest.Samples.NativeCSharp
 
             Console.WriteLine($"[UniTest NativeCSharp Sample] Reports: {SampleEnvironment.ReportPath}");
         }
-
-        private static Task RunSingleStateAsync()
+        static Task RunSingleStateAsync()
         {
             return new SingleProject()
                 .Run(
@@ -92,8 +90,7 @@ namespace UniTest.Samples.NativeCSharp
                     timeLimit: SampleEnvironment.TimeLimit,
                     printResult: true);
         }
-
-        private static Task RunSingleStateReplayAsync()
+        static Task RunSingleStateReplayAsync()
         {
             return new SingleProject()
                 .Run(
@@ -103,8 +100,7 @@ namespace UniTest.Samples.NativeCSharp
                     timeLimit: SampleEnvironment.TimeLimit,
                     printResult: true);
         }
-
-        private static Task RunMultiStateAsync()
+        static Task RunMultiStateAsync()
         {
             return new MultiProject()
                 .Run(
@@ -115,8 +111,7 @@ namespace UniTest.Samples.NativeCSharp
                     timeLimit: SampleEnvironment.TimeLimit,
                     printResult: true);
         }
-
-        private static Task RunSingleStateContinuouslyAsync()
+        static Task RunSingleStateContinuouslyAsync()
         {
             return new SingleProject()
                 .RunContinuously(
@@ -127,8 +122,7 @@ namespace UniTest.Samples.NativeCSharp
                     timeLimit: SampleEnvironment.TimeLimit,
                     printResult: true);
         }
-
-        private static Task RunMultiStateContinuouslyAsync()
+        static Task RunMultiStateContinuouslyAsync()
         {
             return new MultiProject()
                 .RunContinuously(
@@ -139,8 +133,7 @@ namespace UniTest.Samples.NativeCSharp
                     timeLimit: SampleEnvironment.TimeLimit,
                     printResult: true);
         }
-
-        private static void PrintUsage()
+        static void PrintUsage()
         {
             Console.WriteLine("Commands:");
             Console.WriteLine("  single");

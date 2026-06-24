@@ -9,7 +9,7 @@ namespace UniTest_Test.SingleState
 {
     public class Project : Project<Model>
     {
-        const int postExecutionCount = 2;
+        const int PostExecutionCount = 2;
 
         enum KickboardState
         {
@@ -30,10 +30,10 @@ namespace UniTest_Test.SingleState
 
         void Check(Model model)
         {
-            Assert.IsNotNull(model, "Kickboard is Null");
+            Assert.That(model, Is.Not.Null, "Kickboard is Null");
 
-            Assert.AreEqual(model.isDisposed, model.Kickboard.IsDisposed, "Dispose state mismatched");
-            Assert.AreSame(model.rider, model.Kickboard.Rider, "Rider mismatched");
+            Assert.That(model.Kickboard.IsDisposed, Is.EqualTo(model.isDisposed), "Dispose state mismatched");
+            Assert.That(model.Kickboard.Rider, Is.SameAs(model.rider), "Rider mismatched");
         }
 
 
@@ -167,7 +167,7 @@ namespace UniTest_Test.SingleState
                         Actor = model => model.Kickboard.Ride(),
                         Asserter = model =>
                         {
-                            Assert.AreEqual(1, model.RideCount);
+                            Assert.That(model.RideCount, Is.EqualTo(1));
 
                             model.Kickboard.OnRide -= model.OnRide;
                             model.RideCount = 0;
@@ -227,7 +227,7 @@ namespace UniTest_Test.SingleState
                         Arranger = model => model.isDisposed = true,
                         Actor = model => model.Kickboard.Dispose(),
                         Asserter = Check,
-                        RemainingExecutionCount = postExecutionCount
+                        RemainingExecutionCount = PostExecutionCount
                     });
                     break;
 
@@ -242,7 +242,7 @@ namespace UniTest_Test.SingleState
                         },
                         Actor = model => model.Kickboard.Dispose(),
                         Asserter = Check,
-                        RemainingExecutionCount = postExecutionCount
+                        RemainingExecutionCount = PostExecutionCount
                     });
                     break;
 
@@ -252,7 +252,7 @@ namespace UniTest_Test.SingleState
                     {
                         Actor = model => Assert.DoesNotThrow(() => model.Kickboard.Dispose()),
                         Asserter = Check,
-                        RemainingExecutionCount = postExecutionCount
+                        RemainingExecutionCount = PostExecutionCount
                     });
                     break;
             }

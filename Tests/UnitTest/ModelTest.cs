@@ -5,19 +5,19 @@ using UniTest;
 
 public class ModelTest
 {
-    readonly string id = "Test";
-    Model model;
+    readonly string _id = "Test";
+    Model _model;
 
     [SetUp]
     public void SetUp()
     {
-        model = new Model();
+        _model = new Model();
     }
 
     [TearDown]
     public void TearDown()
     {
-        model = null;
+        _model = null;
     }
     
     void DoExecute(string labID)
@@ -25,7 +25,7 @@ public class ModelTest
         try
         {
             var method = typeof(Model).GetMethod("DoExecute", BindingFlags.Instance | BindingFlags.NonPublic);
-            method.Invoke(model, new[] { labID });
+            method.Invoke(_model, new[] { labID });
         }
         catch (TargetInvocationException ex)
         {
@@ -34,9 +34,9 @@ public class ModelTest
     }
     void CheckModel(bool sustainable, bool continuable, int? remainingExecutionCount)
     {
-        Assert.AreEqual(sustainable, model.Sustainable);
-        Assert.AreEqual(continuable, model.Continuable);
-        Assert.AreEqual(remainingExecutionCount, model.RemainingExecutionCount);
+        Assert.That(_model.Sustainable, Is.EqualTo(sustainable));
+        Assert.That(_model.Continuable, Is.EqualTo(continuable));
+        Assert.That(_model.RemainingExecutionCount, Is.EqualTo(remainingExecutionCount));
     }
 
 
@@ -45,7 +45,7 @@ public class ModelTest
     public void StateTransition_ToNonsustainable()
     {
         // Act
-        model.Sustainable = false;
+        _model.Sustainable = false;
         
         // Assert
         CheckModel(false, true, null);
@@ -54,7 +54,7 @@ public class ModelTest
     public void StateTransition_ToNoncontinuable()
     {
         // Act
-        model.Continuable = false;
+        _model.Continuable = false;
 
         // Assert
         CheckModel(false, false, null);
@@ -66,7 +66,7 @@ public class ModelTest
         var count = 1;
 
         // Act
-        model.RemainingExecutionCount = count;
+        _model.RemainingExecutionCount = count;
 
         // Assert
         CheckModel(false, true, count);
@@ -79,10 +79,10 @@ public class ModelTest
     public void DoExecute_Idle_Single()
     {
         // Act
-        DoExecute(id);
+        DoExecute(_id);
 
         // Assert
-        Assert.AreEqual(id, model.GetExecutionHistory());
+        Assert.That(_model.GetExecutionHistory(), Is.EqualTo(_id));
         CheckModel(true, true, null);
     }
     [Test]
@@ -96,7 +96,7 @@ public class ModelTest
         DoExecute(id[1]);
 
         // Assert
-        Assert.AreEqual(string.Join(Model.Separator, id), model.GetExecutionHistory());
+        Assert.That(_model.GetExecutionHistory(), Is.EqualTo(string.Join(Model.Separator, id)));
         CheckModel(true, true, null);
     }
 
@@ -105,20 +105,20 @@ public class ModelTest
     public void DoExecute_Nonsustainable_Single()
     {
         // Arange
-        model.Sustainable = false;
+        _model.Sustainable = false;
 
         // Act
-        DoExecute(id);
+        DoExecute(_id);
 
         // Assert
-        Assert.AreEqual(id, model.GetExecutionHistory());
+        Assert.That(_model.GetExecutionHistory(), Is.EqualTo(_id));
         CheckModel(false, true, null);
     }
     [Test]
     public void DoExecute_Nonsustainable_Multi()
     {
         // Arrange
-        model.Sustainable = false;
+        _model.Sustainable = false;
 
         var id = new[] { "Test01", "Test02" };
         DoExecute(id[0]);
@@ -127,7 +127,7 @@ public class ModelTest
         DoExecute(id[1]);
 
         // Assert
-        Assert.AreEqual(string.Join(Model.Separator, id), model.GetExecutionHistory());
+        Assert.That(_model.GetExecutionHistory(), Is.EqualTo(string.Join(Model.Separator, id)));
         CheckModel(false, true, null);
     }
 
@@ -137,13 +137,13 @@ public class ModelTest
     {
         // Arrange
         var count = 10;
-        model.RemainingExecutionCount = count;
+        _model.RemainingExecutionCount = count;
 
         // Act
-        DoExecute(id);
+        DoExecute(_id);
 
         // Assert
-        Assert.AreEqual(id, model.GetExecutionHistory());
+        Assert.That(_model.GetExecutionHistory(), Is.EqualTo(_id));
         CheckModel(false, true, count - 1);
     }
     [Test]
@@ -151,13 +151,13 @@ public class ModelTest
     {
         // Arrange
         var count = 1;
-        model.RemainingExecutionCount = count;
+        _model.RemainingExecutionCount = count;
 
         // Act
-        DoExecute(id);
+        DoExecute(_id);
 
         // Assert
-        Assert.AreEqual(id, model.GetExecutionHistory());
+        Assert.That(_model.GetExecutionHistory(), Is.EqualTo(_id));
         CheckModel(false, false, count - 1);
     }
 
@@ -166,10 +166,10 @@ public class ModelTest
     public void DoExecute_Noncontinuable()
     {
         // Arrange
-        model.RemainingExecutionCount = 0;
+        _model.RemainingExecutionCount = 0;
 
         // Act & Assert
-        Assert.Throws<InvalidOperationException>(() => DoExecute(id));
+        Assert.Throws<InvalidOperationException>(() => DoExecute(_id));
     }
     #endregion
 
@@ -180,7 +180,7 @@ public class ModelTest
     public void ToNonsustainable_Idle()
     {
         // Act
-        model.Sustainable = false;
+        _model.Sustainable = false;
 
         // Assert
         CheckModel(false, true, null);
@@ -189,10 +189,10 @@ public class ModelTest
     public void ToNonsustainable_Nonsustainable()
     {
         // Arrange
-        model.Sustainable = false;
+        _model.Sustainable = false;
 
         // Act
-        model.Sustainable = false;
+        _model.Sustainable = false;
 
         // Assert
         CheckModel(false, true, null);
@@ -202,10 +202,10 @@ public class ModelTest
     {
         // Arrange
         var count = 10;
-        model.RemainingExecutionCount = count;
+        _model.RemainingExecutionCount = count;
 
         // Act
-        model.Sustainable = false;
+        _model.Sustainable = false;
 
         // Assert
         CheckModel(false, true, count);
@@ -214,10 +214,10 @@ public class ModelTest
     public void ToNonsustainable_Noncontinuable()
     {
         // Arrange
-        model.Continuable = false;
+        _model.Continuable = false;
 
         // Act
-        model.Sustainable = false;
+        _model.Sustainable = false;
 
         // Assert
         CheckModel(false, false, null);
@@ -231,7 +231,7 @@ public class ModelTest
     public void ToNoncontinuable_Idle()
     {
         // Act
-        model.Continuable = false;
+        _model.Continuable = false;
 
         // Assert
         CheckModel(false, false, null);
@@ -240,10 +240,10 @@ public class ModelTest
     public void ToNoncontinuable_Nonsustainable()
     {
         // Arrange
-        model.Sustainable = false;
+        _model.Sustainable = false;
 
         // Act
-        model.Continuable = false;
+        _model.Continuable = false;
 
         // Assert
         CheckModel(false, false, null);
@@ -253,10 +253,10 @@ public class ModelTest
     {
         // Arrange
         var count = 10;
-        model.RemainingExecutionCount = count;
+        _model.RemainingExecutionCount = count;
 
         // Act
-        model.Continuable = false;
+        _model.Continuable = false;
 
         // Assert
         CheckModel(false, false, count);
@@ -265,10 +265,10 @@ public class ModelTest
     public void ToNoncontinuable_Noncontinuable()
     {
         // Arrange
-        model.Continuable = false;
+        _model.Continuable = false;
 
         // Act
-        model.Continuable = false;
+        _model.Continuable = false;
 
         // Assert
         CheckModel(false, false, null);
@@ -279,34 +279,34 @@ public class ModelTest
     public void ToNoncontinuable_Idle_False()
     {
         // Act & Assert
-        Assert.Throws<InvalidOperationException>(() => model.Continuable = true);
+        Assert.Throws<InvalidOperationException>(() => _model.Continuable = true);
     }
     [Test]
     public void ToNoncontinuable_Nonsustainable_False()
     {
         // Arrange
-        model.Sustainable = false;
+        _model.Sustainable = false;
 
         // Act & Assert
-        Assert.Throws<InvalidOperationException>(() => model.Continuable = true);
+        Assert.Throws<InvalidOperationException>(() => _model.Continuable = true);
     }
     [Test]
     public void ToNoncontinuable_Limited_False()
     {
         // Arrange
-        model.RemainingExecutionCount = 10;
+        _model.RemainingExecutionCount = 10;
 
         // Act & Assert
-        Assert.Throws<InvalidOperationException>(() => model.Continuable = true);
+        Assert.Throws<InvalidOperationException>(() => _model.Continuable = true);
     }
     [Test]
     public void ToNoncontinuable_Noncontinuable_False()
     {
         // Arrange
-        model.Continuable = false;
+        _model.Continuable = false;
 
         // Act & Assert
-        Assert.Throws<InvalidOperationException>(() => model.Continuable = true);
+        Assert.Throws<InvalidOperationException>(() => _model.Continuable = true);
     }
     #endregion
 
@@ -317,34 +317,34 @@ public class ModelTest
     public void SetRemainingExecutionCount_Idle_Null()
     {
         // Act & Assert
-        Assert.Throws<InvalidOperationException>(() => model.RemainingExecutionCount = null);
+        Assert.Throws<InvalidOperationException>(() => _model.RemainingExecutionCount = null);
     }
     [Test]
     public void SetRemainingExecutionCount_Nonsustainable_Null()
     {
         // Arrange
-        model.Sustainable = false;
+        _model.Sustainable = false;
 
         // Act & Assert
-        Assert.Throws<InvalidOperationException>(() => model.RemainingExecutionCount = null);
+        Assert.Throws<InvalidOperationException>(() => _model.RemainingExecutionCount = null);
     }
     [Test]
     public void SetRemainingExecutionCount_Limited_Null()
     {
         // Arrange
-        model.RemainingExecutionCount = 10;
+        _model.RemainingExecutionCount = 10;
 
         // Act & Assert
-        Assert.Throws<InvalidOperationException>(() => model.RemainingExecutionCount = null);
+        Assert.Throws<InvalidOperationException>(() => _model.RemainingExecutionCount = null);
     }
     [Test]
     public void SetRemainingExecutionCount_Noncontinuable_Null()
     {
         // Arrange
-        model.Continuable = false;
+        _model.Continuable = false;
 
         // Act & Assert
-        Assert.Throws<InvalidOperationException>(() => model.RemainingExecutionCount = null);
+        Assert.Throws<InvalidOperationException>(() => _model.RemainingExecutionCount = null);
     }
 
 
@@ -352,7 +352,7 @@ public class ModelTest
     public void SetRemainingExecutionCount_Idle(int count)
     {
         // Act
-        model.RemainingExecutionCount = count;
+        _model.RemainingExecutionCount = count;
 
         // Assert
         CheckModel(false, count > 0, count);
@@ -361,10 +361,10 @@ public class ModelTest
     public void SetRemainingExecutionCount_Nonsustainable(int count)
     {
         // Arrange
-        model.Sustainable = false;
+        _model.Sustainable = false;
 
         // Act
-        model.RemainingExecutionCount = count;
+        _model.RemainingExecutionCount = count;
 
         // Assert
         CheckModel(false, count > 0, count);
@@ -374,10 +374,10 @@ public class ModelTest
     {
         // Arrange
         var count = 10;
-        model.RemainingExecutionCount = count;
+        _model.RemainingExecutionCount = count;
 
         // Act
-        model.RemainingExecutionCount = count + 1;
+        _model.RemainingExecutionCount = count + 1;
 
         // Assert
         CheckModel(false, true, count);
@@ -387,10 +387,10 @@ public class ModelTest
     {
         // Arrange
         var count = 10;
-        model.Continuable = false;
+        _model.Continuable = false;
 
         // Act
-        model.RemainingExecutionCount = count;
+        _model.RemainingExecutionCount = count;
 
         // Assert
         CheckModel(false, false, count);
@@ -401,10 +401,10 @@ public class ModelTest
     public void SetRemainingExecutionCount_Limited_Smaller(int count)
     {
         // Arrange
-        model.RemainingExecutionCount = 10;
+        _model.RemainingExecutionCount = 10;
 
         // Act
-        model.RemainingExecutionCount = count;
+        _model.RemainingExecutionCount = count;
 
         // Assert
         CheckModel(false, count > 0, count);
@@ -413,10 +413,10 @@ public class ModelTest
     public void SetRemainingExecutionCount_Limited_Smaller_Noncontinuable(int count)
     {
         // Arrange
-        model.RemainingExecutionCount = 10;
+        _model.RemainingExecutionCount = 10;
 
         // Act
-        model.RemainingExecutionCount = count;
+        _model.RemainingExecutionCount = count;
 
         // Assert
         CheckModel(false, count > 0, count);

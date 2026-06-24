@@ -11,39 +11,39 @@ using UniTest;
 
 public class TestDesignerTest
 {
-    object testDesigner;
-    int DELAY = 100;
+    object _testDesigner;
+    int _delay = 100;
 
-    Lab<Model> lab;
-    Node<Model> node;
+    Lab<Model> _lab;
+    Node<Model> _node;
 
-    Func<Model, IEnumerable<ILab<Model>>> createLabs;
-    ProjectMock project;
+    Func<Model, IEnumerable<ILab<Model>>> _createLabs;
+    ProjectMock _project;
 
-    ICollection completedDesigners;
-    Queue<Node<Model>> preparedNodes;
-    CancellationTokenSource cts;
+    ICollection _completedDesigners;
+    Queue<Node<Model>> _preparedNodes;
+    CancellationTokenSource _cts;
 
 
     void SetUp(Func<Model, IEnumerable<ILab<Model>>> createLabs, bool withRootNode, bool secondFailure = false)
     {
-        project = new ProjectMock(createLabs);
+        _project = new ProjectMock(createLabs);
 
-        completedDesigners = (ICollection)typeof(Project<Model>)
-            .GetField("completedDesigners", BindingFlags.Instance | BindingFlags.NonPublic)
-            .GetValue(project);
+        _completedDesigners = (ICollection)typeof(Project<Model>)
+            .GetField("_completedDesigners", BindingFlags.Instance | BindingFlags.NonPublic)
+            .GetValue(_project);
 
-        preparedNodes = (Queue<Node<Model>>)typeof(Project<Model>)
-            .GetField("preparedNodes", BindingFlags.Instance | BindingFlags.NonPublic)
-            .GetValue(project);
+        _preparedNodes = (Queue<Node<Model>>)typeof(Project<Model>)
+            .GetField("_preparedNodes", BindingFlags.Instance | BindingFlags.NonPublic)
+            .GetValue(_project);
 
-        cts = new();
+        _cts = new();
         int executionCount = 0;
 
         if (withRootNode)
-            lab = null;
+            _lab = null;
         else
-            lab = !secondFailure
+            _lab = !secondFailure
                 ? new Lab<Model>()
                 : new Lab<Model>(actor: (_, _) =>
                 {
@@ -51,9 +51,9 @@ public class TestDesignerTest
                         throw new ProbeException();
                 });
 
-        node = new Node<Model>(lab);
+        _node = new Node<Model>(_lab);
 
-        if (!withRootNode) node.Execute();
+        if (!withRootNode) _node.Execute();
 
         var ctorInfo = typeof(Project<Model>)
             .GetNestedType("TestDesigner", BindingFlags.NonPublic)
@@ -65,48 +65,48 @@ public class TestDesignerTest
                 modifiers: null
             );
 
-        testDesigner = ctorInfo.Invoke(new object[] { project, node });
+        _testDesigner = ctorInfo.Invoke(new object[] { _project, _node });
     }
 
     [TearDown]
     public void TearDown()
     {
-        project = null;
-        testDesigner = null;
-        node = null;
-        lab = null;
+        _project = null;
+        _testDesigner = null;
+        _node = null;
+        _lab = null;
 
-        if (cts != null)
+        if (_cts != null)
         {
-            cts.Cancel();
-            cts.Dispose();
+            _cts.Cancel();
+            _cts.Dispose();
         }
 
-        completedDesigners = null;
-        preparedNodes = null;
+        _completedDesigners = null;
+        _preparedNodes = null;
     }
 
     public void CheckNode(Node<Model> node, Node<Model>.NodeStatus status, int depth,
         Node<Model> before, IEnumerable<Node<Model>> afters, Type expectedExceptionType, Lab<Model> lab)
     {
-        Assert.AreEqual(status, node.Status, node.Exception?.Message ?? "No exception");
-        Assert.AreEqual(depth, node.Depth);
-        Assert.AreSame(before, node.Before);
-        CollectionAssert.AreEquivalent(afters ?? Array.Empty<Node<Model>>(), node.Afters);
+        Assert.That(node.Status, Is.EqualTo(status), node.Exception?.Message ?? "No exception");
+        Assert.That(node.Depth, Is.EqualTo(depth));
+        Assert.That(node.Before, Is.SameAs(before));
+        Assert.That(node.Afters, Is.EquivalentTo(afters ?? Array.Empty<Node<Model>>()));
 
         if (expectedExceptionType != null)
-            Assert.IsAssignableFrom(expectedExceptionType, node.Exception);
+            Assert.That(node.Exception, Is.AssignableTo(expectedExceptionType));
         else
-            Assert.IsNull(node.Exception);
+            Assert.That(node.Exception, Is.Null);
 
-        Assert.AreSame(lab, node.Lab);
-        Assert.AreSame(lab?.ID ?? "root", node.ID);
-        Assert.IsNotNull(node.Model);
+        Assert.That(node.Lab, Is.SameAs(lab));
+        Assert.That(node.ID, Is.SameAs(lab?.ID ?? "root"));
+        Assert.That(node.Model, Is.Not.Null);
     }
 
     async Task Execute()
     {
-        var method = testDesigner.GetType()
+        var method = _testDesigner.GetType()
             .GetMethod(
                 "Execute",
                 BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public,
@@ -115,7 +115,7 @@ public class TestDesignerTest
                 modifiers: null
             );
 
-        await (Task)method.Invoke(testDesigner, new object[] { cts.Token });
+        await (Task)method.Invoke(_testDesigner, new object[] { _cts.Token });
     }
 
 
@@ -132,15 +132,15 @@ public class TestDesignerTest
         await Execute();
 
         // Assert
-        CollectionAssert.AreEqual(new[] { testDesigner }, completedDesigners);
-        CollectionAssert.AreEqual(labs, preparedNodes.Select(n => n.Lab));
+        Assert.That(_completedDesigners, Is.EqualTo(new[] { _testDesigner }));
+        Assert.That(_preparedNodes.Select(n => n.Lab), Is.EqualTo(labs));
 
-        CheckNode(node, withRootNode ? Node<Model>.NodeStatus.Root : Node<Model>.NodeStatus.Success,
-            0, null, preparedNodes, null, lab);
+        CheckNode(_node, withRootNode ? Node<Model>.NodeStatus.Root : Node<Model>.NodeStatus.Success,
+            0, null, _preparedNodes, null, _lab);
 
         int i = 0;
-        foreach (var _node in preparedNodes)
-            CheckNode(_node, Node<Model>.NodeStatus.Ready, 1, node, null, null, labs[i++]);
+        foreach (var preparedNode in _preparedNodes)
+            CheckNode(preparedNode, Node<Model>.NodeStatus.Ready, 1, _node, null, null, labs[i++]);
     }
     [TestCase(true), TestCase(false)]
     public void Execute_Idle_ExecptionThrown_CreateLab(bool withRootNode)
@@ -171,11 +171,11 @@ public class TestDesignerTest
         await Execute();
 
         // Assert
-        CollectionAssert.AreEqual(new[] { testDesigner }, completedDesigners);
-        CollectionAssert.IsEmpty(preparedNodes);
+        Assert.That(_completedDesigners, Is.EqualTo(new[] { _testDesigner }));
+        Assert.That(_preparedNodes, Is.Empty);
 
-        CheckNode(node, withRootNode ? Node<Model>.NodeStatus.Root : Node<Model>.NodeStatus.Success,
-            0, null, null, null, lab);
+        CheckNode(_node, withRootNode ? Node<Model>.NodeStatus.Root : Node<Model>.NodeStatus.Success,
+            0, null, null, null, _lab);
     }
     #endregion
 
@@ -188,14 +188,14 @@ public class TestDesignerTest
         SetUp(_ => labs, withRootNode);
 
         // Act
-        cts.Cancel();
+        _cts.Cancel();
 
         // Assert
-        CollectionAssert.IsEmpty(completedDesigners);
-        CollectionAssert.IsEmpty(preparedNodes);
+        Assert.That(_completedDesigners, Is.Empty);
+        Assert.That(_preparedNodes, Is.Empty);
 
-        CheckNode(node, withRootNode ? Node<Model>.NodeStatus.Root : Node<Model>.NodeStatus.Success,
-            0, null, null, null, lab);
+        CheckNode(_node, withRootNode ? Node<Model>.NodeStatus.Root : Node<Model>.NodeStatus.Success,
+            0, null, null, null, _lab);
     }
     [TestCase(true), TestCase(false)]
     public void OnCancel_Idle_ExecptionThrown_CreateLabs(bool withRootNode)
@@ -204,14 +204,14 @@ public class TestDesignerTest
         SetUp(_ => throw new ProbeException(), withRootNode);
 
         // Act
-        cts.Cancel();
+        _cts.Cancel();
 
         // Assert
-        CollectionAssert.IsEmpty(completedDesigners);
-        CollectionAssert.IsEmpty(preparedNodes);
+        Assert.That(_completedDesigners, Is.Empty);
+        Assert.That(_preparedNodes, Is.Empty);
 
-        CheckNode(node, withRootNode ? Node<Model>.NodeStatus.Root : Node<Model>.NodeStatus.Success,
-            0, null, null, null, lab);
+        CheckNode(_node, withRootNode ? Node<Model>.NodeStatus.Root : Node<Model>.NodeStatus.Success,
+            0, null, null, null, _lab);
     }
     [Test]
     public void OnCancel_Idle_ExecptionThrown_CreateLabs_Append()
@@ -221,13 +221,13 @@ public class TestDesignerTest
         SetUp(_ => labs, false, true);
 
         // Act
-        cts.Cancel();
+        _cts.Cancel();
 
         // Assert
-        CollectionAssert.IsEmpty(completedDesigners);
-        CollectionAssert.IsEmpty(preparedNodes);
+        Assert.That(_completedDesigners, Is.Empty);
+        Assert.That(_preparedNodes, Is.Empty);
         
-        CheckNode(node, Node<Model>.NodeStatus.Success, 0, null, null, null, lab);
+        CheckNode(_node, Node<Model>.NodeStatus.Success, 0, null, null, null, _lab);
     }
     [TestCase(true), TestCase(false)]
     public void OnCancel_Idle_NoTests(bool withRootNode)
@@ -236,14 +236,14 @@ public class TestDesignerTest
         SetUp(null, withRootNode);
 
         // Act
-        cts.Cancel();
+        _cts.Cancel();
 
         // Assert
-        CollectionAssert.IsEmpty(completedDesigners);
-        CollectionAssert.IsEmpty(preparedNodes);
+        Assert.That(_completedDesigners, Is.Empty);
+        Assert.That(_preparedNodes, Is.Empty);
 
-        CheckNode(node, withRootNode ? Node<Model>.NodeStatus.Root : Node<Model>.NodeStatus.Success,
-            0, null, null, null, lab);
+        CheckNode(_node, withRootNode ? Node<Model>.NodeStatus.Root : Node<Model>.NodeStatus.Success,
+            0, null, null, null, _lab);
     }
     #endregion
 
@@ -256,32 +256,32 @@ public class TestDesignerTest
         // Arrange
         var labs = new[] { new Lab<Model>(), new Lab<Model>() };
         SetUp(_ => labs, withRootNode);
-        cts.Cancel();
+        _cts.Cancel();
 
         // Act
         await Execute();
 
         // Assert
-        CollectionAssert.AreEqual(new[] { testDesigner }, completedDesigners);
-        CollectionAssert.IsEmpty(preparedNodes);
-        CheckNode(node, withRootNode ? Node<Model>.NodeStatus.Root : Node<Model>.NodeStatus.Success,
-            0, null, null, null, lab);
+        Assert.That(_completedDesigners, Is.EqualTo(new[] { _testDesigner }));
+        Assert.That(_preparedNodes, Is.Empty);
+        CheckNode(_node, withRootNode ? Node<Model>.NodeStatus.Root : Node<Model>.NodeStatus.Success,
+            0, null, null, null, _lab);
     }
     [TestCase(true), TestCase(false)]
     public async Task Execute_Cancelled_ExecptionThrown_CreateLab(bool withRootNode)
     {
         // Arrange
         SetUp(_ => throw new ProbeException(), withRootNode);
-        cts.Cancel();
+        _cts.Cancel();
 
         // Act
         await Execute();
 
         // Assert
-        CollectionAssert.AreEqual(new[] { testDesigner }, completedDesigners);
-        CollectionAssert.IsEmpty(preparedNodes);
-        CheckNode(node, withRootNode ? Node<Model>.NodeStatus.Root : Node<Model>.NodeStatus.Success,
-            0, null, null, null, lab);
+        Assert.That(_completedDesigners, Is.EqualTo(new[] { _testDesigner }));
+        Assert.That(_preparedNodes, Is.Empty);
+        CheckNode(_node, withRootNode ? Node<Model>.NodeStatus.Root : Node<Model>.NodeStatus.Success,
+            0, null, null, null, _lab);
     }
     [Test]
     public async Task Execute_Cancelled_ExecptionThrown_Append()
@@ -289,31 +289,31 @@ public class TestDesignerTest
         // Arrange
         var labs = new[] { new Lab<Model>(), new Lab<Model>() };
         SetUp(_ => labs, false, true);
-        cts.Cancel();
+        _cts.Cancel();
 
         // Act
         await Execute();
 
         // Assert
-        CollectionAssert.AreEqual(new[] { testDesigner }, completedDesigners);
-        CollectionAssert.IsEmpty(preparedNodes);
-        CheckNode(node, Node<Model>.NodeStatus.Success, 0, null, preparedNodes, null, lab);
+        Assert.That(_completedDesigners, Is.EqualTo(new[] { _testDesigner }));
+        Assert.That(_preparedNodes, Is.Empty);
+        CheckNode(_node, Node<Model>.NodeStatus.Success, 0, null, _preparedNodes, null, _lab);
     }
     [TestCase(true), TestCase(false)]
     public async Task Execute_Cancelled_NoTests(bool withRootNode)
     {
         // Arrange
         SetUp(null, withRootNode);
-        cts.Cancel();
+        _cts.Cancel();
 
         // Act
         await Execute();
 
         // Assert
-        CollectionAssert.AreEqual(new[] { testDesigner }, completedDesigners);
-        CollectionAssert.IsEmpty(preparedNodes);
-        CheckNode(node, withRootNode ? Node<Model>.NodeStatus.Root : Node<Model>.NodeStatus.Success,
-            0, null, null, null, lab);
+        Assert.That(_completedDesigners, Is.EqualTo(new[] { _testDesigner }));
+        Assert.That(_preparedNodes, Is.Empty);
+        CheckNode(_node, withRootNode ? Node<Model>.NodeStatus.Root : Node<Model>.NodeStatus.Success,
+            0, null, null, null, _lab);
     }
     #endregion
 
@@ -325,13 +325,13 @@ public class TestDesignerTest
     {
         // Arrange
         var labs = new[] { new Lab<Model>(), new Lab<Model>() };
-        createLabs = _ =>
+        _createLabs = _ =>
         {
-            Thread.Sleep(DELAY);
+            Thread.Sleep(_delay);
             return labs;
         };
         
-        SetUp(createLabs, withRootNode);
+        SetUp(_createLabs, withRootNode);
 
 
         // Act & Assert
@@ -356,50 +356,50 @@ public class TestDesignerTest
     {
         // Arrange
         var labs = new[] { new Lab<Model>(), new Lab<Model>() };
-        createLabs = _ =>
+        _createLabs = _ =>
         {
-            Thread.Sleep(DELAY);
+            Thread.Sleep(_delay);
             return labs;
         };
 
-        SetUp(createLabs, withRootNode);
+        SetUp(_createLabs, withRootNode);
         var task = Execute();
 
 
         // Act
-        cts.Cancel();
+        _cts.Cancel();
         await task;
 
 
         // Assert
-        CollectionAssert.AreEqual(new[] { testDesigner }, completedDesigners);
-        CollectionAssert.IsEmpty(preparedNodes);
-        CheckNode(node, withRootNode ? Node<Model>.NodeStatus.Root : Node<Model>.NodeStatus.Success,
-            0, null, null, null, lab);
+        Assert.That(_completedDesigners, Is.EqualTo(new[] { _testDesigner }));
+        Assert.That(_preparedNodes, Is.Empty);
+        CheckNode(_node, withRootNode ? Node<Model>.NodeStatus.Root : Node<Model>.NodeStatus.Success,
+            0, null, null, null, _lab);
     }
     [TestCase(true), TestCase(false)]
     public async Task OnCancel_Executing_NoTest(bool withRootNode)
     {
         // Arrange
-        createLabs = _ =>
+        _createLabs = _ =>
         {
-            Thread.Sleep(DELAY);
+            Thread.Sleep(_delay);
             return null;
         };
 
-        SetUp(createLabs, withRootNode);
+        SetUp(_createLabs, withRootNode);
         var task = Execute();
 
         // Act
-        cts.Cancel();
+        _cts.Cancel();
         await task;
 
 
         // Assert
-        CollectionAssert.AreEqual(new[] { testDesigner }, completedDesigners);
-        CollectionAssert.IsEmpty(preparedNodes);
-        CheckNode(node, withRootNode ? Node<Model>.NodeStatus.Root : Node<Model>.NodeStatus.Success,
-            0, null, null, null, lab);
+        Assert.That(_completedDesigners, Is.EqualTo(new[] { _testDesigner }));
+        Assert.That(_preparedNodes, Is.Empty);
+        CheckNode(_node, withRootNode ? Node<Model>.NodeStatus.Root : Node<Model>.NodeStatus.Success,
+            0, null, null, null, _lab);
     }
     #endregion
 
@@ -476,7 +476,7 @@ public class TestDesignerTest
 
 
         // Act & Assert
-        Assert.DoesNotThrow(() => cts.Cancel());
+        Assert.DoesNotThrow(() => _cts.Cancel());
     }
     [TestCase(true), TestCase(false)]
     public async Task OnCancel_Executed_ExecptionThrown_CreateLabs(bool withRootNode)
@@ -492,7 +492,7 @@ public class TestDesignerTest
 
 
         // Act & Assert
-        Assert.DoesNotThrow(() => cts.Cancel());
+        Assert.DoesNotThrow(() => _cts.Cancel());
     }
     [Test]
     public async Task OnCancel_Executed_ExecptionThrown_Append()
@@ -509,7 +509,7 @@ public class TestDesignerTest
 
 
         // Act & Assert
-        Assert.DoesNotThrow(() => cts.Cancel());
+        Assert.DoesNotThrow(() => _cts.Cancel());
     }
     [TestCase(true), TestCase(false)]
     public async Task OnCancel_Executed_NullTest(bool withRootNode)
@@ -520,7 +520,7 @@ public class TestDesignerTest
 
 
         // Act & Assert
-        Assert.DoesNotThrow(() => cts.Cancel());
+        Assert.DoesNotThrow(() => _cts.Cancel());
     }
     #endregion
 }

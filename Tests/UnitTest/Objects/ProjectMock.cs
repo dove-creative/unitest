@@ -11,7 +11,7 @@ public class ProjectMock : Project<Model>
     public ProjectMock SetTargetDepth(int depth)
     {
         typeof(Project<Model>)
-            .GetField("targetDepth", BindingFlags.NonPublic | BindingFlags.Instance)
+            .GetField("_targetDepth", BindingFlags.NonPublic | BindingFlags.Instance)
             .SetValue(this, depth);
 
         return this;

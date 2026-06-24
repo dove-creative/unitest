@@ -118,8 +118,7 @@ namespace UniTest
             node.SetXmlNode(CopyReportLineage());
             return node;
         }
-
-        private XmlNode CopyReportLineage()
+        XmlNode CopyReportLineage()
         {
             var doc = new XmlDocument();
             XmlElement parent = null;
@@ -154,8 +153,7 @@ namespace UniTest
 
             return parent;
         }
-
-        private void Rerun(IEnumerable<ILab<TModel>> labs, CancellationToken ct)
+        void Rerun(IEnumerable<ILab<TModel>> labs, CancellationToken ct)
         {
             foreach (var lab in labs)
             {
@@ -171,8 +169,7 @@ namespace UniTest
                 ct.ThrowIfCancellationRequested();
             }
         }
-
-        private List<Node<TModel>> GetTrace()
+        List<Node<TModel>> GetTrace()
         {
             var current = this;
             var trace = new List<Node<TModel>> { current };
@@ -236,8 +233,7 @@ namespace UniTest
 
             UpdateXml();
         }
-
-        private void UpdateXml()
+        void UpdateXml()
         {
             XmlAttribute attr;
 

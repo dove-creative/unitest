@@ -73,7 +73,7 @@
 
 테스트 어셈블리는 `모듈명.Tests.asmdef` 파일로 분리하고, Unity Editor의 Test Runner에서 감지될 수 있도록 설정한다.
 
-테스트 대상 프레임워크가 POCO라면 가능하면 Unity 프레임워크를 사용하지 않도록 테스트를 구성한다. Unity API, Scene, AssetDatabase, PlayMode, Editor API가 필요하지 않은 테스트는 [External NUnit Executor 워크플로](02-External-NUnit-Executor-Workflow.md)를 통해 명령줄 자동 빌드와 실행 대상이 될 수 있도록 구성한다. Unity 실행 환경이 필요한 테스트는 억지로 POCO 테스트로 바꾸지 않고 Unity Test Runner 또는 Unity batchmode 검증으로 분리한다.
+테스트 대상 프레임워크가 POCO라면 가능하면 Unity 프레임워크를 사용하지 않도록 테스트를 구성한다. Unity API, Scene, AssetDatabase, PlayMode, Editor API가 필요하지 않은 테스트는 [External NUnit Executor 워크플로](02-External-NUnit-Executor-Workflow.md)를 통해 `dotnet test` 빌드와 실행 대상이 될 수 있도록 구성한다. Unity 실행 환경이 필요한 테스트는 억지로 POCO 테스트로 바꾸지 않고 Unity Test Runner 또는 Unity batchmode 검증으로 분리한다.
 
 각 테스트 함수에는 짧은 주석을 작성하여, `01-Tables.md`와 `02-Plans.md`의 어떤 단계 또는 칸에 해당하는 테스트인지 알아볼 수 있게 한다.
 
@@ -94,7 +94,7 @@
 | 대상                              | 실행 경로                                                                                              |
 | ------------------------------- | -------------------------------------------------------------------------------------------------- |
 | Unity API 또는 Editor 환경이 필요한 테스트 | Unity Test Runner 또는 Unity batchmode                                                               |
-| UniTest 기반 POCO 테스트             | UniTest 런타임 파일을 외부 실행기에 링크한 [External NUnit Executor 워크플로](02-External-NUnit-Executor-Workflow.md) |
+| UniTest 기반 POCO 테스트             | Unity와 같은 NUnit framework DLL을 참조하는 `dotnet test` 기반 [External NUnit Executor 워크플로](02-External-NUnit-Executor-Workflow.md) |
 
 테스트 실행 중 실패가 발생하면, 실패한 테스트가 표의 어떤 칸과 계획의 어떤 항목에 대응하는지 먼저 확인한다.
 

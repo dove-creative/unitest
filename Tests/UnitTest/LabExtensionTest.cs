@@ -4,22 +4,22 @@ using UniTest;
 
 public class LabExtensionTest
 {
-    int executionOrder;
-    int lab_1_setMD, lab_1_arrange, lab_1_act, lab_1_assert;
-    int lab_2_setMD, lab_2_arrange, lab_2_act, lab_2_assert;
-    int lab_3_setMD, lab_3_arrange, lab_3_act, lab_3_assert;
-    int lab_4_setMD, lab_4_arrange, lab_4_act, lab_4_assert;
+    int _executionOrder;
+    int _lab1SetMd, _lab1Arrange, _lab1Act, _lab1Assert;
+    int _lab2SetMd, _lab2Arrange, _lab2Act, _lab2Assert;
+    int _lab3SetMd, _lab3Arrange, _lab3Act, _lab3Assert;
+    int _lab4SetMd, _lab4Arrange, _lab4Act, _lab4Assert;
 
 
     [SetUp]
     public void SetUp()
     {
-        executionOrder = -1;
+        _executionOrder = -1;
 
-        lab_1_setMD = lab_1_arrange = lab_1_act = lab_1_assert = executionOrder;
-        lab_2_setMD = lab_2_arrange = lab_2_act = lab_2_assert = executionOrder;
-        lab_3_setMD = lab_3_arrange = lab_3_act = lab_3_assert = executionOrder;
-        lab_4_setMD = lab_4_arrange = lab_4_act = lab_4_assert = executionOrder;
+        _lab1SetMd = _lab1Arrange = _lab1Act = _lab1Assert = _executionOrder;
+        _lab2SetMd = _lab2Arrange = _lab2Act = _lab2Assert = _executionOrder;
+        _lab3SetMd = _lab3Arrange = _lab3Act = _lab3Assert = _executionOrder;
+        _lab4SetMd = _lab4Arrange = _lab4Act = _lab4Assert = _executionOrder;
     }
 
 
@@ -30,17 +30,17 @@ public class LabExtensionTest
         // Arrnage
         var originalLab = new Lab<Model>
         {
-            SetMetadata = _ => lab_1_setMD = ++executionOrder,
-            Arranger = (_, _) => lab_1_arrange = ++executionOrder,
-            Actor = (_, _) => lab_1_act = ++executionOrder,
-            Asserter = (_, _) => lab_1_assert = ++executionOrder
+            SetMetadata = _ => _lab1SetMd = ++_executionOrder,
+            Arranger = (_, _) => _lab1Arrange = ++_executionOrder,
+            Actor = (_, _) => _lab1Act = ++_executionOrder,
+            Asserter = (_, _) => _lab1Assert = ++_executionOrder
         };
         var extendingLab = new Lab<Model>
         {
-            SetMetadata = _ => lab_2_setMD = ++executionOrder,
-            Arranger = (_, _) => lab_2_arrange = ++executionOrder,
-            Actor = (_, _) => lab_2_act = ++executionOrder,
-            Asserter = (_, _) => lab_2_assert = ++executionOrder
+            SetMetadata = _ => _lab2SetMd = ++_executionOrder,
+            Arranger = (_, _) => _lab2Arrange = ++_executionOrder,
+            Actor = (_, _) => _lab2Act = ++_executionOrder,
+            Asserter = (_, _) => _lab2Assert = ++_executionOrder
         };
 
 
@@ -49,18 +49,18 @@ public class LabExtensionTest
         extendedLab.First().Execute(new Model(), out var ex);
 
         // Assert
-        Assert.IsNull(ex);
+        Assert.That(ex, Is.Null);
 
-        Assert.AreEqual(0, lab_1_setMD);
-        Assert.AreEqual(1, lab_1_arrange);
-        Assert.AreEqual(2, lab_2_setMD);
-        Assert.AreEqual(3, lab_2_arrange);
+        Assert.That(_lab1SetMd, Is.EqualTo(0));
+        Assert.That(_lab1Arrange, Is.EqualTo(1));
+        Assert.That(_lab2SetMd, Is.EqualTo(2));
+        Assert.That(_lab2Arrange, Is.EqualTo(3));
 
-        Assert.AreEqual(4, lab_1_act);
-        Assert.AreEqual(-1, lab_2_act);
+        Assert.That(_lab1Act, Is.EqualTo(4));
+        Assert.That(_lab2Act, Is.EqualTo(-1));
 
-        Assert.AreEqual(5, lab_2_assert);
-        Assert.AreEqual(6, lab_1_assert);
+        Assert.That(_lab2Assert, Is.EqualTo(5));
+        Assert.That(_lab1Assert, Is.EqualTo(6));
     }
     [Test]
     public void ExtendLab_FromCompositeLab()
@@ -68,26 +68,26 @@ public class LabExtensionTest
         // Arrnage
         var sourceLab_uppder = new Lab<Model>
         {
-            SetMetadata = _ => lab_1_setMD = ++executionOrder,
-            Arranger = (_, _) => lab_1_arrange = ++executionOrder,
-            Actor = (_, _) => lab_1_act = ++executionOrder,
-            Asserter = (_, _) => lab_1_assert = ++executionOrder
+            SetMetadata = _ => _lab1SetMd = ++_executionOrder,
+            Arranger = (_, _) => _lab1Arrange = ++_executionOrder,
+            Actor = (_, _) => _lab1Act = ++_executionOrder,
+            Asserter = (_, _) => _lab1Assert = ++_executionOrder
         };
         var sourceLab_lower = new Lab<Model>
         {
-            SetMetadata = _ => lab_2_setMD = ++executionOrder,
-            Arranger = (_, _) => lab_2_arrange = ++executionOrder,
-            Actor = (_, _) => lab_2_act = ++executionOrder,
-            Asserter = (_, _) => lab_2_assert = ++executionOrder
+            SetMetadata = _ => _lab2SetMd = ++_executionOrder,
+            Arranger = (_, _) => _lab2Arrange = ++_executionOrder,
+            Actor = (_, _) => _lab2Act = ++_executionOrder,
+            Asserter = (_, _) => _lab2Assert = ++_executionOrder
         };
         var originalLab = new CompositeLab<Model>(sourceLab_uppder, sourceLab_lower);
 
         var extendingLab = new Lab<Model>
         {
-            SetMetadata = _ => lab_3_setMD = ++executionOrder,
-            Arranger = (_, _) => lab_3_arrange = ++executionOrder,
-            Actor = (_, _) => lab_3_act = ++executionOrder,
-            Asserter = (_, _) => lab_3_assert = ++executionOrder
+            SetMetadata = _ => _lab3SetMd = ++_executionOrder,
+            Arranger = (_, _) => _lab3Arrange = ++_executionOrder,
+            Actor = (_, _) => _lab3Act = ++_executionOrder,
+            Asserter = (_, _) => _lab3Assert = ++_executionOrder
         };
 
 
@@ -96,22 +96,22 @@ public class LabExtensionTest
         extendedLab.First().Execute(new Model(), out var ex);
 
         // Assert
-        Assert.IsNull(ex);
+        Assert.That(ex, Is.Null);
 
-        Assert.AreEqual(0, lab_1_setMD);
-        Assert.AreEqual(1, lab_1_arrange);
-        Assert.AreEqual(2, lab_2_setMD);
-        Assert.AreEqual(3, lab_2_arrange);
-        Assert.AreEqual(4, lab_3_setMD);
-        Assert.AreEqual(5, lab_3_arrange);
+        Assert.That(_lab1SetMd, Is.EqualTo(0));
+        Assert.That(_lab1Arrange, Is.EqualTo(1));
+        Assert.That(_lab2SetMd, Is.EqualTo(2));
+        Assert.That(_lab2Arrange, Is.EqualTo(3));
+        Assert.That(_lab3SetMd, Is.EqualTo(4));
+        Assert.That(_lab3Arrange, Is.EqualTo(5));
 
-        Assert.AreEqual(6, lab_1_act);
-        Assert.AreEqual(-1, lab_2_act);
-        Assert.AreEqual(-1, lab_3_act);
+        Assert.That(_lab1Act, Is.EqualTo(6));
+        Assert.That(_lab2Act, Is.EqualTo(-1));
+        Assert.That(_lab3Act, Is.EqualTo(-1));
 
-        Assert.AreEqual(7, lab_3_assert);
-        Assert.AreEqual(8, lab_2_assert);
-        Assert.AreEqual(9, lab_1_assert);
+        Assert.That(_lab3Assert, Is.EqualTo(7));
+        Assert.That(_lab2Assert, Is.EqualTo(8));
+        Assert.That(_lab1Assert, Is.EqualTo(9));
     }
     [Test]
     public void ExtendLab_Multiple()
@@ -119,34 +119,34 @@ public class LabExtensionTest
         // Arrnage
         var originalLab_normal = new Lab<Model>
         {
-            SetMetadata = _ => lab_1_setMD = ++executionOrder,
-            Arranger = (_, _) => lab_1_arrange = ++executionOrder,
-            Actor = (_, _) => lab_1_act = ++executionOrder,
-            Asserter = (_, _) => lab_1_assert = ++executionOrder
+            SetMetadata = _ => _lab1SetMd = ++_executionOrder,
+            Arranger = (_, _) => _lab1Arrange = ++_executionOrder,
+            Actor = (_, _) => _lab1Act = ++_executionOrder,
+            Asserter = (_, _) => _lab1Assert = ++_executionOrder
         };
 
         var sourceLab_uppder = new Lab<Model>
         {
-            SetMetadata = _ => lab_2_setMD = ++executionOrder,
-            Arranger = (_, _) => lab_2_arrange = ++executionOrder,
-            Actor = (_, _) => lab_2_act = ++executionOrder,
-            Asserter = (_, _) => lab_2_assert = ++executionOrder
+            SetMetadata = _ => _lab2SetMd = ++_executionOrder,
+            Arranger = (_, _) => _lab2Arrange = ++_executionOrder,
+            Actor = (_, _) => _lab2Act = ++_executionOrder,
+            Asserter = (_, _) => _lab2Assert = ++_executionOrder
         };
         var sourceLab_lower = new Lab<Model>
         {
-            SetMetadata = _ => lab_3_setMD = ++executionOrder,
-            Arranger = (_, _) => lab_3_arrange = ++executionOrder,
-            Actor = (_, _) => lab_3_act = ++executionOrder,
-            Asserter = (_, _) => lab_3_assert = ++executionOrder
+            SetMetadata = _ => _lab3SetMd = ++_executionOrder,
+            Arranger = (_, _) => _lab3Arrange = ++_executionOrder,
+            Actor = (_, _) => _lab3Act = ++_executionOrder,
+            Asserter = (_, _) => _lab3Assert = ++_executionOrder
         };
         var originalLab_composite = new CompositeLab<Model>(sourceLab_uppder, sourceLab_lower);
 
         var extendingLab = new Lab<Model>
         {
-            SetMetadata = _ => lab_4_setMD = ++executionOrder,
-            Arranger = (_, _) => lab_4_arrange = ++executionOrder,
-            Actor = (_, _) => lab_4_act = ++executionOrder,
-            Asserter = (_, _) => lab_4_assert = ++executionOrder
+            SetMetadata = _ => _lab4SetMd = ++_executionOrder,
+            Arranger = (_, _) => _lab4Arrange = ++_executionOrder,
+            Actor = (_, _) => _lab4Act = ++_executionOrder,
+            Asserter = (_, _) => _lab4Assert = ++_executionOrder
         };
 
 
@@ -155,18 +155,18 @@ public class LabExtensionTest
         extendedLab.First().Execute(new Model(), out var ex);
 
         // Assert 1
-        Assert.IsNull(ex);
+        Assert.That(ex, Is.Null);
 
-        Assert.AreEqual(0, lab_1_setMD);
-        Assert.AreEqual(1, lab_1_arrange);
-        Assert.AreEqual(2, lab_4_setMD);
-        Assert.AreEqual(3, lab_4_arrange);
+        Assert.That(_lab1SetMd, Is.EqualTo(0));
+        Assert.That(_lab1Arrange, Is.EqualTo(1));
+        Assert.That(_lab4SetMd, Is.EqualTo(2));
+        Assert.That(_lab4Arrange, Is.EqualTo(3));
 
-        Assert.AreEqual(4, lab_1_act);
-        Assert.AreEqual(-1, lab_4_act);
+        Assert.That(_lab1Act, Is.EqualTo(4));
+        Assert.That(_lab4Act, Is.EqualTo(-1));
 
-        Assert.AreEqual(5, lab_4_assert);
-        Assert.AreEqual(6, lab_1_assert);
+        Assert.That(_lab4Assert, Is.EqualTo(5));
+        Assert.That(_lab1Assert, Is.EqualTo(6));
 
 
         // Act 2
@@ -174,22 +174,22 @@ public class LabExtensionTest
         extendedLab.Last().Execute(new Model(), out ex);
 
         // Assert 2
-        Assert.IsNull(ex);
+        Assert.That(ex, Is.Null);
 
-        Assert.AreEqual(0, lab_2_setMD);
-        Assert.AreEqual(1, lab_2_arrange);
-        Assert.AreEqual(2, lab_3_setMD);
-        Assert.AreEqual(3, lab_3_arrange);
-        Assert.AreEqual(4, lab_4_setMD);
-        Assert.AreEqual(5, lab_4_arrange);
+        Assert.That(_lab2SetMd, Is.EqualTo(0));
+        Assert.That(_lab2Arrange, Is.EqualTo(1));
+        Assert.That(_lab3SetMd, Is.EqualTo(2));
+        Assert.That(_lab3Arrange, Is.EqualTo(3));
+        Assert.That(_lab4SetMd, Is.EqualTo(4));
+        Assert.That(_lab4Arrange, Is.EqualTo(5));
 
-        Assert.AreEqual(6, lab_2_act);
-        Assert.AreEqual(-1, lab_3_act);
-        Assert.AreEqual(-1, lab_4_act);
+        Assert.That(_lab2Act, Is.EqualTo(6));
+        Assert.That(_lab3Act, Is.EqualTo(-1));
+        Assert.That(_lab4Act, Is.EqualTo(-1));
 
-        Assert.AreEqual(7, lab_4_assert);
-        Assert.AreEqual(8, lab_3_assert);
-        Assert.AreEqual(9, lab_2_assert);
+        Assert.That(_lab4Assert, Is.EqualTo(7));
+        Assert.That(_lab3Assert, Is.EqualTo(8));
+        Assert.That(_lab2Assert, Is.EqualTo(9));
     }
 
 
@@ -200,14 +200,14 @@ public class LabExtensionTest
         // Arrange
         var assertionLab = new Lab<Model>
         {
-            Arranger = (_, _) => lab_1_arrange = ++executionOrder,
-            Asserter = (_, _) => lab_1_assert = ++executionOrder
+            Arranger = (_, _) => _lab1Arrange = ++_executionOrder,
+            Asserter = (_, _) => _lab1Assert = ++_executionOrder
         };
 
         var actorLab = new Lab<Model>("Actor")
         {
-            SetMetadata = _ => lab_2_setMD = ++executionOrder,
-            Actor = (_, _) => lab_2_act = ++executionOrder
+            SetMetadata = _ => _lab2SetMd = ++_executionOrder,
+            Actor = (_, _) => _lab2Act = ++_executionOrder
         };
 
 
@@ -217,17 +217,17 @@ public class LabExtensionTest
 
 
         // Assert
-        Assert.IsNull(ex);
+        Assert.That(ex, Is.Null);
 
-        Assert.AreEqual(-1, lab_1_setMD);
-        Assert.AreEqual(0, lab_2_setMD);
+        Assert.That(_lab1SetMd, Is.EqualTo(-1));
+        Assert.That(_lab2SetMd, Is.EqualTo(0));
 
-        Assert.AreEqual(1, lab_1_arrange);
+        Assert.That(_lab1Arrange, Is.EqualTo(1));
 
-        Assert.AreEqual(-1, lab_1_act);
-        Assert.AreEqual(2, lab_2_act);
+        Assert.That(_lab1Act, Is.EqualTo(-1));
+        Assert.That(_lab2Act, Is.EqualTo(2));
 
-        Assert.AreEqual(3, lab_1_assert);
+        Assert.That(_lab1Assert, Is.EqualTo(3));
     }
     [Test]
     public void ExtendLab_AsActor_Multiple()
@@ -235,19 +235,19 @@ public class LabExtensionTest
         // Arrange
         var assertionLab = new Lab<Model>
         {
-            Arranger = (_, _) => lab_1_arrange = ++executionOrder,
-            Asserter = (_, _) => lab_1_assert = ++executionOrder
+            Arranger = (_, _) => _lab1Arrange = ++_executionOrder,
+            Asserter = (_, _) => _lab1Assert = ++_executionOrder
         };
 
         var actorLab_1 = new Lab<Model>("Actor_1")
         {
-            SetMetadata = _ => lab_2_setMD = ++executionOrder,
-            Actor = (_, _) => lab_2_act = ++executionOrder
+            SetMetadata = _ => _lab2SetMd = ++_executionOrder,
+            Actor = (_, _) => _lab2Act = ++_executionOrder
         };
         var actorLab_2 = new Lab<Model>("Actor_2")
         {
-            SetMetadata = _ => lab_3_setMD = ++executionOrder,
-            Actor = (_, _) => lab_3_act = ++executionOrder
+            SetMetadata = _ => _lab3SetMd = ++_executionOrder,
+            Actor = (_, _) => _lab3Act = ++_executionOrder
         };
 
 
@@ -256,17 +256,17 @@ public class LabExtensionTest
         extended.First().Execute(new Model(), out var ex);
 
         // Assert 1
-        Assert.IsNull(ex);
+        Assert.That(ex, Is.Null);
 
-        Assert.AreEqual(-1, lab_1_setMD);
-        Assert.AreEqual(0, lab_2_setMD);
+        Assert.That(_lab1SetMd, Is.EqualTo(-1));
+        Assert.That(_lab2SetMd, Is.EqualTo(0));
 
-        Assert.AreEqual(1, lab_1_arrange);
+        Assert.That(_lab1Arrange, Is.EqualTo(1));
 
-        Assert.AreEqual(-1, lab_1_act);
-        Assert.AreEqual(2, lab_2_act);
+        Assert.That(_lab1Act, Is.EqualTo(-1));
+        Assert.That(_lab2Act, Is.EqualTo(2));
 
-        Assert.AreEqual(3, lab_1_assert);
+        Assert.That(_lab1Assert, Is.EqualTo(3));
 
 
         // Act 2
@@ -274,16 +274,16 @@ public class LabExtensionTest
         extended.Last().Execute(new Model(), out ex);
 
         // Assert 1
-        Assert.IsNull(ex);
+        Assert.That(ex, Is.Null);
 
-        Assert.AreEqual(-1, lab_1_setMD);
-        Assert.AreEqual(0, lab_3_setMD);
+        Assert.That(_lab1SetMd, Is.EqualTo(-1));
+        Assert.That(_lab3SetMd, Is.EqualTo(0));
 
-        Assert.AreEqual(1, lab_1_arrange);
+        Assert.That(_lab1Arrange, Is.EqualTo(1));
 
-        Assert.AreEqual(-1, lab_1_act);
-        Assert.AreEqual(2, lab_3_act);
+        Assert.That(_lab1Act, Is.EqualTo(-1));
+        Assert.That(_lab3Act, Is.EqualTo(2));
 
-        Assert.AreEqual(3, lab_1_assert);
+        Assert.That(_lab1Assert, Is.EqualTo(3));
     }
 }

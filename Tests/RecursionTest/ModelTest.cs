@@ -10,8 +10,8 @@ public class ModelTest
 {
     static void AssertSucceed(Node<Model> result)
     {
-        Assert.IsTrue(result.AllSucceed(out var cancelled), result.GetFailedReports().OuterXml);
-        Assert.IsFalse(cancelled);
+        Assert.That(result.AllSucceed(out var cancelled), Is.True, result.GetFailedReports().OuterXml);
+        Assert.That(cancelled, Is.False);
     }
 
     public class Model : UniTest.Model
@@ -27,11 +27,11 @@ public class ModelTest
         public bool sustainable = true;
         public bool continuable = true;
         public int? remainingExecutionCount = null;
-        public List<string> executedLabs { get; } = new();
+        public List<string> ExecutedLabs { get; } = new();
 
-        public string[] labs { get; } = new[] { 0, 1, 2, 3, 4 }.Select(i => $"Lab_{i}").ToArray();
-        public Random rand { get; } = new Random(0);
-        public string randNextLab => labs[rand.Next(labs.Length)];
+        public string[] Labs { get; } = new[] { 0, 1, 2, 3, 4 }.Select(i => $"Lab_{i}").ToArray();
+        public Random Rand { get; } = new Random(0);
+        public string RandNextLab => Labs[Rand.Next(Labs.Length)];
     }
 
     class Project : Project<Model>
@@ -66,12 +66,12 @@ public class ModelTest
             if (model.Subject == null)
                 return;
 
-            Assert.AreEqual(model.sustainable, model.Subject.Sustainable);
-            Assert.AreEqual(model.continuable, model.Subject.Continuable);
-            Assert.AreEqual(model.remainingExecutionCount, model.Subject.RemainingExecutionCount);
+            Assert.That(model.Subject.Sustainable, Is.EqualTo(model.sustainable));
+            Assert.That(model.Subject.Continuable, Is.EqualTo(model.continuable));
+            Assert.That(model.Subject.RemainingExecutionCount, Is.EqualTo(model.remainingExecutionCount));
 
-            Assert.AreEqual(model.executedLabs.Count, model.Subject.ExecutionCount);
-            Assert.AreEqual(string.Join(Model.Separator, model.executedLabs), model.Subject.GetExecutionHistory());
+            Assert.That(model.Subject.ExecutionCount, Is.EqualTo(model.ExecutedLabs.Count));
+            Assert.That(model.Subject.GetExecutionHistory(), Is.EqualTo(string.Join(Model.Separator, model.ExecutedLabs)));
         }
 
         void DoExecute(Model model, string labID)
@@ -100,7 +100,7 @@ public class ModelTest
                 {
                     SetMetadata = _ => new Model(),
                     Actor = (m, md) => m.Subject = (Model)md.Metadata,
-                    Asserter = (m, md) => Assert.AreSame(m.Subject, md.Metadata)
+                    Asserter = (m, md) => Assert.That(md.Metadata, Is.SameAs(m.Subject))
                 };
                 yield break;
             }
@@ -110,8 +110,8 @@ public class ModelTest
             // Do Execute
             var template = new Lab<Model>("DoExecute")
             {
-                Arranger = (m, _) => m.executedLabs.Add(m.randNextLab),
-                Actor = (m, _) => DoExecute(m, m.executedLabs[^1]),
+                Arranger = (m, _) => m.ExecutedLabs.Add(m.RandNextLab),
+                Actor = (m, _) => DoExecute(m, m.ExecutedLabs[^1]),
                 Asserter = CheckModel
             };
 

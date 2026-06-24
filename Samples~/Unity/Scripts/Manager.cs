@@ -8,7 +8,7 @@ namespace UniTest_Test
 {
     class Manager : MonoBehaviour
     {
-        private enum TestMode
+        enum TestMode
         {
             SingleState,
             SingleStateReplay,
@@ -16,28 +16,22 @@ namespace UniTest_Test
             SingleStateContinuously,
             MultiStateContinuously,
         }
+        const int ProcessLimit = -1;
+        const int TimeLimit = -1;
+        const int SingleStateDepth = 5;
+        const int MultiStateDepth = 5;
+        const int SingleStateContinuousDepth = 20;
+        const int MultiStateContinuousDepth = 50;
+        const string SingleStateReportName = "SingleState";
+        const string SingleStateReplayReportName = "SingleStateReplay";
+        const string MultiStateReportName = "MultiState";
+        const string SingleStateReplayIDs = "Ignite/Mount_Null/Mount_Targeted";
 
-        private const int ProcessLimit = -1;
-        private const int TimeLimit = -1;
-
-        private const int SingleStateDepth = 5;
-        private const int MultiStateDepth = 5;
-        private const int SingleStateContinuousDepth = 20;
-        private const int MultiStateContinuousDepth = 50;
-
-        private const string SingleStateReportName = "SingleState";
-        private const string SingleStateReplayReportName = "SingleStateReplay";
-        private const string MultiStateReportName = "MultiState";
-        private const string SingleStateReplayIDs = "Ignite/Mount_Null/Mount_Targeted";
-
-        [SerializeField] private TestMode _testMode;
-
-        private static string ReportPath
+        [SerializeField] TestMode _testMode;
+        static string ReportPath
             => Path.Combine(Application.persistentDataPath, "UniTest", "Samples", "Unity");
-
-        private async void Start() => await Run(_testMode);
-
-        private Task Run(TestMode testMode)
+        async void Start() => await Run(_testMode);
+        Task Run(TestMode testMode)
         {
             switch (testMode)
             {
@@ -62,9 +56,8 @@ namespace UniTest_Test
         }
 
         [ContextMenu(nameof(RunSingleState))]
-        private async void RunSingleState() => await RunSingleStateAsync();
-
-        private async Task RunSingleStateAsync()
+        async void RunSingleState() => await RunSingleStateAsync();
+        async Task RunSingleStateAsync()
         {
             await new SingleState.Project()
                 .Run(
@@ -77,9 +70,8 @@ namespace UniTest_Test
         }
 
         [ContextMenu(nameof(RunSingleStateReplay))]
-        private async void RunSingleStateReplay() => await RunSingleStateReplayAsync();
-
-        private async Task RunSingleStateReplayAsync()
+        async void RunSingleStateReplay() => await RunSingleStateReplayAsync();
+        async Task RunSingleStateReplayAsync()
         {
             await new SingleState.Project()
                 .Run(
@@ -91,9 +83,8 @@ namespace UniTest_Test
         }
 
         [ContextMenu(nameof(RunMultiState))]
-        private async void RunMultiState() => await RunMultiStateAsync();
-
-        private async Task RunMultiStateAsync()
+        async void RunMultiState() => await RunMultiStateAsync();
+        async Task RunMultiStateAsync()
         {
             await new MultiState.Project()
                 .Run(
@@ -106,9 +97,8 @@ namespace UniTest_Test
         }
 
         [ContextMenu(nameof(RunSingleStateContinuously))]
-        private async void RunSingleStateContinuously() => await RunSingleStateContinuouslyAsync();
-
-        private async Task RunSingleStateContinuouslyAsync()
+        async void RunSingleStateContinuously() => await RunSingleStateContinuouslyAsync();
+        async Task RunSingleStateContinuouslyAsync()
         {
             await new SingleState.Project()
                 .RunContinuously(
@@ -121,9 +111,8 @@ namespace UniTest_Test
         }
 
         [ContextMenu(nameof(RunMultiStateContinuously))]
-        private async void RunMultiStateContinuously() => await RunMultiStateContinuouslyAsync();
-
-        private async Task RunMultiStateContinuouslyAsync()
+        async void RunMultiStateContinuously() => await RunMultiStateContinuouslyAsync();
+        async Task RunMultiStateContinuouslyAsync()
         {
             await new MultiState.Project()
                 .RunContinuously(

@@ -7,7 +7,7 @@ public class TestCaseTest
     (bool include, object[] definitions)[] GetTestCases(TestCase tc)
     {
         return ((bool, object[])[])typeof(TestCase)
-            .GetProperty("testCases", BindingFlags.NonPublic | BindingFlags.Instance)
+            .GetProperty("TestCases", BindingFlags.NonPublic | BindingFlags.Instance)
             .GetValue(tc);
     }
 
@@ -23,10 +23,10 @@ public class TestCaseTest
 
         // Assert
         var actual = GetTestCases(tc);
-        Assert.AreEqual(1, actual.Length);
+        Assert.That(actual.Length, Is.EqualTo(1));
 
-        Assert.IsTrue(actual[0].include);
-        CollectionAssert.AreEquivalent(actual[0].definitions, new[] { 0 });
+        Assert.That(actual[0].include, Is.True);
+        Assert.That(new[] { 0 }, Is.EquivalentTo(actual[0].definitions));
     }
     [Test]
     public void Append_WithNotEmpth()
@@ -39,13 +39,13 @@ public class TestCaseTest
 
         // Assert
         var actual = GetTestCases(tc);
-        Assert.AreEqual(2, actual.Length);
+        Assert.That(actual.Length, Is.EqualTo(2));
 
-        Assert.IsTrue(actual[0].include);
-        CollectionAssert.AreEquivalent(actual[0].definitions, new[] { 0 });
+        Assert.That(actual[0].include, Is.True);
+        Assert.That(new[] { 0 }, Is.EquivalentTo(actual[0].definitions));
 
-        Assert.IsTrue(actual[1].include);
-        CollectionAssert.AreEquivalent(actual[1].definitions, new[] { 1 });
+        Assert.That(actual[1].include, Is.True);
+        Assert.That(new[] { 1 }, Is.EquivalentTo(actual[1].definitions));
     }
 
 
@@ -61,13 +61,13 @@ public class TestCaseTest
 
         // Assert
         var actual = GetTestCases(tc);
-        Assert.AreEqual(2, actual.Length);
+        Assert.That(actual.Length, Is.EqualTo(2));
 
-        Assert.IsTrue(actual[0].include);
-        CollectionAssert.AreEquivalent(actual[0].definitions, new[] { 0 });
+        Assert.That(actual[0].include, Is.True);
+        Assert.That(new[] { 0 }, Is.EquivalentTo(actual[0].definitions));
 
-        Assert.IsTrue(actual[1].include);
-        CollectionAssert.AreEquivalent(actual[1].definitions, new[] { 10 });
+        Assert.That(actual[1].include, Is.True);
+        Assert.That(new[] { 10 }, Is.EquivalentTo(actual[1].definitions));
     }
     [Test]
     public void Confine_First()
@@ -80,13 +80,13 @@ public class TestCaseTest
 
         // Assert
         var actual = GetTestCases(tc);
-        Assert.AreEqual(2, actual.Length);
+        Assert.That(actual.Length, Is.EqualTo(2));
 
-        Assert.IsTrue(actual[0].include);
-        CollectionAssert.AreEquivalent(actual[0].definitions, new[] { 10 });
+        Assert.That(actual[0].include, Is.True);
+        Assert.That(new[] { 10 }, Is.EquivalentTo(actual[0].definitions));
 
-        Assert.IsTrue(actual[1].include);
-        CollectionAssert.AreEquivalent(actual[1].definitions, new[] { 1 });
+        Assert.That(actual[1].include, Is.True);
+        Assert.That(new[] { 1 }, Is.EquivalentTo(actual[1].definitions));
     }
     [Test]
     public void Confine_Extend()
@@ -99,13 +99,13 @@ public class TestCaseTest
 
         // Assert
         var actual = GetTestCases(tc);
-        Assert.AreEqual(2, actual.Length);
+        Assert.That(actual.Length, Is.EqualTo(2));
 
-        Assert.IsTrue(actual[0].include);
-        CollectionAssert.AreEquivalent(actual[0].definitions, new[] { 0 });
+        Assert.That(actual[0].include, Is.True);
+        Assert.That(new[] { 0 }, Is.EquivalentTo(actual[0].definitions));
 
-        Assert.IsTrue(actual[1].include);
-        CollectionAssert.AreEquivalent(actual[1].definitions, new[] { 10 });
+        Assert.That(actual[1].include, Is.True);
+        Assert.That(new[] { 10 }, Is.EquivalentTo(actual[1].definitions));
     }
 
 
@@ -121,13 +121,13 @@ public class TestCaseTest
 
         // Assert
         var actual = GetTestCases(tc);
-        Assert.AreEqual(2, actual.Length);
+        Assert.That(actual.Length, Is.EqualTo(2));
 
-        Assert.IsTrue(actual[0].include);
-        CollectionAssert.AreEquivalent(actual[0].definitions, new[] { 0 });
+        Assert.That(actual[0].include, Is.True);
+        Assert.That(new[] { 0 }, Is.EquivalentTo(actual[0].definitions));
 
-        Assert.IsTrue(actual[1].include);
-        CollectionAssert.AreEquivalent(actual[1].definitions, new[] { 1 });
+        Assert.That(actual[1].include, Is.True);
+        Assert.That(new[] { 1 }, Is.EquivalentTo(actual[1].definitions));
     }
     [Test]
     public void Include_Override_Positive()
@@ -140,13 +140,13 @@ public class TestCaseTest
 
         // Assert
         var actual = GetTestCases(tc);
-        Assert.AreEqual(2, actual.Length);
+        Assert.That(actual.Length, Is.EqualTo(2));
 
-        Assert.IsTrue(actual[0].include);
-        CollectionAssert.AreEquivalent(actual[0].definitions, new[] { 0 });
+        Assert.That(actual[0].include, Is.True);
+        Assert.That(new[] { 0 }, Is.EquivalentTo(actual[0].definitions));
 
-        Assert.IsTrue(actual[1].include);
-        CollectionAssert.AreEquivalent(actual[1].definitions, new[] { 1, 10 });
+        Assert.That(actual[1].include, Is.True);
+        Assert.That(new[] { 1, 10 }, Is.EquivalentTo(actual[1].definitions));
     }
     [Test]
     public void Include_Override_Negative()
@@ -160,13 +160,13 @@ public class TestCaseTest
 
         // Assert
         var actual = GetTestCases(tc);
-        Assert.AreEqual(2, actual.Length);
+        Assert.That(actual.Length, Is.EqualTo(2));
 
-        Assert.IsTrue(actual[0].include);
-        CollectionAssert.AreEquivalent(actual[0].definitions, new[] { 0 });
+        Assert.That(actual[0].include, Is.True);
+        Assert.That(new[] { 0 }, Is.EquivalentTo(actual[0].definitions));
 
-        Assert.IsFalse(actual[1].include);
-        CollectionAssert.AreEquivalent(actual[1].definitions, new[] { 1 });
+        Assert.That(actual[1].include, Is.False);
+        Assert.That(new[] { 1 }, Is.EquivalentTo(actual[1].definitions));
     }
 
 
@@ -182,13 +182,13 @@ public class TestCaseTest
 
         // Assert
         var actual = GetTestCases(tc);
-        Assert.AreEqual(2, actual.Length);
+        Assert.That(actual.Length, Is.EqualTo(2));
 
-        Assert.IsTrue(actual[0].include);
-        CollectionAssert.AreEquivalent(actual[0].definitions, new[] { 0 });
+        Assert.That(actual[0].include, Is.True);
+        Assert.That(new[] { 0 }, Is.EquivalentTo(actual[0].definitions));
 
-        Assert.IsFalse(actual[1].include);
-        CollectionAssert.AreEquivalent(actual[1].definitions, new[] { 1 });
+        Assert.That(actual[1].include, Is.False);
+        Assert.That(new[] { 1 }, Is.EquivalentTo(actual[1].definitions));
     }
     [Test]
     public void Exclude_Override_Positive()
@@ -202,13 +202,13 @@ public class TestCaseTest
 
         // Assert
         var actual = GetTestCases(tc);
-        Assert.AreEqual(2, actual.Length);
+        Assert.That(actual.Length, Is.EqualTo(2));
 
-        Assert.IsTrue(actual[0].include);
-        CollectionAssert.AreEquivalent(actual[0].definitions, new[] { 0 });
+        Assert.That(actual[0].include, Is.True);
+        Assert.That(new[] { 0 }, Is.EquivalentTo(actual[0].definitions));
 
-        Assert.IsFalse(actual[1].include);
-        CollectionAssert.AreEquivalent(actual[1].definitions, new[] { 1, 10 });
+        Assert.That(actual[1].include, Is.False);
+        Assert.That(new[] { 1, 10 }, Is.EquivalentTo(actual[1].definitions));
     }
     [Test]
     public void Exclude_Override_Negative()
@@ -222,13 +222,13 @@ public class TestCaseTest
 
         // Assert
         var actual = GetTestCases(tc);
-        Assert.AreEqual(2, actual.Length);
+        Assert.That(actual.Length, Is.EqualTo(2));
 
-        Assert.IsTrue(actual[0].include);
-        CollectionAssert.AreEquivalent(actual[0].definitions, new[] { 0 });
+        Assert.That(actual[0].include, Is.True);
+        Assert.That(new[] { 0 }, Is.EquivalentTo(actual[0].definitions));
 
-        Assert.IsTrue(actual[1].include);
-        CollectionAssert.AreEquivalent(actual[1].definitions, new[] { 1 });
+        Assert.That(actual[1].include, Is.True);
+        Assert.That(new[] { 1 }, Is.EquivalentTo(actual[1].definitions));
     }
 
 
@@ -246,16 +246,16 @@ public class TestCaseTest
 
 
         // Assert
-        Assert.IsTrue(confineable);
+        Assert.That(confineable, Is.True);
 
         var actual = GetTestCases(_tc);
-        Assert.AreEqual(2, actual.Length);
+        Assert.That(actual.Length, Is.EqualTo(2));
 
-        Assert.IsTrue(actual[0].include);
-        CollectionAssert.AreEquivalent(actual[0].definitions, new[] { 0 });
+        Assert.That(actual[0].include, Is.True);
+        Assert.That(new[] { 0 }, Is.EquivalentTo(actual[0].definitions));
 
-        Assert.IsTrue(actual[1].include);
-        CollectionAssert.AreEquivalent(actual[1].definitions, new[] { 10 });
+        Assert.That(actual[1].include, Is.True);
+        Assert.That(new[] { 10 }, Is.EquivalentTo(actual[1].definitions));
     }
     [Test]
     public void Confineable_SingleParams_Positive_2()
@@ -269,7 +269,7 @@ public class TestCaseTest
         var confineable = tc.Confineable(1, out var _tc, -1);
 
         // Assert
-        Assert.IsFalse(confineable);
+        Assert.That(confineable, Is.False);
     }
     [Test]
     public void Confineable_SingleParams_Positive_3()
@@ -284,19 +284,19 @@ public class TestCaseTest
 
 
         // Assert
-        Assert.IsTrue(confineable);
+        Assert.That(confineable, Is.True);
 
         var actual = GetTestCases(_tc);
-        Assert.AreEqual(3, actual.Length);
+        Assert.That(actual.Length, Is.EqualTo(3));
 
-        Assert.IsTrue(actual[0].include);
-        CollectionAssert.AreEquivalent(actual[0].definitions, new[] { 0 });
+        Assert.That(actual[0].include, Is.True);
+        Assert.That(new[] { 0 }, Is.EquivalentTo(actual[0].definitions));
 
-        Assert.IsTrue(actual[1].include);
-        CollectionAssert.AreEquivalent(actual[1].definitions, new[] { 1, 10 });
+        Assert.That(actual[1].include, Is.True);
+        Assert.That(new[] { 1, 10 }, Is.EquivalentTo(actual[1].definitions));
 
-        Assert.IsTrue(actual[2].include);
-        CollectionAssert.AreEquivalent(actual[2].definitions, new[] { 2 });
+        Assert.That(actual[2].include, Is.True);
+        Assert.That(new[] { 2 }, Is.EquivalentTo(actual[2].definitions));
     }
 
 
@@ -314,16 +314,16 @@ public class TestCaseTest
 
 
         // Assert
-        Assert.IsTrue(confineable);
+        Assert.That(confineable, Is.True);
 
         var actual = GetTestCases(_tc);
-        Assert.AreEqual(2, actual.Length);
+        Assert.That(actual.Length, Is.EqualTo(2));
 
-        Assert.IsTrue(actual[0].include);
-        CollectionAssert.AreEquivalent(actual[0].definitions, new[] { 0 });
+        Assert.That(actual[0].include, Is.True);
+        Assert.That(new[] { 0 }, Is.EquivalentTo(actual[0].definitions));
 
-        Assert.IsTrue(actual[1].include);
-        CollectionAssert.AreEquivalent(actual[1].definitions, new[] { 2 });
+        Assert.That(actual[1].include, Is.True);
+        Assert.That(new[] { 2 }, Is.EquivalentTo(actual[1].definitions));
     }
     [Test]
     public void Confineable_SingleParams_Negative_2()
@@ -338,7 +338,7 @@ public class TestCaseTest
 
 
         // Assert
-        Assert.IsFalse(confineable);
+        Assert.That(confineable, Is.False);
     }
     [Test]
     public void Confineable_SingleParams_Negative_3()
@@ -353,19 +353,19 @@ public class TestCaseTest
 
 
         // Assert
-        Assert.IsTrue(confineable);
+        Assert.That(confineable, Is.True);
 
         var actual = GetTestCases(_tc);
-        Assert.AreEqual(3, actual.Length);
+        Assert.That(actual.Length, Is.EqualTo(3));
 
-        Assert.IsTrue(actual[0].include);
-        CollectionAssert.AreEquivalent(actual[0].definitions, new[] { 0 });
+        Assert.That(actual[0].include, Is.True);
+        Assert.That(new[] { 0 }, Is.EquivalentTo(actual[0].definitions));
 
-        Assert.IsFalse(actual[1].include);
-        CollectionAssert.AreEquivalent(actual[1].definitions, new[] { 1, 10 });
+        Assert.That(actual[1].include, Is.False);
+        Assert.That(new[] { 1, 10 }, Is.EquivalentTo(actual[1].definitions));
 
-        Assert.IsTrue(actual[2].include);
-        CollectionAssert.AreEquivalent(actual[2].definitions, new[] { 2 });
+        Assert.That(actual[2].include, Is.True);
+        Assert.That(new[] { 2 }, Is.EquivalentTo(actual[2].definitions));
     }
 
 
@@ -379,9 +379,9 @@ public class TestCaseTest
 
 
         // Act & Asserts
-        Assert.IsTrue(tc.Confineable(1, 1, 10));
-        Assert.IsFalse(tc.Confineable(1, 1, 2));
-        Assert.IsTrue(tc.Confineable(2, 100, 200));
+        Assert.That(tc.Confineable(1, 1, 10), Is.True);
+        Assert.That(tc.Confineable(1, 1, 2), Is.False);
+        Assert.That(tc.Confineable(2, 100, 200), Is.True);
     }
 
     [Test]
@@ -393,9 +393,9 @@ public class TestCaseTest
 
 
         // Act & Asserts
-        Assert.IsTrue(tc.Confineable(1, 2, 3));
-        Assert.IsFalse(tc.Confineable(1, 2, 10));
-        Assert.IsTrue(tc.Confineable(2, 100, 200));
+        Assert.That(tc.Confineable(1, 2, 3), Is.True);
+        Assert.That(tc.Confineable(1, 2, 10), Is.False);
+        Assert.That(tc.Confineable(2, 100, 200), Is.True);
     }
 
 
@@ -413,16 +413,16 @@ public class TestCaseTest
 
 
         // Assert
-        Assert.IsTrue(confineable);
+        Assert.That(confineable, Is.True);
 
         var actual = GetTestCases(_tc);
-        Assert.AreEqual(2, actual.Length);
+        Assert.That(actual.Length, Is.EqualTo(2));
 
-        Assert.IsTrue(actual[0].include);
-        CollectionAssert.AreEquivalent(actual[0].definitions, new[] { 0 });
+        Assert.That(actual[0].include, Is.True);
+        Assert.That(new[] { 0 }, Is.EquivalentTo(actual[0].definitions));
 
-        Assert.IsTrue(actual[1].include);
-        CollectionAssert.AreEquivalent(actual[1].definitions, new[] { 1, 10 });
+        Assert.That(actual[1].include, Is.True);
+        Assert.That(new[] { 1, 10 }, Is.EquivalentTo(actual[1].definitions));
     }
     [Test]
     public void ConfineableExcept_Positive_2()
@@ -437,16 +437,16 @@ public class TestCaseTest
 
 
         // Assert
-        Assert.IsTrue(confineable);
+        Assert.That(confineable, Is.True);
 
         var actual = GetTestCases(_tc);
-        Assert.AreEqual(2, actual.Length);
+        Assert.That(actual.Length, Is.EqualTo(2));
 
-        Assert.IsTrue(actual[0].include);
-        CollectionAssert.AreEquivalent(actual[0].definitions, new[] { 0 });
+        Assert.That(actual[0].include, Is.True);
+        Assert.That(new[] { 0 }, Is.EquivalentTo(actual[0].definitions));
 
-        Assert.IsTrue(actual[1].include);
-        CollectionAssert.AreEquivalent(actual[1].definitions, new[] { 10 });
+        Assert.That(actual[1].include, Is.True);
+        Assert.That(new[] { 10 }, Is.EquivalentTo(actual[1].definitions));
     }
     [Test]
     public void ConfineableExcept_Positive_3()
@@ -460,7 +460,7 @@ public class TestCaseTest
         var confineable = tc.ConfineableExcept(1, out _, 1, 10, 100);
 
         // Assert
-        Assert.IsFalse(confineable);
+        Assert.That(confineable, Is.False);
     }
     [Test]
     public void ConfineableExcept_Positive_4()
@@ -475,19 +475,19 @@ public class TestCaseTest
 
 
         // Assert
-        Assert.IsTrue(confineable);
+        Assert.That(confineable, Is.True);
 
         var actual = GetTestCases(_tc);
-        Assert.AreEqual(3, actual.Length);
+        Assert.That(actual.Length, Is.EqualTo(3));
 
-        Assert.IsTrue(actual[0].include);
-        CollectionAssert.AreEquivalent(actual[0].definitions, new[] { 0 });
+        Assert.That(actual[0].include, Is.True);
+        Assert.That(new[] { 0 }, Is.EquivalentTo(actual[0].definitions));
 
-        Assert.IsTrue(actual[1].include);
-        CollectionAssert.AreEquivalent(actual[1].definitions, new[] { 1, 10 });
+        Assert.That(actual[1].include, Is.True);
+        Assert.That(new[] { 1, 10 }, Is.EquivalentTo(actual[1].definitions));
 
-        Assert.IsFalse(actual[2].include);
-        CollectionAssert.AreEquivalent(actual[2].definitions, new[] { 3, 4 });
+        Assert.That(actual[2].include, Is.False);
+        Assert.That(new[] { 3, 4 }, Is.EquivalentTo(actual[2].definitions));
     }
 
 
@@ -505,16 +505,16 @@ public class TestCaseTest
 
 
         // Assert
-        Assert.IsTrue(confineable);
+        Assert.That(confineable, Is.True);
 
         var actual = GetTestCases(_tc);
-        Assert.AreEqual(2, actual.Length);
+        Assert.That(actual.Length, Is.EqualTo(2));
 
-        Assert.IsTrue(actual[0].include);
-        CollectionAssert.AreEquivalent(actual[0].definitions, new[] { 0 });
+        Assert.That(actual[0].include, Is.True);
+        Assert.That(new[] { 0 }, Is.EquivalentTo(actual[0].definitions));
 
-        Assert.IsFalse(actual[1].include);
-        CollectionAssert.AreEquivalent(actual[1].definitions, new[] { 1, 10, 20, 30 });
+        Assert.That(actual[1].include, Is.False);
+        Assert.That(new[] { 1, 10, 20, 30 }, Is.EquivalentTo(actual[1].definitions));
     }
     [Test]
     public void ConfineableExcept_Negative_2()
@@ -529,16 +529,16 @@ public class TestCaseTest
 
 
         // Assert
-        Assert.IsTrue(confineable);
+        Assert.That(confineable, Is.True);
 
         var actual = GetTestCases(_tc);
-        Assert.AreEqual(2, actual.Length);
+        Assert.That(actual.Length, Is.EqualTo(2));
 
-        Assert.IsTrue(actual[0].include);
-        CollectionAssert.AreEquivalent(actual[0].definitions, new[] { 0 });
+        Assert.That(actual[0].include, Is.True);
+        Assert.That(new[] { 0 }, Is.EquivalentTo(actual[0].definitions));
 
-        Assert.IsFalse(actual[1].include);
-        CollectionAssert.AreEquivalent(actual[1].definitions, new[] { 1, 2, 10 });
+        Assert.That(actual[1].include, Is.False);
+        Assert.That(new[] { 1, 2, 10 }, Is.EquivalentTo(actual[1].definitions));
     }
     [Test]
     public void ConfineableExcept_Negative_3()
@@ -552,16 +552,16 @@ public class TestCaseTest
         var confineable = tc.ConfineableExcept(1, out var _tc, 1);
 
         // Assert
-        Assert.IsTrue(confineable);
+        Assert.That(confineable, Is.True);
 
         var actual = GetTestCases(_tc);
-        Assert.AreEqual(2, actual.Length);
+        Assert.That(actual.Length, Is.EqualTo(2));
 
-        Assert.IsTrue(actual[0].include);
-        CollectionAssert.AreEquivalent(actual[0].definitions, new[] { 0 });
+        Assert.That(actual[0].include, Is.True);
+        Assert.That(new[] { 0 }, Is.EquivalentTo(actual[0].definitions));
 
-        Assert.IsFalse(actual[1].include);
-        CollectionAssert.AreEquivalent(actual[1].definitions, new[] { 1, 10 });
+        Assert.That(actual[1].include, Is.False);
+        Assert.That(new[] { 1, 10 }, Is.EquivalentTo(actual[1].definitions));
     }
     [Test]
     public void ConfineableExcept_Negative_4()
@@ -576,18 +576,18 @@ public class TestCaseTest
 
 
         // Assert
-        Assert.IsTrue(confineable);
+        Assert.That(confineable, Is.True);
 
         var actual = GetTestCases(_tc);
-        Assert.AreEqual(3, actual.Length);
+        Assert.That(actual.Length, Is.EqualTo(3));
 
-        Assert.IsTrue(actual[0].include);
-        CollectionAssert.AreEquivalent(actual[0].definitions, new[] { 0 });
+        Assert.That(actual[0].include, Is.True);
+        Assert.That(new[] { 0 }, Is.EquivalentTo(actual[0].definitions));
 
-        Assert.IsFalse(actual[1].include);
-        CollectionAssert.AreEquivalent(actual[1].definitions, new[] { 1, 10 });
+        Assert.That(actual[1].include, Is.False);
+        Assert.That(new[] { 1, 10 }, Is.EquivalentTo(actual[1].definitions));
 
-        Assert.IsFalse(actual[2].include);
-        CollectionAssert.AreEquivalent(actual[2].definitions, new[] { 3, 4 });
+        Assert.That(actual[2].include, Is.False);
+        Assert.That(new[] { 3, 4 }, Is.EquivalentTo(actual[2].definitions));
     }
 }

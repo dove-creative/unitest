@@ -54,10 +54,7 @@ namespace UniTest
         } int? _remainingExecutionCount = null;
 
         public int ExecutionCount => _executedLabs.Count;
-
-
-        // Internal
-        private List<string> _executedLabs = new();
+        List<string> _executedLabs = new();
         public const string Separator = "/";
 
 

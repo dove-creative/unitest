@@ -10,25 +10,25 @@ namespace UniTest
         class TestDesigner
         {   
             // Internal
-            Project<TModel> parent;
-            Node<TModel> node;
+            Project<TModel> _parent;
+            Node<TModel> _node;
 
-            volatile bool executed = false;
+            volatile bool _executed = false;
 
 
             // Content
             public TestDesigner(Project<TModel> parent, Node<TModel> node)
             {
-                this.parent = parent;
-                this.node = node;
+                this._parent = parent;
+                this._node = node;
             }
 
             public async Task Execute(CancellationToken ct)
             {
-                if (executed)
+                if (_executed)
                     throw new InvalidOperationException("Test Designer cannot be executed multiple times.");
 
-                executed = true;
+                _executed = true;
 
 #if UNITEST_SINGLETHREAD
                 await Task.Yield();
@@ -36,7 +36,7 @@ namespace UniTest
 #else
                 if (ct.IsCancellationRequested)
                 {
-                    parent.completedDesigners.Enqueue(this);
+                    _parent._completedDesigners.Enqueue(this);
                     return;
                 }
 
@@ -48,24 +48,24 @@ namespace UniTest
             {
                 if (ct.IsCancellationRequested)
                 {
-                    parent.completedDesigners.Enqueue(this);
+                    _parent._completedDesigners.Enqueue(this);
                     return;
                 }
 
-                Node<TModel> currentNode = node;
+                Node<TModel> currentNode = _node;
                 IEnumerable<ILab<TModel>> labs;
 
                 try
                 {
-                    labs = parent.CreateLabs(node.Model) ?? Array.Empty<Lab<TModel>>();
+                    labs = _parent.CreateLabs(_node.Model) ?? Array.Empty<Lab<TModel>>();
                 }
                 catch (Exception ex)
                 {
                     ex = new ExecutionException(
-                        $"An exception occurred while creating labs for node '{node}'.", ex);
+                        $"An exception occurred while creating labs for node '{_node}'.", ex);
 
                     currentNode.SetExternalException(ex, Node<TModel>.NodeStatus.Failure);
-                    parent.completedDesigners.Enqueue(this);
+                    _parent._completedDesigners.Enqueue(this);
 
                     throw ex;
                 }
@@ -77,10 +77,10 @@ namespace UniTest
                     {
                         ct.ThrowIfCancellationRequested();
 
-                        currentNode = node.Append(lab, ct);
+                        currentNode = _node.Append(lab, ct);
 
-                        lock (parent.preparedLock)
-                            parent.preparedNodes.Enqueue(currentNode);
+                        lock (_parent._preparedLock)
+                            _parent._preparedNodes.Enqueue(currentNode);
                     }
                 }
                 catch (OperationCanceledException ex)
@@ -90,14 +90,14 @@ namespace UniTest
                 catch (Exception ex)
                 {
                     ex = new ExecutionException(
-                        $"Test Designer failed at node '{node}'.", ex);
+                        $"Test Designer failed at node '{_node}'.", ex);
 
-                    node.SetExternalException(ex, Node<TModel>.NodeStatus.Failure);
+                    _node.SetExternalException(ex, Node<TModel>.NodeStatus.Failure);
                     throw ex;
                 }
                 finally
                 {
-                    parent.completedDesigners.Enqueue(this);
+                    _parent._completedDesigners.Enqueue(this);
                 }
             }
         }

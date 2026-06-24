@@ -26,26 +26,26 @@ namespace UniTest
         
 
         // Internal
-        int targetDepth = int.MaxValue;
-        volatile bool failureOccurred = false;
+        int _targetDepth = int.MaxValue;
+        volatile bool _failureOccurred = false;
 
-        readonly Queue<Node<TModel>> idleNodes = new();
-        readonly Queue<Node<TModel>> preparedNodes = new();
+        readonly Queue<Node<TModel>> _idleNodes = new();
+        readonly Queue<Node<TModel>> _preparedNodes = new();
 
-        readonly object idleLock = new();
-        readonly object preparedLock = new();
+        readonly object _idleLock = new();
+        readonly object _preparedLock = new();
 
-        readonly HashSet<TestDesigner> designers = new();
-        readonly Dictionary<TestDesigner, Task> designerTasks = new();
-        readonly ConcurrentQueue<TestDesigner> completedDesigners = new();
+        readonly HashSet<TestDesigner> _designers = new();
+        readonly Dictionary<TestDesigner, Task> _designerTasks = new();
+        readonly ConcurrentQueue<TestDesigner> _completedDesigners = new();
 
-        readonly HashSet<TestExecutor> executors = new();
-        readonly Dictionary<TestExecutor, Task> executorTasks = new();
-        readonly ConcurrentQueue<TestExecutor> completedExecutors = new();
+        readonly HashSet<TestExecutor> _executors = new();
+        readonly Dictionary<TestExecutor, Task> _executorTasks = new();
+        readonly ConcurrentQueue<TestExecutor> _completedExecutors = new();
 
-        readonly CancellationTokenSource cts = new();
-        CancellationTokenRegistration externalCancellationRegistration;
-        bool externalCancellationRegistered = false;
+        readonly CancellationTokenSource _cts = new();
+        CancellationTokenRegistration _externalCancellationRegistration;
+        bool _externalCancellationRegistered = false;
 
         public const string DividingLine = "==============================";
 
@@ -59,11 +59,11 @@ namespace UniTest
         public async Task<Node<TModel>> Execute(int depth, bool stopOnFailure = true, CancellationToken cancellationToken = default)
         {
             DoExecute(cancellationToken);
-            targetDepth = depth;
+            _targetDepth = depth;
 
-            var ct = cts.Token;
+            var ct = _cts.Token;
             var rootNode = new Node<TModel>(null);
-            idleNodes.Enqueue(rootNode);
+            _idleNodes.Enqueue(rootNode);
 
             try
             {
@@ -72,42 +72,42 @@ namespace UniTest
                     ct.ThrowIfCancellationRequested();
 
 
-                    lock (idleLock)
+                    lock (_idleLock)
                     {
-                        while (idleNodes.TryDequeue(out var node))
+                        while (_idleNodes.TryDequeue(out var node))
                         {
                             var designer = new TestDesigner(this, node);
-                            designers.Add(designer);
+                            _designers.Add(designer);
 
-                            designerTasks[designer] = designer.Execute(ct);
+                            _designerTasks[designer] = designer.Execute(ct);
                         }
                     }
 
-                    while (completedDesigners.TryDequeue(out var designer))
+                    while (_completedDesigners.TryDequeue(out var designer))
                     {
-                        designers.Remove(designer);
-                        ObserveTask(designerTasks, designer);
+                        _designers.Remove(designer);
+                        ObserveTask(_designerTasks, designer);
                     }
 
-                    lock (preparedLock)
+                    lock (_preparedLock)
                     {
-                        while (preparedNodes.TryDequeue(out var node))
+                        while (_preparedNodes.TryDequeue(out var node))
                         {
                             var executor = new TestExecutor(this, node);
 
-                            executors.Add(executor);
-                            executorTasks[executor] = executor.Execute(ct);
+                            _executors.Add(executor);
+                            _executorTasks[executor] = executor.Execute(ct);
                         }
                     }
 
-                    while (completedExecutors.TryDequeue(out var executor))
+                    while (_completedExecutors.TryDequeue(out var executor))
                     {
-                        executors.Remove(executor);
-                        ObserveTask(executorTasks, executor);
+                        _executors.Remove(executor);
+                        ObserveTask(_executorTasks, executor);
                     }
 
 
-                    if (stopOnFailure && failureOccurred)
+                    if (stopOnFailure && _failureOccurred)
                     {
                         Logger.Log(DividingLine);
                         Logger.Log("Cancelling operation: a failure has occurred");
@@ -116,15 +116,15 @@ namespace UniTest
                         return rootNode;
                     }
 
-                    if (designers.Count == 0 && executors.Count == 0)
+                    if (_designers.Count == 0 && _executors.Count == 0)
                     {
                         bool isEmpty = true;
 
-                        lock (idleLock)
-                            if (idleNodes.Count > 0) isEmpty = false;
+                        lock (_idleLock)
+                            if (_idleNodes.Count > 0) isEmpty = false;
 
-                        lock (preparedLock)
-                            if (preparedNodes.Count > 0) isEmpty = false;
+                        lock (_preparedLock)
+                            if (_preparedNodes.Count > 0) isEmpty = false;
 
                         if (isEmpty)
                             break;
@@ -162,7 +162,7 @@ namespace UniTest
         {
             DoExecute(cancellationToken);
 
-            var ct = cts.Token;
+            var ct = _cts.Token;
             var rootNode = new Node<TModel>(null);
             var node = rootNode;
 
@@ -180,9 +180,9 @@ namespace UniTest
                     node.Execute();
 
                     if (node.Status == Node<TModel>.NodeStatus.Failure || node.Exception != null)
-                        failureOccurred = true;
+                        _failureOccurred = true;
 
-                    if (stopOnFailure && failureOccurred)
+                    if (stopOnFailure && _failureOccurred)
                     {
                         Logger.Log(DividingLine);
                         Logger.Log("Operation cancelled due to failure.");
@@ -226,7 +226,7 @@ namespace UniTest
         {
             DoExecute(cancellationToken);
 
-            var ct = cts.Token;
+            var ct = _cts.Token;
             var rootNode = new Node<TModel>(null);
             var node = rootNode;
 
@@ -239,12 +239,12 @@ namespace UniTest
                     ct.ThrowIfCancellationRequested();
 
                     await new TestDesigner(this, node).Execute(ct);
-                    await Task.WhenAll(preparedNodes.Select(n => new TestExecutor(this, n).Execute(ct)));
+                    await Task.WhenAll(_preparedNodes.Select(n => new TestExecutor(this, n).Execute(ct)));
 
-                    completedDesigners.Clear();
-                    completedExecutors.Clear();
+                    _completedDesigners.Clear();
+                    _completedExecutors.Clear();
 
-                    if (stopOnFailure && failureOccurred)
+                    if (stopOnFailure && _failureOccurred)
                     {
                         Logger.Log(DividingLine);
                         Logger.Log("Operation cancelled due to failure.");
@@ -254,15 +254,15 @@ namespace UniTest
                     }
 
 
-                    var candidates = idleNodes.Where(n => n.Model.Sustainable);
+                    var candidates = _idleNodes.Where(n => n.Model.Sustainable);
                     if (!candidates.Any()) break;
 
                     node = candidates
                         .OrderBy(c => c.ID)
                         .ElementAt(node.Model.GetDeterministicRandom(candidates.Count(), seed));
 
-                    preparedNodes.Clear();
-                    idleNodes.Clear();
+                    _preparedNodes.Clear();
+                    _idleNodes.Clear();
                 }
 
                 return rootNode;
@@ -305,7 +305,7 @@ namespace UniTest
 
             if (task.IsFaulted)
             {
-                failureOccurred = true;
+                _failureOccurred = true;
                 Logger.LogException(task.Exception.GetBaseException());
             }
         }
@@ -315,19 +315,19 @@ namespace UniTest
             if (!cancellationToken.CanBeCanceled)
                 return;
 
-            externalCancellationRegistration = cancellationToken.Register(Cancel);
-            externalCancellationRegistered = true;
+            _externalCancellationRegistration = cancellationToken.Register(Cancel);
+            _externalCancellationRegistered = true;
         }
 
         void CompleteExecution()
         {
-            if (externalCancellationRegistered)
+            if (_externalCancellationRegistered)
             {
-                externalCancellationRegistration.Dispose();
-                externalCancellationRegistered = false;
+                _externalCancellationRegistration.Dispose();
+                _externalCancellationRegistered = false;
             }
 
-            cts.Dispose();
+            _cts.Dispose();
         }
 
         public void Cancel()
@@ -336,7 +336,7 @@ namespace UniTest
 
             try
             {
-                cts?.Cancel();
+                _cts?.Cancel();
             }
             catch (ObjectDisposedException) { }
         }

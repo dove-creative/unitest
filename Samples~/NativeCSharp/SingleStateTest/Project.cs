@@ -9,7 +9,7 @@ namespace UniTest_Test.SingleState
 {
     public class Project : Project<Model>
     {
-        const int postExecutionCount = 2;
+        const int PostExecutionCount = 2;
 
         enum KickboardState
         {
@@ -227,7 +227,7 @@ namespace UniTest_Test.SingleState
                         Arranger = model => model.isDisposed = true,
                         Actor = model => model.Kickboard.Dispose(),
                         Asserter = Check,
-                        RemainingExecutionCount = postExecutionCount
+                        RemainingExecutionCount = PostExecutionCount
                     });
                     break;
 
@@ -242,7 +242,7 @@ namespace UniTest_Test.SingleState
                         },
                         Actor = model => model.Kickboard.Dispose(),
                         Asserter = Check,
-                        RemainingExecutionCount = postExecutionCount
+                        RemainingExecutionCount = PostExecutionCount
                     });
                     break;
 
@@ -252,7 +252,7 @@ namespace UniTest_Test.SingleState
                     {
                         Actor = model => SampleAssert.DoesNotThrow(() => model.Kickboard.Dispose()),
                         Asserter = Check,
-                        RemainingExecutionCount = postExecutionCount
+                        RemainingExecutionCount = PostExecutionCount
                     });
                     break;
             }

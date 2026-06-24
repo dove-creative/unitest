@@ -7,7 +7,7 @@ namespace UniTest_Test.MultiState
 {
     public partial class Project : Project<Model>
     {
-        readonly int postExecutionCount = 2;
+        readonly int _postExecutionCount = 2;
 
         public enum MainTestCase
         {

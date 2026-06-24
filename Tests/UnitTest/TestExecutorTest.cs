@@ -9,36 +9,36 @@ using UniTest;
 
 public class TestExecutorTest
 {
-    object testExecutor;
-    int DELAY = 100;
+    object _testExecutor;
+    int _delay = 100;
 
-    Lab<Model> lab;
-    Node<Model> node;
+    Lab<Model> _lab;
+    Node<Model> _node;
 
-    Func<Model, IEnumerable<ILab<Model>>> createLabs;
-    ProjectMock project;
+    Func<Model, IEnumerable<ILab<Model>>> _createLabs;
+    ProjectMock _project;
 
-    ICollection completedExecutors;
-    Queue<Node<Model>> idleNodes;
-    CancellationTokenSource cts;
+    ICollection _completedExecutors;
+    Queue<Node<Model>> _idleNodes;
+    CancellationTokenSource _cts;
 
 
     void SetUp(Lab<Model> lab, int targetDepth = int.MaxValue)
     {
-        project = new ProjectMock().SetTargetDepth(targetDepth);
+        _project = new ProjectMock().SetTargetDepth(targetDepth);
 
-        completedExecutors = (ICollection)typeof(Project<Model>)
-            .GetField("completedExecutors", BindingFlags.Instance | BindingFlags.NonPublic)
-            .GetValue(project);
+        _completedExecutors = (ICollection)typeof(Project<Model>)
+            .GetField("_completedExecutors", BindingFlags.Instance | BindingFlags.NonPublic)
+            .GetValue(_project);
 
-        idleNodes = (Queue<Node<Model>>)typeof(Project<Model>)
-            .GetField("idleNodes", BindingFlags.Instance | BindingFlags.NonPublic)
-            .GetValue(project);
+        _idleNodes = (Queue<Node<Model>>)typeof(Project<Model>)
+            .GetField("_idleNodes", BindingFlags.Instance | BindingFlags.NonPublic)
+            .GetValue(_project);
 
-        cts = new();
+        _cts = new();
 
-        this.lab = lab;
-        node = new Node<Model>(lab);
+        this._lab = lab;
+        _node = new Node<Model>(lab);
 
         var ctorInfo = typeof(Project<Model>)
             .GetNestedType("TestExecutor", BindingFlags.NonPublic)
@@ -50,47 +50,47 @@ public class TestExecutorTest
                 modifiers: null
             );
 
-        testExecutor = ctorInfo.Invoke(new object[] { project, node });
+        _testExecutor = ctorInfo.Invoke(new object[] { _project, _node });
     }
 
     [TearDown]
     public void TearDown()
     {
-        project = null;
-        testExecutor = null;
-        node = null;
+        _project = null;
+        _testExecutor = null;
+        _node = null;
 
-        if (cts != null)
+        if (_cts != null)
         {
-            cts.Cancel();
-            cts.Dispose();
+            _cts.Cancel();
+            _cts.Dispose();
         }
 
-        completedExecutors = null;
-        idleNodes = null;
+        _completedExecutors = null;
+        _idleNodes = null;
     }
 
     public void CheckNode(Node<Model> node, Node<Model>.NodeStatus status, int depth,
         Node<Model> before, IEnumerable<Node<Model>> afters, Type expectedExceptionType, Lab<Model> lab)
     {
-        Assert.AreEqual(status, node.Status);
-        Assert.AreEqual(depth, node.Depth);
-        Assert.AreSame(before, node.Before);
-        CollectionAssert.AreEquivalent(afters ?? Array.Empty<Node<Model>>(), node.Afters);
+        Assert.That(node.Status, Is.EqualTo(status));
+        Assert.That(node.Depth, Is.EqualTo(depth));
+        Assert.That(node.Before, Is.SameAs(before));
+        Assert.That(node.Afters, Is.EquivalentTo(afters ?? Array.Empty<Node<Model>>()));
 
         if (expectedExceptionType != null)
-            Assert.IsAssignableFrom(expectedExceptionType, node.Exception);
+            Assert.That(node.Exception, Is.AssignableTo(expectedExceptionType));
         else
-            Assert.IsNull(node.Exception);
+            Assert.That(node.Exception, Is.Null);
 
-        Assert.AreSame(lab, node.Lab);
-        Assert.AreSame(lab?.ID ?? "root", node.ID);
-        Assert.IsNotNull(node.Model);
+        Assert.That(node.Lab, Is.SameAs(lab));
+        Assert.That(node.ID, Is.SameAs(lab?.ID ?? "root"));
+        Assert.That(node.Model, Is.Not.Null);
     }
 
     async Task Execute()
     {
-        var method = testExecutor.GetType()
+        var method = _testExecutor.GetType()
             .GetMethod(
                 "Execute",
                 BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public,
@@ -99,7 +99,7 @@ public class TestExecutorTest
                 modifiers: null
             );
 
-        await (Task)method.Invoke(testExecutor, new object[] { cts.Token });
+        await (Task)method.Invoke(_testExecutor, new object[] { _cts.Token });
     }
 
 
@@ -115,9 +115,9 @@ public class TestExecutorTest
         await Execute();
         
         // Assert
-        CollectionAssert.AreEqual(new[] { testExecutor }, completedExecutors);
-        CollectionAssert.AreEqual(new[] { node }, idleNodes);
-        CheckNode(node, Node<Model>.NodeStatus.Success, 0, null, null, null, lab);
+        Assert.That(_completedExecutors, Is.EqualTo(new[] { _testExecutor }));
+        Assert.That(_idleNodes, Is.EqualTo(new[] { _node }));
+        CheckNode(_node, Node<Model>.NodeStatus.Success, 0, null, null, null, _lab);
     }
     [Test]
     public async Task Execute_Idle_ExecptionThrown()
@@ -129,9 +129,9 @@ public class TestExecutorTest
         await Execute();
 
         // Assert
-        CollectionAssert.AreEqual(new[] { testExecutor }, completedExecutors);
-        CollectionAssert.IsEmpty(idleNodes);
-        CheckNode(node, Node<Model>.NodeStatus.Failure, 0, null, null, typeof(ExecutionException), lab);
+        Assert.That(_completedExecutors, Is.EqualTo(new[] { _testExecutor }));
+        Assert.That(_idleNodes, Is.Empty);
+        CheckNode(_node, Node<Model>.NodeStatus.Failure, 0, null, null, typeof(ExecutionException), _lab);
     }
     [Test]
     public async Task Execute_Idle_ReachedDepthLimit()
@@ -143,9 +143,9 @@ public class TestExecutorTest
         await Execute();
 
         // Assert
-        CollectionAssert.AreEqual(new[] { testExecutor }, completedExecutors);
-        CollectionAssert.IsEmpty(idleNodes);
-        CheckNode(node, Node<Model>.NodeStatus.Success, 0, null, null, null, lab);
+        Assert.That(_completedExecutors, Is.EqualTo(new[] { _testExecutor }));
+        Assert.That(_idleNodes, Is.Empty);
+        CheckNode(_node, Node<Model>.NodeStatus.Success, 0, null, null, null, _lab);
     }
     [Test]
     public void Execute_Idle_NullLab()
@@ -166,12 +166,12 @@ public class TestExecutorTest
         SetUp(new Lab<Model>());
 
         // Act
-        cts.Cancel();
+        _cts.Cancel();
 
         // Assert
-        CollectionAssert.IsEmpty(completedExecutors);
-        CollectionAssert.IsEmpty(idleNodes);
-        CheckNode(node, Node<Model>.NodeStatus.Ready, 0, null, null, null, lab);
+        Assert.That(_completedExecutors, Is.Empty);
+        Assert.That(_idleNodes, Is.Empty);
+        CheckNode(_node, Node<Model>.NodeStatus.Ready, 0, null, null, null, _lab);
     }
     [Test]
     public void OnCancel_Idle_ExecptionThrown()
@@ -180,12 +180,12 @@ public class TestExecutorTest
         SetUp(new Lab<Model>(actor: (_, _) => throw new ProbeException()));
 
         // Act
-        cts.Cancel();
+        _cts.Cancel();
 
         // Assert
-        CollectionAssert.IsEmpty(completedExecutors);
-        CollectionAssert.IsEmpty(idleNodes);
-        CheckNode(node, Node<Model>.NodeStatus.Ready, 0, null, null, null, lab);
+        Assert.That(_completedExecutors, Is.Empty);
+        Assert.That(_idleNodes, Is.Empty);
+        CheckNode(_node, Node<Model>.NodeStatus.Ready, 0, null, null, null, _lab);
     }
     [Test]
     public void OnCancel_Idle_ReachedDepthLimit()
@@ -194,12 +194,12 @@ public class TestExecutorTest
         SetUp(new Lab<Model>(), 0);
 
         // Act
-        cts.Cancel();
+        _cts.Cancel();
 
         // Assert
-        CollectionAssert.IsEmpty(completedExecutors);
-        CollectionAssert.IsEmpty(idleNodes);
-        CheckNode(node, Node<Model>.NodeStatus.Ready, 0, null, null, null, lab);
+        Assert.That(_completedExecutors, Is.Empty);
+        Assert.That(_idleNodes, Is.Empty);
+        CheckNode(_node, Node<Model>.NodeStatus.Ready, 0, null, null, null, _lab);
     }
     [Test]
     public void OnCancel_Idle_NullLab()
@@ -208,12 +208,12 @@ public class TestExecutorTest
         SetUp(null);
 
         // Act
-        cts.Cancel();
+        _cts.Cancel();
 
         // Assert
-        CollectionAssert.IsEmpty(completedExecutors);
-        CollectionAssert.IsEmpty(idleNodes);
-        CheckNode(node, Node<Model>.NodeStatus.Root, 0, null, null, null, lab);
+        Assert.That(_completedExecutors, Is.Empty);
+        Assert.That(_idleNodes, Is.Empty);
+        CheckNode(_node, Node<Model>.NodeStatus.Root, 0, null, null, null, _lab);
     }
     #endregion
 
@@ -225,60 +225,60 @@ public class TestExecutorTest
     {
         // Arrange
         SetUp(new Lab<Model>());
-        cts.Cancel();
+        _cts.Cancel();
 
         // Act
         await Execute();
 
         // Assert
-        CollectionAssert.AreEqual(new[] { testExecutor }, completedExecutors);
-        CollectionAssert.IsEmpty(idleNodes);
-        CheckNode(node, Node<Model>.NodeStatus.Cancelled, 0, null, null, typeof(OperationCanceledException), lab);
+        Assert.That(_completedExecutors, Is.EqualTo(new[] { _testExecutor }));
+        Assert.That(_idleNodes, Is.Empty);
+        CheckNode(_node, Node<Model>.NodeStatus.Cancelled, 0, null, null, typeof(OperationCanceledException), _lab);
     }
     [Test]
     public async Task Execute_Cancelled_ExecptionThrown()
     {
         // Arrange
         SetUp(new Lab<Model>(actor: (_, _) => throw new ProbeException()));
-        cts.Cancel();
+        _cts.Cancel();
 
         // Act
         await Execute();
 
         // Assert
-        CollectionAssert.AreEqual(new[] { testExecutor }, completedExecutors);
-        CollectionAssert.IsEmpty(idleNodes);
-        CheckNode(node, Node<Model>.NodeStatus.Cancelled, 0, null, null, typeof(OperationCanceledException), lab);
+        Assert.That(_completedExecutors, Is.EqualTo(new[] { _testExecutor }));
+        Assert.That(_idleNodes, Is.Empty);
+        CheckNode(_node, Node<Model>.NodeStatus.Cancelled, 0, null, null, typeof(OperationCanceledException), _lab);
     }
     [Test]
     public async Task Execute_Cancelled_ReachedDepthLimit()
     {
         // Arrange
         SetUp(new Lab<Model>(), 0);
-        cts.Cancel();
+        _cts.Cancel();
 
         // Act
         await Execute();
 
         // Assert
-        CollectionAssert.AreEqual(new[] { testExecutor }, completedExecutors);
-        CollectionAssert.IsEmpty(idleNodes);
-        CheckNode(node, Node<Model>.NodeStatus.Cancelled, 0, null, null, typeof(OperationCanceledException), lab);
+        Assert.That(_completedExecutors, Is.EqualTo(new[] { _testExecutor }));
+        Assert.That(_idleNodes, Is.Empty);
+        CheckNode(_node, Node<Model>.NodeStatus.Cancelled, 0, null, null, typeof(OperationCanceledException), _lab);
     }
     [Test]
     public async Task Execute_Cancelled_NullLab()
     {
         // Arrange
         SetUp(null);
-        cts.Cancel();
+        _cts.Cancel();
 
         // Act
         await Execute();
 
         // Assert
-        CollectionAssert.AreEqual(new[] { testExecutor }, completedExecutors);
-        CollectionAssert.IsEmpty(idleNodes);
-        CheckNode(node, Node<Model>.NodeStatus.Cancelled, 0, null, null, typeof(OperationCanceledException), lab);
+        Assert.That(_completedExecutors, Is.EqualTo(new[] { _testExecutor }));
+        Assert.That(_idleNodes, Is.Empty);
+        CheckNode(_node, Node<Model>.NodeStatus.Cancelled, 0, null, null, typeof(OperationCanceledException), _lab);
     }
     #endregion
 
@@ -289,7 +289,7 @@ public class TestExecutorTest
     public void Execute_Executing_Normal()
     {
         // Arrange
-        SetUp(new Lab<Model>(actor: (_, _) => Thread.Sleep(DELAY)));
+        SetUp(new Lab<Model>(actor: (_, _) => Thread.Sleep(_delay)));
         _ = Execute();
 
         // Act & Assert
@@ -312,17 +312,17 @@ public class TestExecutorTest
     public async Task OnCancel_Executing_Normal()
     {
         // Arrange
-        SetUp(new Lab<Model>(actor: (_, _) => Thread.Sleep(DELAY)));
+        SetUp(new Lab<Model>(actor: (_, _) => Thread.Sleep(_delay)));
         var task = Execute();
 
         // Act
-        cts.Cancel();
+        _cts.Cancel();
         await task;
 
         // Assert
-        CollectionAssert.AreEqual(new[] { testExecutor }, completedExecutors);
-        CollectionAssert.IsEmpty(idleNodes);
-        CheckNode(node, Node<Model>.NodeStatus.Cancelled, 0, null, null, typeof(OperationCanceledException), lab);
+        Assert.That(_completedExecutors, Is.EqualTo(new[] { _testExecutor }));
+        Assert.That(_idleNodes, Is.Empty);
+        CheckNode(_node, Node<Model>.NodeStatus.Cancelled, 0, null, null, typeof(OperationCanceledException), _lab);
     }
     [Test]
     public async Task OnCancel_Executing_NullLab()
@@ -332,13 +332,13 @@ public class TestExecutorTest
         var task = Execute();
 
         // Act
-        cts.Cancel();
+        _cts.Cancel();
         await task;
 
         // Assert
-        CollectionAssert.AreEqual(new[] { testExecutor }, completedExecutors);
-        CollectionAssert.IsEmpty(idleNodes);
-        CheckNode(node, Node<Model>.NodeStatus.Cancelled, 0, null, null, typeof(OperationCanceledException), lab);
+        Assert.That(_completedExecutors, Is.EqualTo(new[] { _testExecutor }));
+        Assert.That(_idleNodes, Is.Empty);
+        CheckNode(_node, Node<Model>.NodeStatus.Cancelled, 0, null, null, typeof(OperationCanceledException), _lab);
     }
     #endregion
 
@@ -402,7 +402,7 @@ public class TestExecutorTest
         await Execute();
 
         // Act & Assert
-        Assert.DoesNotThrow(() => cts.Cancel());
+        Assert.DoesNotThrow(() => _cts.Cancel());
     }
     [Test]
     public async Task OnCancel_Executed_ExecptionThrown()
@@ -412,7 +412,7 @@ public class TestExecutorTest
         await Execute();
 
         // Act & Assert
-        Assert.DoesNotThrow(() => cts.Cancel());
+        Assert.DoesNotThrow(() => _cts.Cancel());
     }
     [Test]
     public async Task OnCancel_Executed_ReachedDepthLimit()
@@ -422,7 +422,7 @@ public class TestExecutorTest
         await Execute();
 
         // Act & Assert
-        Assert.DoesNotThrow(() => cts.Cancel());
+        Assert.DoesNotThrow(() => _cts.Cancel());
     }
     [Test]
     public async Task OnCancel_Executed_NullLab()
@@ -438,7 +438,7 @@ public class TestExecutorTest
 
 
         // Act & Assert
-        Assert.DoesNotThrow(() => cts.Cancel());
+        Assert.DoesNotThrow(() => _cts.Cancel());
     }
     #endregion
 }

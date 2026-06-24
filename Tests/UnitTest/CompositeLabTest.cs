@@ -6,33 +6,33 @@ using UniTest;
 
 public class CompositeLabTest
 {
-    Lab<Model> lab_1;
-    Lab<Model> lab_2;
-    Lab<Model> lab_3;
-    CompositeLab<Model> compositeLab;
+    Lab<Model> _lab1;
+    Lab<Model> _lab2;
+    Lab<Model> _lab3;
+    CompositeLab<Model> _compositeLab;
 
-    Model model;
+    Model _model;
 
     [SetUp]
     public void SetUp()
     {
-        lab_1 = new Lab<Model>("lab_1");
-        lab_2 = new Lab<Model>("lab_2");
-        lab_3 = new Lab<Model>("lab_3");
-        compositeLab = new CompositeLab<Model>(lab_1, lab_2);
+        _lab1 = new Lab<Model>("lab_1");
+        _lab2 = new Lab<Model>("lab_2");
+        _lab3 = new Lab<Model>("lab_3");
+        _compositeLab = new CompositeLab<Model>(_lab1, _lab2);
 
-        model = new();
+        _model = new();
     }
 
     [TearDown]
     public void TearDown()
     {
-        lab_1 = null;
-        lab_2 = null;
-        lab_3 = null;
-        compositeLab = null;
+        _lab1 = null;
+        _lab2 = null;
+        _lab3 = null;
+        _compositeLab = null;
 
-        model = null;
+        _model = null;
     }
 
     public struct Order
@@ -137,11 +137,11 @@ public class CompositeLabTest
     public void Execute_NullModel()
     {
         // Act
-        compositeLab.Execute(null, out var ex);
+        _compositeLab.Execute(null, out var ex);
 
         // Assert
-        Assert.IsAssignableFrom<ExecutionException>(ex);
-        Assert.AreEqual("Model setting failed", ex.Message);
+        Assert.That(ex, Is.AssignableTo<ExecutionException>());
+        Assert.That(ex.Message, Is.EqualTo("Model setting failed"));
     }
 
 
@@ -151,101 +151,100 @@ public class CompositeLabTest
     public void Execute_Model(Order order)
     {
         // Arrange
-        SetLabs(order, lab_1, lab_2);
+        SetLabs(order, _lab1, _lab2);
         Exception ex;
 
         // Act
-        compositeLab.Execute(model, out var _ex);
+        _compositeLab.Execute(_model, out var _ex);
         ex = _ex;
 
         // Assert
         if (!order.lab_2_conditions[0])
         {
-            Assert.IsAssignableFrom<ExecutionException>(ex);
+            Assert.That(ex, Is.AssignableTo<ExecutionException>());
 
             ex = ex.InnerException;
-            Assert.IsAssignableFrom<ProbeException>(ex, ex?.Message ?? "-");
-            Assert.AreEqual($"{lab_2.ID}.Arranger Failure", ex.Message);
+            Assert.That(ex, Is.AssignableTo<ProbeException>(), ex?.Message ?? "-");
+            Assert.That(ex.Message, Is.EqualTo($"{_lab2.ID}.Arranger Failure"));
 
-            Assert.IsFalse(model.Continuable);
+            Assert.That(_model.Continuable, Is.False);
             return;
         }
         if (!order.lab_1_conditions[0])
         {
-            Assert.IsAssignableFrom<ExecutionException>(ex);
+            Assert.That(ex, Is.AssignableTo<ExecutionException>());
 
             ex = ex.InnerException;
-            Assert.IsAssignableFrom<ProbeException>(ex, ex?.Message ?? "-");
-            Assert.AreEqual($"{lab_1.ID}.Arranger Failure", ex.Message);
+            Assert.That(ex, Is.AssignableTo<ProbeException>(), ex?.Message ?? "-");
+            Assert.That(ex.Message, Is.EqualTo($"{_lab1.ID}.Arranger Failure"));
 
-            Assert.IsFalse(model.Continuable);
+            Assert.That(_model.Continuable, Is.False);
             return;
         }
 
 
         if (!order.lab_2_conditions[1])
         {
-            Assert.IsNull(ex);
+            Assert.That(ex, Is.Null);
         }
         if (!order.lab_1_conditions[1])
         {
-            Assert.IsAssignableFrom<ExecutionException>(ex);
+            Assert.That(ex, Is.AssignableTo<ExecutionException>());
 
             ex = ex.InnerException;
-            Assert.IsAssignableFrom<ProbeException>(ex, ex?.Message ?? "-");
-            Assert.AreEqual($"{lab_1.ID}.Actor Failure", ex.Message);
+            Assert.That(ex, Is.AssignableTo<ProbeException>(), ex?.Message ?? "-");
+            Assert.That(ex.Message, Is.EqualTo($"{_lab1.ID}.Actor Failure"));
 
-            Assert.IsFalse(model.Continuable);
+            Assert.That(_model.Continuable, Is.False);
             return;
         }
 
 
         if (!order.lab_2_conditions[2])
         {
-            Assert.IsAssignableFrom<ExecutionException>(ex);
+            Assert.That(ex, Is.AssignableTo<ExecutionException>());
 
             ex = ex.InnerException;
-            Assert.IsAssignableFrom<ProbeException>(ex, ex?.Message ?? "-");
-            Assert.AreEqual($"{lab_2.ID}.Asserter Failure", ex.Message);
+            Assert.That(ex, Is.AssignableTo<ProbeException>(), ex?.Message ?? "-");
+            Assert.That(ex.Message, Is.EqualTo($"{_lab2.ID}.Asserter Failure"));
 
-            Assert.IsFalse(model.Continuable);
+            Assert.That(_model.Continuable, Is.False);
             return;
         }
         if (!order.lab_1_conditions[2])
         {
-            Assert.IsAssignableFrom<ExecutionException>(ex);
+            Assert.That(ex, Is.AssignableTo<ExecutionException>());
 
             ex = ex.InnerException;
-            Assert.IsAssignableFrom<ProbeException>(ex, ex?.Message ?? "-");
-            Assert.AreEqual($"{lab_1.ID}.Asserter Failure", ex.Message);
+            Assert.That(ex, Is.AssignableTo<ProbeException>(), ex?.Message ?? "-");
+            Assert.That(ex.Message, Is.EqualTo($"{_lab1.ID}.Asserter Failure"));
 
-            Assert.IsFalse(model.Continuable);
+            Assert.That(_model.Continuable, Is.False);
             return;
         }
 
-        Assert.IsNull(ex);
-        Assert.IsTrue(model.Continuable);
+        Assert.That(ex, Is.Null);
+        Assert.That(_model.Continuable, Is.True);
     }
 
     [Test]
     public void Execute_ExtensionExpectedException()
     {
         // Arrange
-        lab_1.Actor = (_, _) => { };
-        lab_2 = new Lab<Model>(
+        _lab1.Actor = (_, _) => { };
+        _lab2 = new Lab<Model>(
             "lab_2",
             expectedExceptionType: typeof(ProbeException));
-        compositeLab = new CompositeLab<Model>(lab_1, lab_2);
+        _compositeLab = new CompositeLab<Model>(_lab1, _lab2);
 
         // Act
-        compositeLab.Execute(model, out var ex);
+        _compositeLab.Execute(_model, out var ex);
 
         // Assert
-        Assert.IsAssignableFrom<ExecutionException>(ex);
-        Assert.IsAssignableFrom<MissingExpectedException>(ex.InnerException);
-        Assert.AreEqual(typeof(ProbeException),
-            ((MissingExpectedException)ex.InnerException).ExpectedExceptionType);
-        Assert.IsFalse(model.Continuable);
+        Assert.That(ex, Is.AssignableTo<ExecutionException>());
+        Assert.That(ex.InnerException, Is.AssignableTo<MissingExpectedException>());
+        Assert.That(((MissingExpectedException)ex.InnerException).ExpectedExceptionType, Is.EqualTo(typeof(ProbeException)));
+        Assert.That(_model.Continuable, Is.False);
     }
 
 
@@ -254,13 +253,13 @@ public class CompositeLabTest
         bool lab_1_ts, bool lab_1_tu, int lab_1_rec, bool lab_2_ts, bool lab_2_tu, int lab_2_rec)
     {
         // Arrange
-        lab_1.Arranger = (_, md) =>
+        _lab1.Arranger = (_, md) =>
         {
             md.ToUnsustainable = lab_1_ts;
             md.ToUncontinuable = lab_1_tu;
             md.RemainingExecutionCount = lab_1_rec;
         };
-        lab_2.Arranger = (_, md) =>
+        _lab2.Arranger = (_, md) =>
         {
             md.ToUnsustainable = lab_2_ts;
             md.ToUncontinuable = lab_2_tu;
@@ -268,22 +267,20 @@ public class CompositeLabTest
         };
 
         // Act
-        compositeLab.Execute(model, out var ex);
+        _compositeLab.Execute(_model, out var ex);
 
         // Assert
-        Assert.IsNull(ex);
-        Assert.AreEqual((lab_1_ts || lab_2_ts) || (lab_1_tu || lab_2_tu) || (lab_1_rec >= 0 || lab_2_rec >= 0), !model.Sustainable);
-        Assert.AreEqual((lab_1_tu || lab_2_tu) || (lab_1_rec == 0 || lab_2_rec == 0), !model.Continuable);
+        Assert.That(ex, Is.Null);
+        Assert.That(!_model.Sustainable, Is.EqualTo((lab_1_ts || lab_2_ts) || (lab_1_tu || lab_2_tu) || (lab_1_rec >= 0 || lab_2_rec >= 0)));
+        Assert.That(!_model.Continuable, Is.EqualTo((lab_1_tu || lab_2_tu) || (lab_1_rec == 0 || lab_2_rec == 0)));
 
         if (lab_1_rec >= 0 || lab_2_rec >= 0)
         {
-            Assert.AreEqual(
-                Math.Min(lab_1_rec >= 0 ? lab_1_rec : int.MaxValue, lab_2_rec >= 0 ? lab_2_rec : int.MaxValue),
-                model.RemainingExecutionCount);
+            Assert.That(_model.RemainingExecutionCount, Is.EqualTo(Math.Min(lab_1_rec >= 0 ? lab_1_rec : int.MaxValue, lab_2_rec >= 0 ? lab_2_rec : int.MaxValue)));
         }
         else
-            Assert.IsNull(model.RemainingExecutionCount);
-    } 
+            Assert.That(_model.RemainingExecutionCount, Is.Null);
+    }
 
 
 
@@ -296,12 +293,12 @@ public class CompositeLabTest
             yield return new TestCaseData(order.OriginalArguments[0], 2).SetName(order.TestName + " case 2");
         }
     }
-     
+
     [TestCaseSource(nameof(GetTestCases_Ordered))]
     public void Extend(Order order, int testOrder)
     {
         // Arrange
-        compositeLab = compositeLab.Extend(lab_3);
+        _compositeLab = _compositeLab.Extend(_lab3);
         Exception ex;
 
         Lab<Model> lab_a;
@@ -310,18 +307,18 @@ public class CompositeLabTest
         switch (testOrder)
         {
             case 0:
-                lab_a = lab_1;
-                lab_b = lab_2;
+                lab_a = _lab1;
+                lab_b = _lab2;
                 break;
 
             case 1:
-                lab_a = lab_2;
-                lab_b = lab_3;
+                lab_a = _lab2;
+                lab_b = _lab3;
                 break;
 
             case 2:
-                lab_a = lab_1;
-                lab_b = lab_3;
+                lab_a = _lab1;
+                lab_b = _lab3;
                 break;
 
             default:
@@ -331,71 +328,71 @@ public class CompositeLabTest
         SetLabs(order, lab_a, lab_b);
 
         // Act
-        compositeLab.Execute(model, out var _ex);
+        _compositeLab.Execute(_model, out var _ex);
         ex = _ex;
 
         // Assert
         if (!order.lab_2_conditions[0])
         {
-            Assert.IsAssignableFrom<ExecutionException>(ex);
+            Assert.That(ex, Is.AssignableTo<ExecutionException>());
 
             ex = ex.InnerException;
-            Assert.IsAssignableFrom<ProbeException>(ex, ex?.Message ?? "-");
-            Assert.AreEqual($"{lab_b.ID}.Arranger Failure", ex.Message); 
+            Assert.That(ex, Is.AssignableTo<ProbeException>(), ex?.Message ?? "-");
+            Assert.That(ex.Message, Is.EqualTo($"{lab_b.ID}.Arranger Failure"));
 
-            Assert.IsFalse(model.Continuable);
+            Assert.That(_model.Continuable, Is.False);
             return;
         }
         if (!order.lab_1_conditions[0])
         {
-            Assert.IsAssignableFrom<ExecutionException>(ex);
+            Assert.That(ex, Is.AssignableTo<ExecutionException>());
 
             ex = ex.InnerException;
-            Assert.IsAssignableFrom<ProbeException>(ex, ex?.Message ?? "-");
-            Assert.AreEqual($"{lab_a.ID}.Arranger Failure", ex.Message);
+            Assert.That(ex, Is.AssignableTo<ProbeException>(), ex?.Message ?? "-");
+            Assert.That(ex.Message, Is.EqualTo($"{lab_a.ID}.Arranger Failure"));
 
-            Assert.IsFalse(model.Continuable);
+            Assert.That(_model.Continuable, Is.False);
             return;
         }
 
 
-        if (!order.lab_1_conditions[1] && lab_a == lab_1)
+        if (!order.lab_1_conditions[1] && lab_a == _lab1)
         {
-            Assert.IsAssignableFrom<ExecutionException>(ex);
+            Assert.That(ex, Is.AssignableTo<ExecutionException>());
 
             ex = ex.InnerException;
-            Assert.IsAssignableFrom<ProbeException>(ex, ex?.Message ?? "-");
-            Assert.AreEqual($"{lab_a.ID}.Actor Failure", ex.Message);
+            Assert.That(ex, Is.AssignableTo<ProbeException>(), ex?.Message ?? "-");
+            Assert.That(ex.Message, Is.EqualTo($"{lab_a.ID}.Actor Failure"));
 
-            Assert.IsFalse(model.Continuable);
+            Assert.That(_model.Continuable, Is.False);
             return;
         }
 
 
         if (!order.lab_2_conditions[2])
         {
-            Assert.IsAssignableFrom<ExecutionException>(ex);
+            Assert.That(ex, Is.AssignableTo<ExecutionException>());
 
             ex = ex.InnerException;
-            Assert.IsAssignableFrom<ProbeException>(ex, ex?.Message ?? "-");
-            Assert.AreEqual($"{lab_b.ID}.Asserter Failure", ex.Message);
+            Assert.That(ex, Is.AssignableTo<ProbeException>(), ex?.Message ?? "-");
+            Assert.That(ex.Message, Is.EqualTo($"{lab_b.ID}.Asserter Failure"));
 
-            Assert.IsFalse(model.Continuable);
+            Assert.That(_model.Continuable, Is.False);
             return;
         }
         if (!order.lab_1_conditions[2])
         {
-            Assert.IsAssignableFrom<ExecutionException>(ex);
+            Assert.That(ex, Is.AssignableTo<ExecutionException>());
 
             ex = ex.InnerException;
-            Assert.IsAssignableFrom<ProbeException>(ex, ex?.Message ?? "-");
-            Assert.AreEqual($"{lab_a.ID}.Asserter Failure", ex.Message);
+            Assert.That(ex, Is.AssignableTo<ProbeException>(), ex?.Message ?? "-");
+            Assert.That(ex.Message, Is.EqualTo($"{lab_a.ID}.Asserter Failure"));
 
-            Assert.IsFalse(model.Continuable);
+            Assert.That(_model.Continuable, Is.False);
             return;
         }
 
-        Assert.IsNull(ex);
-        Assert.IsTrue(model.Continuable);
+        Assert.That(ex, Is.Null);
+        Assert.That(_model.Continuable, Is.True);
     }
 }
