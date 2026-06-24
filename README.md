@@ -4,7 +4,7 @@
 
 UniTest is a Unity/C# testing framework that automatically generates and verifies executable test paths from model and state-action combinations.
 
-Where normal unit tests focus on manually listing individual test cases, UniTest generates available `Lab`s from the current `Model` and expands subsequent states from the execution history.
+Where normal unit tests focus on manually listing individual test cases, UniTest generates available `Lab`s from the current `Model` and expands subsequent states from the execution history. It also provides test authoring and CLI execution automation workflows for agents.
 
 ---
 
@@ -175,6 +175,11 @@ Detailed documentation is available in `Documentation~/Wiki.en`.
 - [02-Implementations.md](Documentation~/Wiki.en/02-Implementations.md): implementation structure and execution units
 - [03-Uni-Test-Extensions.md](Documentation~/Wiki.en/03-Uni-Test-Extensions.md): extension APIs and composition patterns
 - [04-Usage.md](Documentation~/Wiki.en/04-Usage.md): usage examples and call guidelines
+
+When an agent writes UniTest-based tests or organizes domain-owned POCO test execution paths outside Unity, it follows the workflow documents in `Documentation~/Workflow.en`.
+
+- [01-Test-Authoring-Workflow.md](Documentation~/Workflow.en/01-Test-Authoring-Workflow.md): test authoring, planning, and result recording flow
+- [02-External-NUnit-Executor-Workflow.md](Documentation~/Workflow.en/02-External-NUnit-Executor-Workflow.md): domain-owned external NUnit executor setup flow
 
 Korean documentation is available in `Documentation~/Wiki.ko`.
 

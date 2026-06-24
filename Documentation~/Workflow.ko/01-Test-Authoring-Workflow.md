@@ -69,9 +69,11 @@
 
 ## 5. 테스트 코드 작성
 
-테스트 계획에 따라 테스트 파일을 작성하거나 수정한다. 테스트 코드는 해당 모듈 또는 유닛 폴더 아래의 `Tests` 폴더에 둔다.
+테스트 계획에 따라 테스트 파일을 작성하거나 수정한다. 테스트 코드는 해당 모듈 또는 유닛 폴더 아래의 `UniTests` 폴더에 둔다. 이미 해당 모듈에 `Tests` 폴더가 존재한다면, 그 폴더 아래에서 `UniTests` 폴더를 생성하여 사용한다.
 
-테스트 어셈블리는 `모듈명.Tests.asmdef` 파일로 분리하고, Unity Editor의 Test Runner에서 감지될 수 있도록 설정한다.
+도메인별 POCO 테스트를 Unity 밖에서 실행해야 하는 경우에도 테스트 프로젝트는 UniTest 패키지 안에 추가하지 않고, 해당 도메인 폴더가 자기 external test project를 소유한다.
+
+테스트 어셈블리는 `모듈명.Tests.UniTest.asmdef` 파일로 분리하고, Unity Editor의 Test Runner에서 감지될 수 있도록 설정한다.
 
 테스트 대상 프레임워크가 POCO라면 가능하면 Unity 프레임워크를 사용하지 않도록 테스트를 구성한다. Unity API, Scene, AssetDatabase, PlayMode, Editor API가 필요하지 않은 테스트는 [External NUnit Executor 워크플로](02-External-NUnit-Executor-Workflow.md)를 통해 `dotnet test` 빌드와 실행 대상이 될 수 있도록 구성한다. Unity 실행 환경이 필요한 테스트는 억지로 POCO 테스트로 바꾸지 않고 Unity Test Runner 또는 Unity batchmode 검증으로 분리한다.
 
@@ -94,7 +96,7 @@
 | 대상                              | 실행 경로                                                                                              |
 | ------------------------------- | -------------------------------------------------------------------------------------------------- |
 | Unity API 또는 Editor 환경이 필요한 테스트 | Unity Test Runner 또는 Unity batchmode                                                               |
-| UniTest 기반 POCO 테스트             | Unity와 같은 NUnit framework DLL을 참조하는 `dotnet test` 기반 [External NUnit Executor 워크플로](02-External-NUnit-Executor-Workflow.md) |
+| UniTest 기반 POCO 테스트             | NuGet `NUnit` 3.x를 복원해 실행하는 `dotnet test` 기반 [External NUnit Executor 워크플로](02-External-NUnit-Executor-Workflow.md) |
 
 테스트 실행 중 실패가 발생하면, 실패한 테스트가 표의 어떤 칸과 계획의 어떤 항목에 대응하는지 먼저 확인한다.
 
@@ -114,4 +116,4 @@
 - 실패 원인과 후속 조치
 - 표, 계획, 코드 사이의 정합성 보강 내용
 
-모듈 또는 유닛 테스트가 완료되면 대표적인 유스케이스와 실패 시나리오를 포함한 통합 테스트를 수행한다. 통합 테스트 결과도 필요하면 `03-Results.md`에 함께 기록한다.
+모듈 또는 유닛 테스트가 완료되면 대표 유스케이스와 실패 시나리오를 포함해 통합 테스트를 수행한다. 통합 테스트의 실행, 보고, 대기 방식도 1번에서 선택한 모드를 따르며, 필요한 결과는 `03-Results.md`에 함께 기록한다.
