@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "displayName": "UniTest",
   "description": "State-driven unit test generation and execution framework for Unity and C#.",
+  "documentationUrl": "https://github.com/dove-creative/unitest#readme",
   "unity": "6000.0",
   "license": "MIT",
   "author": {

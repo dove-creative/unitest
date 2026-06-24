@@ -66,7 +66,7 @@ dotnet run --project UniTest.NativeCSharp.Samples.csproj
 
 ## 빠른 시작
 
-아래 예시는 카운터의 현재 값과 기대값을 함께 들고 가며, 가능한 `Increment` 경로를 깊이 3까지 자동 확장한다.
+아래 예시는 카운터의 현재 값과 기대값을 함께 들고 가며, 가능한 `Increment`와 `Decrement` 경로를 깊이 3까지 자동 확장한다.
 
 ```csharp
 using System;
@@ -82,6 +82,11 @@ public sealed class Counter
     public void Increment()
     {
         Value++;
+    }
+
+    public void Decrement()
+    {
+        Value--;
     }
 }
 
@@ -121,6 +126,13 @@ public sealed class CounterProject : Project<CounterModel>
             Actor = m => m.Counter.Increment(),
             Asserter = Check
         }.Build();
+
+        yield return new CompactLab<CounterModel>("Decrement")
+        {
+            Arranger = m => m.ExpectedValue--,
+            Actor = m => m.Counter.Decrement(),
+            Asserter = Check
+        }.Build();
     }
 
     private static void Check(CounterModel model)
@@ -147,7 +159,7 @@ public static class CounterRunner
 이 예시는 다음 흐름을 보여준다.
 
 - `Model`은 실제 대상인 `Counter`와 기대 상태인 `ExpectedValue`를 함께 가진다.
-- `CreateLabs(...)`는 시작 상태에서 `Ignite`를 만들고, 이후 상태에서 `Increment`를 만든다.
+- `CreateLabs(...)`는 시작 상태에서 `Ignite`를 만들고, 이후 상태에서 `Increment`와 `Decrement`를 만든다.
 - `Run(...)`은 가능한 경로를 실행하고 XML 리포트를 출력한다.
 
 Unity 프로젝트에서는 같은 패턴을 MonoBehaviour나 Editor 테스트 진입점에서 호출할 수 있다.

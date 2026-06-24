@@ -66,7 +66,7 @@ After running it, enter one of `single`, `single-replay`, `multi`, `single-conti
 
 ## Quick Start
 
-The example below carries the counter's current value and expected value together, then automatically expands the available `Increment` path to depth 3.
+The example below carries the counter's current value and expected value together, then automatically expands the available `Increment` and `Decrement` paths to depth 3.
 
 ```csharp
 using System;
@@ -82,6 +82,11 @@ public sealed class Counter
     public void Increment()
     {
         Value++;
+    }
+
+    public void Decrement()
+    {
+        Value--;
     }
 }
 
@@ -121,6 +126,13 @@ public sealed class CounterProject : Project<CounterModel>
             Actor = m => m.Counter.Increment(),
             Asserter = Check
         }.Build();
+
+        yield return new CompactLab<CounterModel>("Decrement")
+        {
+            Arranger = m => m.ExpectedValue--,
+            Actor = m => m.Counter.Decrement(),
+            Asserter = Check
+        }.Build();
     }
 
     private static void Check(CounterModel model)
@@ -147,7 +159,7 @@ public static class CounterRunner
 This example shows the following flow.
 
 - `Model` carries both the real target, `Counter`, and the expected state, `ExpectedValue`.
-- `CreateLabs(...)` creates `Ignite` from the starting state, then creates `Increment` from later states.
+- `CreateLabs(...)` creates `Ignite` from the starting state, then creates `Increment` and `Decrement` from later states.
 - `Run(...)` executes the available paths and outputs an XML report.
 
 In a Unity project, the same pattern can be called from a MonoBehaviour or Editor test entry point.
