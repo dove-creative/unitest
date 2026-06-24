@@ -25,7 +25,7 @@
 
 Uni Test has the following structure.
 
-![[02-image1.png]]
+<img src="../Resources/02-image1.png" alt="UniTest structure diagram" width="655">
 
 Components
 
@@ -393,7 +393,7 @@ Project is the core object that executes tests by calling each Node's Execute me
 
 Project consists of the following structure.
 
-![[02-image2.png|697]]
+<img src="../Resources/02-image2.png" alt="UniTest project structure diagram" width="697">
 
 Components
 

@@ -52,7 +52,7 @@ Model is a unit object that holds the test target object together with metadata 
 
 Model is composed of the following elements.
 
-![[01-20260420213325.png|334]]
+<img src="../Resources/01-20260420213325.png" alt="UniTest model structure diagram" width="334">
 
 Components
 - Subject: the actual target object on which tests are performed
@@ -65,7 +65,7 @@ Lab contains the three functions used in a test (Arrange, Act, Assert), receives
 
 Lab is composed of the following elements.
 
-![[01-20260420213332.png]]
+<img src="../Resources/01-20260420213332.png" alt="UniTest lab structure diagram" width="902">
 
 Components
 - Arranger: configures the Model before test execution and sets Mock to the expected state of Subject
@@ -80,7 +80,7 @@ Node represents one test execution step and is composed of a pair of Model and L
 
 Node is composed of the following elements.
 
-![[01-20260420213333.png]]
+<img src="../Resources/01-20260420213333.png" alt="UniTest node structure diagram" width="476">
 
 Components
 - Model: the Model to be used in the current step
@@ -108,7 +108,7 @@ UniTest executes tests by using Node as the unit. At this time, tests proceed in
 In UniTest, the object that executes tests through Nodes is called Project.
 Project is composed of the following elements.
 
-![[01-20260420213335.png]]
+<img src="../Resources/01-20260420213335.png" alt="UniTest project structure diagram" width="903">
 
 Components
 - Root Node: the starting point of the test and the first Idle Node
@@ -168,7 +168,7 @@ Depending on the test type, there may be cases where a generator must create tes
 
 In tests for tests with multiple independent states, Model is composed of the following elements.
 
-![[01-20260420214502.png|351]]
+<img src="../Resources/01-20260420214502.png" alt="UniTest multi-state model structure diagram" width="351">
 
 Components
 - Subject: the actual target object on which tests are performed
@@ -181,7 +181,7 @@ Components
 Lab is an object that executes a test for one independent state.
 Lab is composed of the following elements.
 
-![[01-20260420214513.png]]
+<img src="../Resources/01-20260420214513.png" alt="UniTest independent lab structure diagram" width="903">
 
 Components
 - Set Metadata: configures test metadata for the corresponding state
@@ -195,7 +195,7 @@ Components
 Composite Lab is an object that groups Labs for each independent state and executes them sequentially.
 Composite Lab is composed of the following elements.
 
-![[01-20260420214522.png]]
+<img src="../Resources/01-20260420214522.png" alt="UniTest composite lab structure diagram" width="902">
 
 Components
 - Labs: the set of Labs corresponding to each independent state
