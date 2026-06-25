@@ -39,11 +39,13 @@ The default layout is as follows.
 Packages/
   domain-package/
     Tests/
-      ExternalNUnitExecutor/
+      ExternalNUnitExecutor~/
         ExternalNUnitExecutor.csproj
 ```
 
 `ExternalNUnitExecutor.csproj` connects test target files with `Link` instead of copying them. This keeps the test code in its original location, while the external executor project is responsible only for the CLI build and test execution path.
+
+The external execution folder uses the `~` suffix and is named `ExternalNUnitExecutor~` so Unity does not import it. Keep the project file name as `ExternalNUnitExecutor.csproj`, and do not create a folder `.meta` or `.csproj.meta` file for it.
 
 ## 3. Test Project Configuration
 
@@ -95,13 +97,13 @@ The NUnit framework is restored through the NuGet `NUnit` 3.14.0 package. Theref
 The external executor does not have its own `Program.cs`. Tests are discovered by `NUnit3TestAdapter` and executed by `dotnet test`.
 
 ```powershell
-dotnet test Packages\domain-package\Tests\ExternalNUnitExecutor\ExternalNUnitExecutor.csproj
+dotnet test Packages\domain-package\Tests\ExternalNUnitExecutor~\ExternalNUnitExecutor.csproj
 ```
 
 If restore has already completed and only build and execution need to be repeated, run it as follows.
 
 ```powershell
-dotnet test --no-restore Packages\domain-package\Tests\ExternalNUnitExecutor\ExternalNUnitExecutor.csproj
+dotnet test --no-restore Packages\domain-package\Tests\ExternalNUnitExecutor~\ExternalNUnitExecutor.csproj
 ```
 
 In the test authoring workflow, include this execution result in the test execution result summary in `03-Results.md`.
@@ -110,7 +112,7 @@ In the test authoring workflow, include this execution result in the test execut
 
 - The external executor is not a tool for verifying whether the Unity Editor runs. It is a tool for quickly iterating test code that does not depend on Unity.
 - Test files should clearly branch Unity-only code and pure .NET code whenever possible.
-- `ExternalNUnitExecutor` does not own test code. Test code remains in the original module or test folder, and the executor project links and runs those files.
+- The `ExternalNUnitExecutor~` folder does not own test code. Test code remains in the original module or test folder, and the executor project links and runs those files.
 - The UniTest package does not own external test projects for other domains.
 - Domain-specific external test projects are owned by each domain or framework's `Tests` folder.
 - The external executor runs with NuGet NUnit 3.14.0, but test code uses only common NUnit APIs that can also compile with Unity's NUnit 3.5-based custom DLL.

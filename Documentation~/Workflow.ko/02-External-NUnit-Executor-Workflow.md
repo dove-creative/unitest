@@ -39,11 +39,13 @@ UniTest 패키지는 테스트 실행 모델과 런타임 API를 제공하지만
 Packages/
   domain-package/
     Tests/
-      ExternalNUnitExecutor/
+      ExternalNUnitExecutor~/
         ExternalNUnitExecutor.csproj
 ```
 
 `ExternalNUnitExecutor.csproj`는 테스트 대상 파일을 복사하지 않고 `Link`로 연결한다. 이렇게 하면 테스트 코드는 원래 위치에 남고, 외부 실행기 프로젝트는 CLI용 빌드와 테스트 실행 경로만 담당한다.
+
+외부 실행 폴더는 Unity가 import하지 않도록 `~` 접미사를 붙여 `ExternalNUnitExecutor~`로 둔다. 프로젝트 파일명은 `ExternalNUnitExecutor.csproj`를 유지하고, 폴더 `.meta`나 `.csproj.meta`는 만들지 않는다.
 
 ## 3. 테스트 프로젝트 구성
 
@@ -95,13 +97,13 @@ NUnit framework는 NuGet `NUnit` 3.14.0 패키지로 복원한다. 따라서 Ext
 외부 실행기는 자체 `Program.cs`를 갖지 않는다. 테스트는 `NUnit3TestAdapter`가 발견하고 `dotnet test`가 실행한다.
 
 ```powershell
-dotnet test Packages\domain-package\Tests\ExternalNUnitExecutor\ExternalNUnitExecutor.csproj
+dotnet test Packages\domain-package\Tests\ExternalNUnitExecutor~\ExternalNUnitExecutor.csproj
 ```
 
 복원이 이미 끝난 상태에서 빌드와 실행만 반복해야 한다면 다음처럼 실행한다.
 
 ```powershell
-dotnet test --no-restore Packages\domain-package\Tests\ExternalNUnitExecutor\ExternalNUnitExecutor.csproj
+dotnet test --no-restore Packages\domain-package\Tests\ExternalNUnitExecutor~\ExternalNUnitExecutor.csproj
 ```
 
 테스트 작성 워크플로에서는 이 실행 결과를 `03-Results.md`의 테스트 실행 결과 요약에 포함한다.
@@ -110,7 +112,7 @@ dotnet test --no-restore Packages\domain-package\Tests\ExternalNUnitExecutor\Ext
 
 - 외부 실행기는 Unity Editor 실행 여부를 검증하는 도구가 아니라, Unity에 의존하지 않는 테스트 코드를 빠르게 반복 실행하기 위한 도구이다.
 - 테스트 파일은 가능하면 Unity 전용 코드와 순수 .NET 코드를 명확히 분기한다.
-- `ExternalNUnitExecutor`는 테스트 코드를 소유하지 않는다. 테스트 코드는 원래 모듈 또는 테스트 폴더에 남기고, 실행기 프로젝트는 해당 파일을 연결해서 실행한다.
+- `ExternalNUnitExecutor~` 폴더는 테스트 코드를 소유하지 않는다. 테스트 코드는 원래 모듈 또는 테스트 폴더에 남기고, 실행기 프로젝트는 해당 파일을 연결해서 실행한다.
 - UniTest 패키지는 다른 도메인의 external test project를 소유하지 않는다.
 - 도메인별 external test project는 각 도메인 또는 프레임워크의 `Tests` 폴더가 소유한다.
 - 외부 실행기는 NuGet NUnit 3.14.0으로 실행하지만, 테스트 코드는 Unity의 NUnit 3.5 기반 커스텀 DLL에서도 컴파일할 수 있는 공통 NUnit API만 사용한다.
