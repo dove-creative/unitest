@@ -159,7 +159,7 @@ Uni Test 코드는 처음 보면 타입이 많아 보이지만, 사용자가 직
 
 실제 코드는 [SingleStateTest/Model.cs](../../Samples~/Unity/Scripts/SingleStateTest/Model.cs)와 [SingleStateTest/Project.cs](../../Samples~/Unity/Scripts/SingleStateTest/Project.cs)에 있다. 테스트 대상의 원래 동작은 [SingleStatedKickboard.cs](../../Samples~/Unity/Scripts/Kickboard/SingleStatedKickboard.cs)를 기준으로 확인할 수 있다.
 
-아래 표는 `SingleStateTest.Project`가 실제로 코드로 옮기는 상태-동작 표이다. 표기 규칙은 [[00-Unit-Test-Guideline]]의 상태-동작 표와 같다.
+아래 표는 `SingleStateTest.Project`가 실제로 코드로 옮기는 상태-동작 표이다. 표기 규칙은 [00-Unit-Test-Guideline](00-Unit-Test-Guideline.md)의 상태-동작 표와 같다.
 
 | State    | -   | Mount              | <                  | <    | <                  | <            | Ride               | Dismount | Dispose                    |
 | -------- | --- | ------------------ | ------------------ | ---- | ------------------ | ------------ | ------------------ | -------- | -------------------------- |

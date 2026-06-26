@@ -159,7 +159,7 @@ The first step is to test an object with one state axis, as in `SingleStateTest`
 
 The actual code is in [SingleStateTest/Model.cs](../../Samples~/Unity/Scripts/SingleStateTest/Model.cs) and [SingleStateTest/Project.cs](../../Samples~/Unity/Scripts/SingleStateTest/Project.cs). The original behavior of the test target can be checked in [SingleStatedKickboard.cs](../../Samples~/Unity/Scripts/Kickboard/SingleStatedKickboard.cs).
 
-The table below is the state-operation table that `SingleStateTest.Project` actually moves into code. The notation rules are the same as the state-operation table in [[00-Unit-Test-Guideline]].
+The table below is the state-operation table that `SingleStateTest.Project` actually moves into code. The notation rules are the same as the state-operation table in [00-Unit-Test-Guideline](00-Unit-Test-Guideline.md).
 
 | State    | -   | Mount              | <                  | <    | <                  | <            | Ride               | Dismount | Dispose                    |
 | -------- | --- | ------------------ | ------------------ | ---- | ------------------ | ------------ | ------------------ | -------- | -------------------------- |
