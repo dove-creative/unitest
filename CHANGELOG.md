@@ -4,6 +4,18 @@ This file records public changes to UniTest.
 
 The format follows Keep a Changelog, and version numbers follow Semantic Versioning.
 
+## [Unreleased]
+
+### Changed
+
+- Converted the active library, tests, sample, and documentation to a .NET-only repository layout.
+- Added a `netstandard2.1` library project and `net9.0` NUnit test and console sample projects.
+- Replaced source-linked sample compilation with a project reference to `src/UniTest/UniTest.csproj`.
+
+### Removed
+
+- Removed Unity package metadata, assembly definitions, asset metadata, and the Unity scene sample.
+
 ## [0.1.0] - 2026-06-23
 
 ### Added
