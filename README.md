@@ -2,7 +2,7 @@
 
 [Korean README](README.ko.md)
 
-UniTest is a Unity/C# testing framework that automatically generates and verifies executable test paths from model and state-action combinations.
+UniTest is a .NET testing framework that automatically generates and verifies executable test paths from model and state-action combinations.
 
 Where normal unit tests focus on manually listing individual test cases, UniTest generates available `Lab`s from the current `Model` and expands subsequent states from the execution history.
 
@@ -10,7 +10,7 @@ Where normal unit tests focus on manually listing individual test cases, UniTest
 
 UniTest provides test authoring and external execution automation workflows so agent-assisted test writing and repeated CLI verification can continue on the same model structure.
 
-AI agents first check the `Documentation~/Workflow.en` entry in [Documentation](#documentation) for the actual working procedure when they are responsible for UniTest-based test authoring or repeated CLI verification.
+AI agents first check the `docs/Workflow.en` entry in [Documentation](#documentation) for the actual working procedure when they are responsible for UniTest-based test authoring or repeated CLI verification.
 
 ## Features
 
@@ -23,47 +23,18 @@ AI agents first check the `Documentation~/Workflow.en` entry in [Documentation](
 
 ## Installation
 
-UniTest can be used as a folder-based Unity package in Unity projects, or by directly including the runtime source in Native C# projects.
-
-### Use In Unity
-
-In Package Manager, use `Add package from git URL` with the following URL.
-
-```text
-https://github.com/dove-creative/unitest.git
-```
-
-For local development or embedded package usage, place the package directly.
-
-1. Place this folder at `Packages/com.blackthunder.unitest` in a Unity project.
-2. Add `UNITEST` to Player Settings > Scripting Define Symbols.
-3. Reference the `UniTest` asmdef from test assemblies or sample assemblies.
-
-The `UniTest` runtime asmdef uses the `UNITEST` define constraint. Without this symbol, core types such as `Project<TModel>`, `Model`, and `Lab<TModel>` are not compiled.
-
-The Unity sample can be imported from the Package Manager `Samples` area as `Unity Usage`, or inspected inside the package at `Samples~/Unity`.
-
-### Use In Native C#
-
-There is no separate NuGet package yet. In Native C# projects, keep this package folder as a source dependency and include the `Runtime` source in compilation.
+There is no separate NuGet package yet. Check out this repository and reference `src/UniTest/UniTest.csproj` from the consuming project.
 
 ```xml
 <ItemGroup>
-  <Compile Include="path/to/com.blackthunder.unitest/Runtime/Infrastructure/**/*.cs" LinkBase="UniTest/Infrastructure" />
-  <Compile Include="path/to/com.blackthunder.unitest/Runtime/Lab/**/*.cs" LinkBase="UniTest/Lab" />
-  <Compile Include="path/to/com.blackthunder.unitest/Runtime/Model/**/*.cs" LinkBase="UniTest/Model" />
-  <Compile Include="path/to/com.blackthunder.unitest/Runtime/Project/**/*.cs" LinkBase="UniTest/Project" />
-  <Compile Include="path/to/com.blackthunder.unitest/Runtime/Tools/**/*.cs" LinkBase="UniTest/Tools" />
-  <Compile Include="path/to/com.blackthunder.unitest/Runtime/Node.cs" Link="UniTest/Node.cs" />
-  <Compile Include="path/to/com.blackthunder.unitest/Runtime/TestCase.cs" Link="UniTest/TestCase.cs" />
+  <ProjectReference Include="path/to/unitest/src/UniTest/UniTest.csproj" />
 </ItemGroup>
 ```
 
-The Native C# sample runs without Unity APIs.
+The sample is a .NET 9 console application.
 
 ```powershell
-cd Samples~/NativeCSharp
-dotnet run --project UniTest.NativeCSharp.Samples.csproj
+dotnet run --project samples/UniTest.Samples/UniTest.Samples.csproj
 ```
 
 After running it, enter one of `single`, `single-replay`, `multi`, `single-continuous`, `multi-continuous`, `help`, or `exit` at the `sample>` prompt. Reports are saved under `UniTest/Samples/NativeCSharp` in the sample app output folder.
@@ -166,8 +137,6 @@ This example shows the following flow.
 - `CreateLabs(...)` creates `Ignite` from the starting state, then creates `Increment` and `Decrement` from later states.
 - `Run(...)` executes the available paths and outputs an XML report.
 
-In a Unity project, the same pattern can be called from a MonoBehaviour or Editor test entry point.
-
 ## Main APIs
 
 - `Model`: stores the test target `Subject`, execution history, sustainability status, and state string to write into reports.
@@ -184,26 +153,29 @@ In a Unity project, the same pattern can be called from a MonoBehaviour or Edito
 
 ## Documentation
 
-Detailed documentation is available in `Documentation~/Wiki.en`.
+Detailed documentation is available in `docs/Wiki.en`.
 
-- [00-Unit-Test-Guideline.md](Documentation~/Wiki.en/00-Unit-Test-Guideline.md): state-action table writing guidelines
-- [01-Overview.md](Documentation~/Wiki.en/01-Overview.md): feature purpose and overall flow
-- [02-Implementations.md](Documentation~/Wiki.en/02-Implementations.md): implementation structure and execution units
-- [03-Uni-Test-Extensions.md](Documentation~/Wiki.en/03-Uni-Test-Extensions.md): extension APIs and composition patterns
-- [04-Usage.md](Documentation~/Wiki.en/04-Usage.md): usage examples and call guidelines
+- [00-Unit-Test-Guideline.md](docs/Wiki.en/00-Unit-Test-Guideline.md): state-action table writing guidelines
+- [01-Overview.md](docs/Wiki.en/01-Overview.md): feature purpose and overall flow
+- [02-Implementations.md](docs/Wiki.en/02-Implementations.md): implementation structure and execution units
+- [03-Uni-Test-Extensions.md](docs/Wiki.en/03-Uni-Test-Extensions.md): extension APIs and composition patterns
+- [04-Usage.md](docs/Wiki.en/04-Usage.md): usage examples and call guidelines
 
-AI agents follow the workflow documents in `Documentation~/Workflow.en` when they write UniTest-based tests or organize domain-owned POCO test execution paths outside Unity. They first check the test authoring mode and documentation record flow, then apply the External NUnit Executor flow only to tests that do not require the Unity execution environment.
+AI agents follow the workflow documents in `docs/Workflow.en` when they write UniTest-based tests or organize domain-owned POCO test execution paths.
 
-- [01-Test-Authoring-Workflow.md](Documentation~/Workflow.en/01-Test-Authoring-Workflow.md): test authoring, planning, and result recording flow
-- [02-External-NUnit-Executor-Workflow.md](Documentation~/Workflow.en/02-External-NUnit-Executor-Workflow.md): domain-owned external NUnit executor setup flow
+- [01-Test-Authoring-Workflow.md](docs/Workflow.en/01-Test-Authoring-Workflow.md): test authoring, planning, and result recording flow
+- [02-External-NUnit-Executor-Workflow.md](docs/Workflow.en/02-External-NUnit-Executor-Workflow.md): domain-owned NUnit test project setup flow
 
-Korean documentation is available in `Documentation~/Wiki.ko`.
+Korean documentation is available in `docs/Wiki.ko`.
 
 ## Tests
 
-Test code is in the `Tests` folder and uses Unity Test Framework with NUnit.
+Test code is in the `tests` folder and uses NUnit.
 
-To run the package's own tests in Unity, enable `UNITEST`, `UNITY_INCLUDE_TESTS`, and the target test asmdef symbol, either `UNITEST_TEST_UT` or `UNITEST_TEST_RT`. If the package is used as a separated package, also check the Unity project's testables settings and test asmdef references.
+```powershell
+dotnet test tests/UniTest.Test.UnitTest/UniTest.Test.UnitTest.csproj
+dotnet test tests/UniTest.Test.RecursionTest/UniTest.Test.RecursionTest.csproj
+```
 
 ## License
 

@@ -2,7 +2,7 @@
 
 [English README](README.md)
 
-UniTest는 모델과 상태-동작 조합을 기반으로 실행 가능한 테스트 경로를 자동 생성하고 검증하는 Unity/C# 테스트 프레임워크이다.
+UniTest는 모델과 상태-동작 조합을 기반으로 실행 가능한 테스트 경로를 자동 생성하고 검증하는 .NET 테스트 프레임워크이다.
 
 일반 유닛 테스트가 개별 테스트 케이스를 직접 나열하는 데 집중한다면, UniTest는 현재 `Model`에서 가능한 `Lab`을 생성하고 실행 이력에 따라 후속 상태를 확장한다.
 
@@ -10,7 +10,7 @@ UniTest는 모델과 상태-동작 조합을 기반으로 실행 가능한 테�
 
 UniTest는 에이전트 보조 테스트 작성과 CLI 기반 반복 검증을 같은 모델 구조 위에서 이어갈 수 있도록, 테스트 작성 흐름과 외부 실행 자동화 워크플로를 함께 제공한다.
 
-AI 에이전트는 UniTest 기반 테스트 작성이나 CLI 반복 검증을 맡는 경우, 실제 작업 절차를 아래 [문서](#문서)의 `Documentation~/Workflow.ko` 항목에서 먼저 확인한다.
+AI 에이전트는 UniTest 기반 테스트 작성이나 CLI 반복 검증을 맡는 경우, 실제 작업 절차를 아래 [문서](#문서)의 `docs/Workflow.ko` 항목에서 먼저 확인한다.
 
 ## 주요 기능
 
@@ -23,47 +23,18 @@ AI 에이전트는 UniTest 기반 테스트 작성이나 CLI 반복 검증을 �
 
 ## 설치
 
-UniTest는 Unity 프로젝트에서는 폴더형 Unity 패키지로 사용할 수 있고, Native C# 프로젝트에서는 런타임 소스를 직접 포함해 사용할 수 있다.
-
-### Unity에서 사용
-
-Package Manager의 `Add package from git URL`에 아래 주소를 입력해 설치할 수 있다.
-
-```text
-https://github.com/dove-creative/unitest.git
-```
-
-로컬 개발이나 embedded package 사용이 필요하면 아래처럼 직접 배치한다.
-
-1. 이 폴더를 Unity 프로젝트의 `Packages/com.blackthunder.unitest` 위치에 둔다.
-2. Player Settings의 Scripting Define Symbols에 `UNITEST`를 추가한다.
-3. 테스트 어셈블리나 샘플 어셈블리에서 `UniTest` asmdef를 참조한다.
-
-`UniTest` 런타임 asmdef는 `UNITEST` define constraint를 사용한다. 이 심볼이 없으면 `Project<TModel>`, `Model`, `Lab<TModel>` 같은 핵심 타입이 컴파일되지 않는다.
-
-Unity 샘플은 Package Manager의 `Samples` 영역에서 `Unity Usage`를 import하거나, 패키지 내부 `Samples~/Unity`에서 확인할 수 있다.
-
-### Native C#에서 사용
-
-현재 별도 NuGet 패키지는 제공하지 않는다. Native C# 프로젝트에서는 이 패키지 폴더를 소스 의존성으로 두고, `Runtime` 소스를 컴파일에 포함한다.
+현재 별도 NuGet 패키지는 제공하지 않는다. 저장소를 체크아웃한 뒤 소비 프로젝트에서 `src/UniTest/UniTest.csproj`를 참조한다.
 
 ```xml
 <ItemGroup>
-  <Compile Include="path/to/com.blackthunder.unitest/Runtime/Infrastructure/**/*.cs" LinkBase="UniTest/Infrastructure" />
-  <Compile Include="path/to/com.blackthunder.unitest/Runtime/Lab/**/*.cs" LinkBase="UniTest/Lab" />
-  <Compile Include="path/to/com.blackthunder.unitest/Runtime/Model/**/*.cs" LinkBase="UniTest/Model" />
-  <Compile Include="path/to/com.blackthunder.unitest/Runtime/Project/**/*.cs" LinkBase="UniTest/Project" />
-  <Compile Include="path/to/com.blackthunder.unitest/Runtime/Tools/**/*.cs" LinkBase="UniTest/Tools" />
-  <Compile Include="path/to/com.blackthunder.unitest/Runtime/Node.cs" Link="UniTest/Node.cs" />
-  <Compile Include="path/to/com.blackthunder.unitest/Runtime/TestCase.cs" Link="UniTest/TestCase.cs" />
+  <ProjectReference Include="path/to/unitest/src/UniTest/UniTest.csproj" />
 </ItemGroup>
 ```
 
-Native C# 샘플은 Unity API 없이 실행된다.
+샘플은 .NET 9 콘솔 애플리케이션이다.
 
 ```powershell
-cd Samples~/NativeCSharp
-dotnet run --project UniTest.NativeCSharp.Samples.csproj
+dotnet run --project samples/UniTest.Samples/UniTest.Samples.csproj
 ```
 
 실행 후 `sample>` 프롬프트에서 `single`, `single-replay`, `multi`, `single-continuous`, `multi-continuous`, `help`, `exit` 중 하나를 입력한다. 리포트는 샘플 앱 출력 폴더의 `UniTest/Samples/NativeCSharp` 아래에 저장된다.
@@ -166,8 +137,6 @@ public static class CounterRunner
 - `CreateLabs(...)`는 시작 상태에서 `Ignite`를 만들고, 이후 상태에서 `Increment`와 `Decrement`를 만든다.
 - `Run(...)`은 가능한 경로를 실행하고 XML 리포트를 출력한다.
 
-Unity 프로젝트에서는 같은 패턴을 MonoBehaviour나 Editor 테스트 진입점에서 호출할 수 있다.
-
 ## 주요 API
 
 - `Model`: 테스트 대상 `Subject`, 실행 이력, 지속 가능 여부, 리포트에 남길 상태 문자열을 보관한다.
@@ -184,26 +153,29 @@ Unity 프로젝트에서는 같은 패턴을 MonoBehaviour나 Editor 테스트 �
 
 ## 문서
 
-자세한 설명은 `Documentation~/Wiki.ko` 폴더에 있다.
+자세한 설명은 `docs/Wiki.ko` 폴더에 있다.
 
-- [00-Unit-Test-Guideline.md](Documentation~/Wiki.ko/00-Unit-Test-Guideline.md): 상태-동작 표 작성 기준
-- [01-Overview.md](Documentation~/Wiki.ko/01-Overview.md): 기능의 목적과 큰 흐름
-- [02-Implementations.md](Documentation~/Wiki.ko/02-Implementations.md): 구현 구조와 실행 단위
-- [03-Uni-Test-Extensions.md](Documentation~/Wiki.ko/03-Uni-Test-Extensions.md): 확장 API와 조합 방식
-- [04-Usage.md](Documentation~/Wiki.ko/04-Usage.md): 사용 예시와 호출 기준
+- [00-Unit-Test-Guideline.md](docs/Wiki.ko/00-Unit-Test-Guideline.md): 상태-동작 표 작성 기준
+- [01-Overview.md](docs/Wiki.ko/01-Overview.md): 기능의 목적과 큰 흐름
+- [02-Implementations.md](docs/Wiki.ko/02-Implementations.md): 구현 구조와 실행 단위
+- [03-Uni-Test-Extensions.md](docs/Wiki.ko/03-Uni-Test-Extensions.md): 확장 API와 조합 방식
+- [04-Usage.md](docs/Wiki.ko/04-Usage.md): 사용 예시와 호출 기준
 
-AI 에이전트는 UniTest 기반 테스트를 작성하거나 도메인별 Unity 밖 POCO 테스트 실행 경로를 정리할 때 `Documentation~/Workflow.ko`의 워크플로 문서를 따른다. 먼저 테스트 작성 모드와 문서 기록 흐름을 확인하고, Unity 실행 환경이 필요 없는 테스트에 한해 External NUnit Executor 흐름을 적용한다.
+AI 에이전트는 UniTest 기반 테스트를 작성하거나 도메인별 POCO 테스트 실행 경로를 정리할 때 `docs/Workflow.ko`의 워크플로 문서를 따른다.
 
-- [01-Test-Authoring-Workflow.md](Documentation~/Workflow.ko/01-Test-Authoring-Workflow.md): 테스트 작성, 계획, 결과 기록 흐름
-- [02-External-NUnit-Executor-Workflow.md](Documentation~/Workflow.ko/02-External-NUnit-Executor-Workflow.md): 도메인별 외부 NUnit 실행기 구성 흐름
+- [01-Test-Authoring-Workflow.md](docs/Workflow.ko/01-Test-Authoring-Workflow.md): 테스트 작성, 계획, 결과 기록 흐름
+- [02-External-NUnit-Executor-Workflow.md](docs/Workflow.ko/02-External-NUnit-Executor-Workflow.md): 도메인별 NUnit 테스트 프로젝트 구성 흐름
 
-영어 문서는 `Documentation~/Wiki.en` 폴더에 있다.
+영어 문서는 `docs/Wiki.en` 폴더에 있다.
 
 ## 테스트
 
-테스트 코드는 `Tests` 폴더에 있으며, Unity Test Framework와 NUnit을 사용한다.
+테스트 코드는 `tests` 폴더에 있으며 NUnit을 사용한다.
 
-Unity에서 패키지 자체 테스트를 실행하려면 `UNITEST`, `UNITY_INCLUDE_TESTS`와 함께 대상 테스트 asmdef에 맞는 `UNITEST_TEST_UT` 또는 `UNITEST_TEST_RT` 심볼을 활성화한다. 패키지 형태로 분리해 사용하는 경우 Unity 프로젝트의 testables 설정과 테스트 asmdef 참조도 함께 확인한다.
+```powershell
+dotnet test tests/UniTest.Test.UnitTest/UniTest.Test.UnitTest.csproj
+dotnet test tests/UniTest.Test.RecursionTest/UniTest.Test.RecursionTest.csproj
+```
 
 ## 라이선스
 
