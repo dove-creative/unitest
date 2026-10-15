@@ -17,7 +17,7 @@ Place CLI test automation in the following flow.
 1. Write test code based on the state-operation table.
 2. Confirm that the test target and test code build as SDK projects.
 3. Place an NUnit project under the `tests` folder owned by the target domain or framework.
-4. Connect the test target and UniTest with `ProjectReference` items.
+4. Connect the test target with a `ProjectReference` and UniTest with an exact stable package version.
 5. Run tests from the CLI and record the results.
 6. If a failure occurs, analyze the cause and return to the implementation or verification step.
 
@@ -29,6 +29,9 @@ Use the following default layout.
 
 ```text
 domain-framework/
+  NuGet.config
+  packages/
+    BlackThunder.UniTest.0.2.0.nupkg
   src/
     Domain/
       Domain.csproj
@@ -40,6 +43,8 @@ domain-framework/
 Keep the test code and project file in the same folder. If multiple test sets contain the same global type names, separate them into distinct test projects.
 
 ## 3. Test Project Configuration
+
+Keep the validated UniTest package in the consumer repository's `packages/` folder and register that local feed and the `nuget.org` feed for NUnit dependencies in a root `NuGet.config`. See the [README installation guide](../../README.md#installation) for the configuration example. Record the source commit, SHA-256, and verification results, and never overwrite a package at the same version.
 
 Use the following basic project configuration.
 
@@ -55,6 +60,7 @@ Use the following basic project configuration.
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="BlackThunder.UniTest" Version="[0.2.0]" />
     <PackageReference Include="NUnit" Version="3.14.0" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.6.0" />
     <PackageReference Include="NUnit3TestAdapter" Version="6.2.0" />
@@ -62,12 +68,13 @@ Use the following basic project configuration.
 
   <ItemGroup>
     <ProjectReference Include="../../src/Domain/Domain.csproj" />
-    <ProjectReference Include="path/to/unitest/src/UniTest/UniTest.csproj" />
   </ItemGroup>
 </Project>
 ```
 
-`Microsoft.NET.Test.Sdk` and `NUnit3TestAdapter` allow `dotnet test` to discover and run the tests. The repository declares package references and does not vendor restored DLLs.
+`Microsoft.NET.Test.Sdk` and `NUnit3TestAdapter` allow `dotnet test` to discover and run the tests. Only validated first-party `.nupkg` files are versioned; restored dependencies and generated DLLs are not included. Restore and execution must work without an external UniTest development checkout.
+
+Test projects that need processing without an additional `Task.Run` select `base(UniTest.ExecutionMode.Inline)` in the derived `Project<TModel>` or `CompactProject<TModel>` constructor. The default is `ThreadPool`. `Inline` still executes asynchronously through `Task.Yield()` and does not guarantee the same OS thread. No `UNITEST_SINGLETHREAD` build symbol is required.
 
 ## 4. Execution Flow
 
@@ -83,7 +90,7 @@ Include the execution result in the test result summary in `03-Results.md`.
 ## 5. Operating Principles
 
 - The tested domain or framework owns its test project under `tests`.
-- Connect runtime code with `ProjectReference` instead of duplicating it.
+- Connect the test target's source with a `ProjectReference` instead of duplicating it, and consume UniTest through an exact stable package version.
 - Prefer `Assert.That(..., Is/Has/Does/Contains...)` for value verification.
 - Do not use NUnit 4-only APIs or `NUnit.Framework.Legacy`.
 - Use `Assert.Throws` or `Assert.ThrowsAsync` for exception verification.

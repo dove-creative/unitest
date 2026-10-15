@@ -61,7 +61,7 @@ Write or modify test files according to the test plan. Test code is placed under
 
 Do not add domain-specific test projects inside the UniTest repository. The corresponding domain folder owns its own test project.
 
-Separate each test set into a `ModuleName.Tests.csproj` SDK project and reference the test target and UniTest with `ProjectReference` items.
+Separate each test set into a `ModuleName.Tests.csproj` SDK project. Connect the test target with a `ProjectReference`, and consume the stable `BlackThunder.UniTest` package at the exact version `[0.2.0]` from the consumer repository's local feed. Tests and samples used to develop UniTest itself retain source project references.
 
 Configure POCO test targets for `dotnet test` according to the [External NUnit Executor workflow](02-External-NUnit-Executor-Workflow.md).
 

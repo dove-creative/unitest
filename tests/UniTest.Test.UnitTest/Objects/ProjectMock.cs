@@ -8,6 +8,10 @@ public class ProjectMock : Project<Model>
     public Func<Model, IEnumerable<ILab<Model>>> createLabs;
 
     public ProjectMock(Func<Model, IEnumerable<ILab<Model>>> createLabs = null) => this.createLabs = createLabs;
+
+    public ProjectMock(ExecutionMode executionMode, Func<Model, IEnumerable<ILab<Model>>> createLabs = null)
+        : base(executionMode) => this.createLabs = createLabs;
+
     public ProjectMock SetTargetDepth(int depth)
     {
         typeof(Project<Model>)

@@ -6,11 +6,24 @@ The format follows Keep a Changelog, and version numbers follow Semantic Version
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-10-15
+
+### Added
+
+- Added `ExecutionMode.ThreadPool` and `ExecutionMode.Inline`, selected through protected constructors on `Project<TModel>` and `CompactProject<TModel>` and exposed through a read-only `ExecutionMode` property.
+- Added stable `BlackThunder.UniTest` NuGet packaging with MIT licensing, README, and repository metadata for repository-local consumer feeds.
+
+### Fixed
+
+- Made worker cancellation tests control the execution stage before cancelling, removing scheduling races without changing runtime cancellation behavior.
+
 ### Changed
 
 - Converted the active library, tests, sample, and documentation to a .NET-only repository layout.
 - Added a `netstandard2.1` library project and `net9.0` NUnit test and console sample projects.
 - Replaced source-linked sample compilation with a project reference to `src/UniTest/UniTest.csproj`.
+- Replaced the `UNITEST_SINGLETHREAD` build symbol with per-project execution mode selection. Existing parameterless construction defaults to `ThreadPool`; `Inline` yields asynchronously and avoids an additional `Task.Run` without guaranteeing a fixed OS thread.
+- Updated consumer installation and external NUnit workflows to pin stable package versions instead of referencing a UniTest development checkout.
 
 ### Removed
 

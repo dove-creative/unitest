@@ -354,10 +354,15 @@ public class TestDesignerTest
     public async Task OnCancel_Executing_Normal(bool withRootNode)
     {
         // Arrange
+        var entered = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        using var release = new ManualResetEventSlim();
         var labs = new[] { new Lab<Model>(), new Lab<Model>() };
         _createLabs = _ =>
         {
-            Thread.Sleep(_delay);
+            entered.TrySetResult(true);
+            if (!release.Wait(TimeSpan.FromSeconds(10)))
+                throw new TimeoutException("The test did not release the designer callback.");
+
             return labs;
         };
 
@@ -366,23 +371,37 @@ public class TestDesignerTest
 
 
         // Act
-        _cts.Cancel();
+        try
+        {
+            await entered.Task.WaitAsync(TimeSpan.FromSeconds(10));
+            _cts.Cancel();
+        }
+        finally
+        {
+            release.Set();
+        }
+
         await task;
 
 
         // Assert
         Assert.That(_completedDesigners, Is.EqualTo(new[] { _testDesigner }));
         Assert.That(_preparedNodes, Is.Empty);
-        CheckNode(_node, withRootNode ? Node<Model>.NodeStatus.Root : Node<Model>.NodeStatus.Success,
-            0, null, null, null, _lab);
+        CheckNode(_node, Node<Model>.NodeStatus.Cancelled,
+            0, null, null, typeof(OperationCanceledException), _lab);
     }
     [TestCase(true), TestCase(false)]
     public async Task OnCancel_Executing_NoTest(bool withRootNode)
     {
         // Arrange
+        var entered = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        using var release = new ManualResetEventSlim();
         _createLabs = _ =>
         {
-            Thread.Sleep(_delay);
+            entered.TrySetResult(true);
+            if (!release.Wait(TimeSpan.FromSeconds(10)))
+                throw new TimeoutException("The test did not release the designer callback.");
+
             return null;
         };
 
@@ -390,7 +409,16 @@ public class TestDesignerTest
         var task = Execute();
 
         // Act
-        _cts.Cancel();
+        try
+        {
+            await entered.Task.WaitAsync(TimeSpan.FromSeconds(10));
+            _cts.Cancel();
+        }
+        finally
+        {
+            release.Set();
+        }
+
         await task;
 
 

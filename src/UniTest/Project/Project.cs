@@ -18,6 +18,8 @@ namespace UniTest
     public abstract partial class Project<TModel> : IProject where TModel : Model, new()
     {
         // Front
+        public ExecutionMode ExecutionMode { get; }
+
         public int ProcessCount => (int)Interlocked.Read(ref _processCount);
         long _processCount = 0;
 
@@ -51,6 +53,17 @@ namespace UniTest
 
 
         // Content
+        protected Project()
+            : this(UniTest.ExecutionMode.ThreadPool) { }
+
+        protected Project(ExecutionMode executionMode)
+        {
+            if (executionMode != UniTest.ExecutionMode.ThreadPool && executionMode != UniTest.ExecutionMode.Inline)
+                throw new ArgumentOutOfRangeException(nameof(executionMode), executionMode, "Unknown execution mode.");
+
+            ExecutionMode = executionMode;
+        }
+
         public Task<Node<TModel>> Execute(int depth, CancellationToken cancellationToken)
         {
             return Execute(depth, true, cancellationToken);

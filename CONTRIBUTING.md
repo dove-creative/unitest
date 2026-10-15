@@ -17,6 +17,8 @@ UniTest uses the .NET SDK and a standard repository layout.
 - Recursion tests: `tests/UniTest.Test.RecursionTest/UniTest.Test.RecursionTest.csproj`
 - Console sample: `samples/UniTest.Samples/UniTest.Samples.csproj`
 
+Develop UniTest in its independent repository, such as `Projects/unitest`. Tests and samples in this repository retain their source `ProjectReference` so changes can be verified before release. Other repositories consume a validated stable `BlackThunder.UniTest` package from their own local `packages/` feed and pin the exact version; they do not build a sibling UniTest checkout.
+
 Restore and build the root solution before submitting a code change.
 
 ```powershell
@@ -40,6 +42,20 @@ English documentation is in `docs/Wiki.en` and `docs/Workflow.en`. Korean docume
 Keep code identifiers unchanged. Names such as `Project<TModel>`, `CompactLab<TModel>`, `Run(...)`, `RunContinuously(...)`, and `Execute(ids)` should stay as they are.
 
 When changing test authoring or external execution guidance, update the workflow documents together with the README if the contributor-facing flow changes.
+
+## Stable Packages
+
+The library package ID is `BlackThunder.UniTest`, currently version `0.2.0`. The assembly name, namespace, and `netstandard2.1` target remain unchanged. Packages are stored in consumer repositories; publishing to a public NuGet feed is not part of this workflow.
+
+After verification passes, commit the library changes and package that source commit with repository provenance.
+
+```powershell
+$sourceCommit = git rev-parse HEAD
+dotnet pack src/UniTest/UniTest.csproj --configuration Release -o artifacts/packages -p:RepositoryCommit=$sourceCommit
+Get-FileHash artifacts/packages/BlackThunder.UniTest.0.2.0.nupkg -Algorithm SHA256
+```
+
+Copy the validated `.nupkg` into the consumer's `packages/` folder, register that local feed in its root `NuGet.config`, and use `Version="[0.2.0]"` in its `PackageReference`. Record the version, source commit, SHA-256, and verification results in the consumer repository. Only validated first-party release packages are tracked; restored packages and generated build output remain untracked. Do not overwrite an existing package at the same version: increment the version for any replacement.
 
 ## Tests
 

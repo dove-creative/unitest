@@ -394,11 +394,14 @@ Project는 아래의 구조로 이루어진다.
 - `Root Node`: 테스트 시작점이 되는 Node로, 최초 Idle Node에 해당
 - `Idle Nodes`: 테스트 주기의 첫 번째 단계(Design)를 대기 중인 Node들의 집합
 - `Prepared Nodes`: 테스트 주기의 두 번째 단계(Execute)를 대기 중인 Node들의 집합
+- `ExecutionMode`: 생성 시 선택한 읽기 전용 실행 정책. 기본값은 `ThreadPool`이며 `CompactProject<TModel>`도 같은 생성자 경로를 제공한다.
 
 메서드
 
 - `Execute`: 전체 테스트 과정 실행
 - `Create Labs` (템플릿 메서드): Design 과정 중 주어진 Node.Model에 대해 실행 가능한 Labs 생성
+
+설계와 실행 작업은 `ThreadPool` 모드에서 `Task.Run`으로 전달한다. `Inline` 모드에서는 `Task.Yield()` 이후 추가 `Task.Run` 없이 처리한다. 두 모드 모두 비동기 흐름을 유지하므로 `Inline`을 동기 실행이나 고정 OS 스레드 보장으로 해석하지 않는다. 실행 모드 선택은 `Execute` 시그니처와 취소·실패 처리 계약을 바꾸지 않는다.
 
 Project가 동작하는 과정은 아래와 같다.
 

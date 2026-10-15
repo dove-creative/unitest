@@ -13,11 +13,15 @@ Therefore, the explanation order follows the table and model that a test author 
 
 ## 1. What to Check Before Starting
 
-### 1-1. Reference the `UniTest` Project
+### 1-1. Reference a Stable Package
 
-Reference `src/UniTest/UniTest.csproj` from the consuming project with a `ProjectReference`. Core types such as `Project<TModel>`, `Model`, and `Lab<TModel>` are available without compilation symbols.
+Keep the validated `BlackThunder.UniTest.0.2.0.nupkg` in the consumer repository's `packages/` folder and register the local feed in its root `NuGet.config`. Reference the exact version from the test project as follows. See the [README installation guide](../../README.md#installation) for the configuration example.
 
-If test code cannot find a type, first check the test project's `ProjectReference` path and target framework compatibility.
+```xml
+<PackageReference Include="BlackThunder.UniTest" Version="[0.2.0]" />
+```
+
+Core types such as `Project<TModel>`, `Model`, and `Lab<TModel>` remain in the `UniTest` namespace and require no compilation symbols. If a type cannot be found, first check the local feed configuration, package restore results, and `netstandard2.1` compatibility. Tests and samples used to develop UniTest itself retain their source project references.
 
 ### 1-2. Create the State-Operation Table First
 
@@ -68,6 +72,26 @@ The examples in this document are based on the actual test code under `samples/U
 | Multi-state generators | [Project-Charge.cs](../../samples/UniTest.Samples/MultiStateTest/Project-Charge.cs), [Project-Battery.cs](../../samples/UniTest.Samples/MultiStateTest/Project-Battery.cs), [Project-Kickboard.cs](../../samples/UniTest.Samples/MultiStateTest/Project-Kickboard.cs) | State-layer-specific Lab composition |
 | Actual operation template | [GetTemplates.cs](../../samples/UniTest.Samples/MultiStateTest/GetTemplates.cs) | Actual Act definition by `MainTestCase` |
 | Test target objects | [SingleStatedKickboard.cs](../../samples/UniTest.Samples/Kickboard/SingleStatedKickboard.cs), [MultiStatedKickboard.cs](../../samples/UniTest.Samples/Kickboard/MultiStatedKickboard.cs) | Actual state transitions of the test target |
+
+### 1-5. Select an Execution Mode
+
+`Project<TModel>` and `CompactProject<TModel>` select their execution mode through protected constructors. The parameterless constructor selects `ExecutionMode.ThreadPool`; the read-only `ExecutionMode` property exposes the selected value.
+
+| Mode | Execution |
+| --- | --- |
+| `ThreadPool` | Dispatches design and execution work to the thread pool with `Task.Run`. |
+| `Inline` | Processes design and execution work after `Task.Yield()` without an additional `Task.Run`. |
+
+Select the mode in the derived project's constructor.
+
+```csharp
+public Project()
+    : base(UniTest.ExecutionMode.Inline)
+{
+}
+```
+
+Both modes preserve the existing asynchronous `Execute` API and cancellation and failure handling. `Inline` does not guarantee synchronous execution or execution on the same OS thread. Undefined enum values are rejected at construction with `ArgumentOutOfRangeException`, and the `UNITEST_SINGLETHREAD` build symbol is no longer used.
 
 ## 2. Shortest Start Flow
 

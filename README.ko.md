@@ -23,15 +23,30 @@ AI 에이전트는 UniTest 기반 테스트 작성이나 CLI 반복 검증을 �
 
 ## 설치
 
-현재 별도 NuGet 패키지는 제공하지 않는다. 저장소를 체크아웃한 뒤 소비 프로젝트에서 `src/UniTest/UniTest.csproj`를 참조한다.
+소비 프로젝트는 검증된 `BlackThunder.UniTest` 안정 패키지를 사용한다. `BlackThunder.UniTest.0.2.0.nupkg`를 소비 저장소의 `packages/`에 보관하고, 저장소 루트의 `NuGet.config`에 로컬 피드를 등록한다. 현재 배포 방식은 저장소에 보관하는 로컬 패키지이며 공개 NuGet 피드에 게시하지 않는다.
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<configuration>
+  <packageSources>
+    <clear />
+    <add key="local" value="packages" />
+    <add key="nuget.org" value="https://api.nuget.org/v3/index.json" />
+  </packageSources>
+</configuration>
+```
+
+테스트 프로젝트에서는 정확한 버전을 지정한다.
 
 ```xml
 <ItemGroup>
-  <ProjectReference Include="path/to/unitest/src/UniTest/UniTest.csproj" />
+  <PackageReference Include="BlackThunder.UniTest" Version="[0.2.0]" />
 </ItemGroup>
 ```
 
-샘플은 .NET 9 콘솔 애플리케이션이다.
+패키지는 `netstandard2.1`을 대상으로 하며 어셈블리명과 네임스페이스는 `UniTest`이다. 패키지의 원본 커밋·SHA-256·검증 결과를 소비 저장소에 함께 기록하고, 같은 버전의 패키지는 덮어쓰지 않는다.
+
+UniTest 자체 개발용 테스트와 샘플은 이 저장소의 소스를 `ProjectReference`로 참조한다. 샘플은 .NET 9 콘솔 애플리케이션이다.
 
 ```powershell
 dotnet run --project samples/UniTest.Samples/UniTest.Samples.csproj
@@ -141,6 +156,7 @@ public static class CounterRunner
 
 - `Model`: 테스트 대상 `Subject`, 실행 이력, 지속 가능 여부, 리포트에 남길 상태 문자열을 보관한다.
 - `Project<TModel>`: 현재 `Model`에서 실행 가능한 `Lab` 목록을 생성하고 테스트 그래프를 실행한다.
+- `ExecutionMode`: 기본 `ThreadPool` 또는 추가 `Task.Run` 없이 처리하는 `Inline`을 프로젝트 생성 시 선택한다. 구체적인 실행 특성은 [사용 문서](docs/Wiki.ko/04-Usage.md#1-5-실행-모드를-선택한다)를 따른다.
 - `Lab<TModel>`: metadata, 예상 예외, 지속 가능 여부를 포함한 AAA 테스트 단위이다.
 - `CompactLab<TModel>`: 단순한 AAA 흐름을 delegate로 빠르게 작성하는 helper이다.
 - `ILab<TModel>`: `Lab`과 `CompositeLab`이 공유하는 실행 단위 인터페이스이다.

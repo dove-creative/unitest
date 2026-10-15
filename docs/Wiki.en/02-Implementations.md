@@ -393,11 +393,14 @@ Components
 - `Root Node`: the Node that becomes the starting point of the test and corresponds to the first Idle Node
 - `Idle Nodes`: the set of Nodes waiting for the first step of the test cycle (Design)
 - `Prepared Nodes`: the set of Nodes waiting for the second step of the test cycle (Execute)
+- `ExecutionMode`: the read-only execution policy selected at construction. It defaults to `ThreadPool`; `CompactProject<TModel>` exposes the same constructor path.
 
 Methods
 
 - `Execute`: executes the full test process
 - `Create Labs` (template method): creates executable Labs for the given Node.Model during the Design process
+
+Design and execution work is dispatched through `Task.Run` in `ThreadPool` mode. `Inline` processes that work after `Task.Yield()` without an additional `Task.Run`. Both modes retain asynchronous execution, so `Inline` does not imply synchronous execution or a fixed OS thread. Selecting a mode does not change the `Execute` signatures or the cancellation and failure handling contract.
 
 The process by which Project operates is as follows.
 

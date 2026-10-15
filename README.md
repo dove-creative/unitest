@@ -23,15 +23,30 @@ AI agents first check the `docs/Workflow.en` entry in [Documentation](#documenta
 
 ## Installation
 
-There is no separate NuGet package yet. Check out this repository and reference `src/UniTest/UniTest.csproj` from the consuming project.
+Consuming projects use the validated `BlackThunder.UniTest` stable package. Keep `BlackThunder.UniTest.0.2.0.nupkg` in the consumer repository's `packages/` folder and register the local feed in a root `NuGet.config`. Packages are distributed through repository-local files rather than published to a public NuGet feed.
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<configuration>
+  <packageSources>
+    <clear />
+    <add key="local" value="packages" />
+    <add key="nuget.org" value="https://api.nuget.org/v3/index.json" />
+  </packageSources>
+</configuration>
+```
+
+Pin the exact version in the test project.
 
 ```xml
 <ItemGroup>
-  <ProjectReference Include="path/to/unitest/src/UniTest/UniTest.csproj" />
+  <PackageReference Include="BlackThunder.UniTest" Version="[0.2.0]" />
 </ItemGroup>
 ```
 
-The sample is a .NET 9 console application.
+The package targets `netstandard2.1`; its assembly name and namespace remain `UniTest`. Record the source commit, SHA-256, and verification results alongside the package in the consumer repository, and never overwrite a package at the same version.
+
+Tests and samples used to develop UniTest itself keep a `ProjectReference` to this repository's source. The sample is a .NET 9 console application.
 
 ```powershell
 dotnet run --project samples/UniTest.Samples/UniTest.Samples.csproj
@@ -141,6 +156,7 @@ This example shows the following flow.
 
 - `Model`: stores the test target `Subject`, execution history, sustainability status, and state string to write into reports.
 - `Project<TModel>`: generates the available `Lab` list from the current `Model` and executes the test graph.
+- `ExecutionMode`: selects the default `ThreadPool` mode or `Inline`, which avoids an additional `Task.Run`, when constructing a project. See the [usage documentation](docs/Wiki.en/04-Usage.md#1-5-select-an-execution-mode) for execution details.
 - `Lab<TModel>`: an AAA test unit that includes metadata, expected exceptions, and sustainability settings.
 - `CompactLab<TModel>`: a helper for quickly writing a simple AAA flow with delegates.
 - `ILab<TModel>`: the execution-unit interface shared by `Lab` and `CompositeLab`.

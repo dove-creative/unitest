@@ -23,9 +23,9 @@ public class TestExecutorTest
     CancellationTokenSource _cts;
 
 
-    void SetUp(Lab<Model> lab, int targetDepth = int.MaxValue)
+    void SetUp(Lab<Model> lab, int targetDepth = int.MaxValue, ExecutionMode executionMode = ExecutionMode.ThreadPool)
     {
-        _project = new ProjectMock().SetTargetDepth(targetDepth);
+        _project = new ProjectMock(executionMode).SetTargetDepth(targetDepth);
 
         _completedExecutors = (ICollection)typeof(Project<Model>)
             .GetField("_completedExecutors", BindingFlags.Instance | BindingFlags.NonPublic)
@@ -312,11 +312,27 @@ public class TestExecutorTest
     public async Task OnCancel_Executing_Normal()
     {
         // Arrange
-        SetUp(new Lab<Model>(actor: (_, _) => Thread.Sleep(_delay)));
+        var entered = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        using var release = new ManualResetEventSlim();
+        SetUp(new Lab<Model>(actor: (_, _) =>
+        {
+            entered.TrySetResult(true);
+            if (!release.Wait(TimeSpan.FromSeconds(10)))
+                throw new TimeoutException("The test did not release the executor callback.");
+        }));
         var task = Execute();
 
         // Act
-        _cts.Cancel();
+        try
+        {
+            await entered.Task.WaitAsync(TimeSpan.FromSeconds(10));
+            _cts.Cancel();
+        }
+        finally
+        {
+            release.Set();
+        }
+
         await task;
 
         // Assert
@@ -325,15 +341,24 @@ public class TestExecutorTest
         CheckNode(_node, Node<Model>.NodeStatus.Cancelled, 0, null, null, typeof(OperationCanceledException), _lab);
     }
     [Test]
-    public async Task OnCancel_Executing_NullLab()
+    public void OnCancel_Executing_NullLab()
     {
         // Arrange
-        SetUp(null);
-        var task = Execute();
+        SetUp(null, executionMode: ExecutionMode.Inline);
+        using var context = new QueuedSynchronizationContext();
 
         // Act
-        _cts.Cancel();
-        await task;
+        context.Run(async () =>
+        {
+            var task = Execute();
+            Assert.That(task.IsCompleted, Is.False);
+            Assert.That(_completedExecutors, Is.Empty);
+            Assert.That(_node.Status, Is.EqualTo(Node<Model>.NodeStatus.Root));
+
+            // Execute has queued its Inline continuation, but the core has not run yet.
+            _cts.Cancel();
+            await task;
+        });
 
         // Assert
         Assert.That(_completedExecutors, Is.EqualTo(new[] { _testExecutor }));

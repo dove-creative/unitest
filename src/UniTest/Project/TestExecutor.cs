@@ -32,18 +32,21 @@ namespace UniTest
 
                 _executed = true;
 
-#if UNITEST_SINGLETHREAD
-                await Task.Yield();
-                ExecuteCore(ct);
-#else
-                if (ct.IsCancellationRequested)
+                if (_parent.ExecutionMode == UniTest.ExecutionMode.Inline)
                 {
+                    await Task.Yield();
                     ExecuteCore(ct);
-                    return;
                 }
+                else
+                {
+                    if (ct.IsCancellationRequested)
+                    {
+                        ExecuteCore(ct);
+                        return;
+                    }
 
-                await Task.Run(() => ExecuteCore(ct), ct);
-#endif
+                    await Task.Run(() => ExecuteCore(ct), ct);
+                }
             }
 
             void ExecuteCore(CancellationToken ct)

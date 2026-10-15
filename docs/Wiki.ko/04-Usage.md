@@ -13,11 +13,15 @@
 
 ## 1. 시작 전에 확인할 것
 
-### 1-1. `UniTest` 프로젝트를 참조한다
+### 1-1. 안정 패키지를 참조한다
 
-소비 프로젝트에서 `src/UniTest/UniTest.csproj`를 `ProjectReference`로 참조한다. `Project<TModel>`, `Model`, `Lab<TModel>` 같은 핵심 타입은 별도 컴파일 심볼 없이 제공된다.
+소비 저장소의 `packages/`에 검증된 `BlackThunder.UniTest.0.2.0.nupkg`를 보관하고, 루트 `NuGet.config`에 로컬 피드를 등록한다. 테스트 프로젝트는 다음과 같이 정확한 버전을 참조한다. 설정 예시는 [README 설치 안내](../../README.ko.md#설치)를 따른다.
 
-테스트 코드에서 타입을 찾지 못한다면 테스트 프로젝트의 `ProjectReference` 경로와 대상 프레임워크 호환성을 먼저 확인한다.
+```xml
+<PackageReference Include="BlackThunder.UniTest" Version="[0.2.0]" />
+```
+
+`Project<TModel>`, `Model`, `Lab<TModel>` 같은 핵심 타입은 `UniTest` 네임스페이스로 제공되며 별도 컴파일 심볼이 필요하지 않다. 타입을 찾지 못한다면 로컬 피드 설정, 패키지 복원 결과, `netstandard2.1` 호환성을 먼저 확인한다. UniTest 자체 개발용 테스트와 샘플은 소스 프로젝트 참조를 유지한다.
 
 ### 1-2. 상태-동작 표를 먼저 만든다
 
@@ -68,6 +72,26 @@ public class Model : UniTest.Model
 | 다중 상태 생성기      | [Project-Charge.cs](../../samples/UniTest.Samples/MultiStateTest/Project-Charge.cs), [Project-Battery.cs](../../samples/UniTest.Samples/MultiStateTest/Project-Battery.cs), [Project-Kickboard.cs](../../samples/UniTest.Samples/MultiStateTest/Project-Kickboard.cs) | 상태 계층별 Lab 조합                          |
 | 실제 동작 template | [GetTemplates.cs](../../samples/UniTest.Samples/MultiStateTest/GetTemplates.cs)                                                                                                                                                                                                                     | `MainTestCase`별 실제 Act 정의              |
 | 테스트 대상 객체      | [SingleStatedKickboard.cs](../../samples/UniTest.Samples/Kickboard/SingleStatedKickboard.cs), [MultiStatedKickboard.cs](../../samples/UniTest.Samples/Kickboard/MultiStatedKickboard.cs)                                                                                             | 테스트 대상의 실제 상태 전환                       |
+
+### 1-5. 실행 모드를 선택한다
+
+`Project<TModel>`과 `CompactProject<TModel>`은 protected 생성자에서 실행 모드를 선택한다. 기본 생성자는 `ExecutionMode.ThreadPool`을 선택하며, 선택한 값은 읽기 전용 `ExecutionMode` 속성으로 확인한다.
+
+| 모드 | 실행 방식 |
+| --- | --- |
+| `ThreadPool` | 설계와 실행 작업을 `Task.Run`으로 스레드 풀에 전달한다. |
+| `Inline` | `Task.Yield()` 이후 추가 `Task.Run` 없이 설계와 실행 작업을 처리한다. |
+
+파생 프로젝트의 생성자에서 다음과 같이 선택한다.
+
+```csharp
+public Project()
+    : base(UniTest.ExecutionMode.Inline)
+{
+}
+```
+
+두 모드 모두 기존 비동기 `Execute` API와 취소·실패 처리를 유지한다. `Inline`은 동기 실행이나 같은 OS 스레드에서의 실행을 보장하지 않는다. 정의되지 않은 enum 값은 생성 시 `ArgumentOutOfRangeException`으로 거부하며, `UNITEST_SINGLETHREAD` 빌드 심볼은 더 이상 사용하지 않는다.
 
 ## 2. 가장 짧은 시작 흐름
 
