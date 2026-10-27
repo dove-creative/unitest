@@ -27,7 +27,7 @@ namespace UniTest
                 if (_executed)
                 {
                     throw new InvalidOperationException(
-                        "Test Designer cannot be executed multiple times.");
+                        "Test Executor cannot be executed multiple times.");
                 }
 
                 _executed = true;
@@ -63,6 +63,8 @@ namespace UniTest
                     {
                         lock (_parent._idleLock)
                             _parent._idleNodes.Enqueue(_node);
+
+                        _parent.SignalStateChange();
                     }
                     else if (_node.Status == Node<TModel>.NodeStatus.Failure)
                     {
@@ -84,7 +86,6 @@ namespace UniTest
                 finally
                 {
                     Interlocked.Increment(ref _parent._processCount);
-                    _parent._completedExecutors.Enqueue(this);
                 }
             }
         }

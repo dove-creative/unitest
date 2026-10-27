@@ -19,11 +19,24 @@ AI agents first check the `docs/Workflow.en` entry in [Documentation](#documenta
 - Path expansion: `Node<TModel>` preserves the execution history and independently creates the next test state.
 - Multi-state composition: combines multiple state axes hierarchically with `TestCase`, `Merge(...)`, and `Extend(...)`.
 - Replay and continuous execution: selects full paths, long single paths, or failed path replay with `Run(...)`, `RunContinuously(...)`, and `Execute(ids)`.
-- XML reports: saves and reviews execution results and failed paths as XML.
+- JSON reports: saves and reviews execution results and failed paths as JSON.
+
+### Report API
+
+Since `0.3.0`, reports are exported as indented UTF-8 JSON; `0.2.0` used XML. This is a breaking API change from `0.2.0`.
+
+```csharp
+var root = await project.Execute(3);
+TestReport report = root.GetReport();
+Tools.ExportJson(report, "result", "reports");
+string failedJson = root.GetFailedReports().ToJson();
+```
+
+Replace `node.Report` with `node.GetReport()`, `ExportXml` with `ExportJson`, and `.OuterXml` with `.ToJson()`. Reports contain a flat `nodes` array linked by `nodeId` and `parentId`, with Lab IDs stored as values. Spaces, Unicode, and punctuation are allowed; `/` remains reserved for replay paths. See [JSON report usage and migration](docs/Wiki.en/04-Usage.md#6-5-read-the-json-report).
 
 ## Installation
 
-Consuming projects use the validated `BlackThunder.UniTest` stable package. Keep `BlackThunder.UniTest.0.2.0.nupkg` in the consumer repository's `packages/` folder and register the local feed in a root `NuGet.config`. Packages are distributed through repository-local files rather than published to a public NuGet feed.
+Consuming projects use the validated `BlackThunder.UniTest` stable package. Keep `BlackThunder.UniTest.0.3.0.nupkg` in the consumer repository's `packages/` folder and register the local feed in a root `NuGet.config`. Packages are distributed through repository-local files rather than published to a public NuGet feed.
 
 ```xml
 <?xml version="1.0" encoding="utf-8"?>
@@ -40,7 +53,7 @@ Pin the exact version in the test project.
 
 ```xml
 <ItemGroup>
-  <PackageReference Include="BlackThunder.UniTest" Version="[0.2.0]" />
+  <PackageReference Include="BlackThunder.UniTest" Version="[0.3.0]" />
 </ItemGroup>
 ```
 
@@ -150,7 +163,7 @@ This example shows the following flow.
 
 - `Model` carries both the real target, `Counter`, and the expected state, `ExpectedValue`.
 - `CreateLabs(...)` creates `Ignite` from the starting state, then creates `Increment` and `Decrement` from later states.
-- `Run(...)` executes the available paths and outputs an XML report.
+- `Run(...)` executes the available paths and outputs a JSON report.
 
 ## Main APIs
 
@@ -163,7 +176,7 @@ This example shows the following flow.
 - `TestCase`: passes which action and child condition should be generated in multi-state tests.
 - `Merge(...)`: combines a state-condition Lab and an actual-action template into one Lab.
 - `Extend(...)`: adds another state layer's Arrange/Assert around an existing Lab.
-- `Run(...)`: executes a full path or a specified execution history and outputs an XML report.
+- `Run(...)`: executes a full path or a specified execution history and outputs a JSON report.
 - `RunContinuously(...)`: deterministically selects one available path and runs a long continuous execution.
 - `Execute(ids)`: re-executes only the execution history separated by `/`.
 
@@ -189,9 +202,12 @@ Korean documentation is available in `docs/Wiki.ko`.
 Test code is in the `tests` folder and uses NUnit.
 
 ```powershell
-dotnet test tests/UniTest.Test.UnitTest/UniTest.Test.UnitTest.csproj
-dotnet test tests/UniTest.Test.RecursionTest/UniTest.Test.RecursionTest.csproj
+dotnet restore UniTest.sln
+dotnet build UniTest.sln --configuration Release --no-restore -m:1
+dotnet test UniTest.sln --configuration Release --no-build --no-restore -m:1 --logger trx --results-directory TestResults
 ```
+
+[CI](.github/workflows/ci.yml) runs these commands on Windows and Ubuntu with .NET SDK 9.0.x for pushes, pull requests, and manual runs. Each platform uploads its TRX test results for seven days. CI builds the sample but does not launch its interactive UI or publish packages.
 
 ## License
 

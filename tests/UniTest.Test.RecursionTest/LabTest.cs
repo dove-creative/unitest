@@ -9,7 +9,7 @@ public class LabTest
 {
     static void AssertSucceed(Node<Model> result)
     {
-        Assert.That(result.AllSucceed(out var cancelled), Is.True, result.GetFailedReports().OuterXml);
+        Assert.That(result.AllSucceed(out var cancelled), Is.True, result.GetFailedReports().ToJson());
         Assert.That(cancelled, Is.False);
     }
 

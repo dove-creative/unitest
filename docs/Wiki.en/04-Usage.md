@@ -15,10 +15,10 @@ Therefore, the explanation order follows the table and model that a test author 
 
 ### 1-1. Reference a Stable Package
 
-Keep the validated `BlackThunder.UniTest.0.2.0.nupkg` in the consumer repository's `packages/` folder and register the local feed in its root `NuGet.config`. Reference the exact version from the test project as follows. See the [README installation guide](../../README.md#installation) for the configuration example.
+Keep the validated `BlackThunder.UniTest.0.3.0.nupkg` in the consumer repository's `packages/` folder and register the local feed in its root `NuGet.config`. Reference the exact version from the test project as follows. See the [README installation guide](../../README.md#installation) for the configuration example.
 
 ```xml
-<PackageReference Include="BlackThunder.UniTest" Version="[0.2.0]" />
+<PackageReference Include="BlackThunder.UniTest" Version="[0.3.0]" />
 ```
 
 Core types such as `Project<TModel>`, `Model`, and `Lab<TModel>` remain in the `UniTest` namespace and require no compilation symbols. If a type cannot be found, first check the local feed configuration, package restore results, and `netstandard2.1` compatibility. Tests and samples used to develop UniTest itself retain their source project references.
@@ -93,6 +93,10 @@ public Project()
 
 Both modes preserve the existing asynchronous `Execute` API and cancellation and failure handling. `Inline` does not guarantee synchronous execution or execution on the same OS thread. Undefined enum values are rejected at construction with `ArgumentOutOfRangeException`, and the `UNITEST_SINGLETHREAD` build symbol is no longer used.
 
+In both modes, the `Execute(depth)` coordinator asynchronously waits for queued-work or worker-completion notifications when there is no work to process. Prepared Labs can start while the designer is still generating other Labs, and cancellation can interrupt the wait.
+
+When stopping after failure or cancellation, `Execute(depth)` stops scheduling new work and waits for all started design and execution workers before returning the result. It also observes worker faults raised during shutdown. Workers do not change the result tree or execution count after the method returns.
+
 ## 2. Shortest Start Flow
 
 The simplest usage flow is the following six steps.
@@ -102,7 +106,7 @@ The simplest usage flow is the following six steps.
 3. Return the list of `Lab`s appropriate for the current state from `CreateLabs(Model model)`.
 4. Put Arrange, Act, and Assert into each `Lab`.
 5. Run the tests with `Run(...)` or `Execute(...)`.
-6. Read the XML report or failed execution history.
+6. Read the JSON report or failed execution history.
 
 ```csharp
 using UniTest;
@@ -164,7 +168,7 @@ At first glance, Uni Test code may look like it has many types, but there are no
 | `TestCase` | When passing which operation to create in a multi-state test | Passes selection conditions between lower/upper test generators |
 | `Merge(...)` | When combining an actual operation template into the current Lab | Combines state conditions and the actual Act into one Lab |
 | `Extend(...)` | When adding a state verification layer on top of an existing Lab | Creates a `CompositeLab` and adds Arrange/Assert layers |
-| `Run(...)` | When an XML result is needed | Handles full execution and XML export together |
+| `Run(...)` | When a JSON result is needed | Handles full execution and JSON export together |
 | `RunContinuously(...)` | When a long continuable path is needed instead of every combination | Selects an arbitrary path and performs a long continuous test |
 | `Execute(ids)` | When a failed path needs to be re-run | Reproduces only the specified execution history |
 
@@ -267,7 +271,11 @@ case KickboardState.Idle:
     break;
 ```
 
-`ToUncontinuable` means that the same path will not be extended further after this test. Attaching it to an operation that expects failure or to a semantically terminated path can reduce unnecessary subsequent test generation.
+`ToUncontinuable` stops further expansion of the path after the current Lab completes Arrange, Act, and Assert. A satisfied expected-exception condition still proceeds to Assert. When validation succeeds, the Node is `Success` and the Model has `Continuable=false`. Unexpected Arrange/Act exceptions and assertion failures retain the existing failure handling.
+
+CompositeLab also runs assertions from the lower layer to the upper layer before stopping further execution if any constituent Lab has `ToUncontinuable=true`. Flags set during Assert are applied at the end as well. An actual assertion failure stops the remaining assertions.
+
+**Behavior change in `0.3.0`:** version `0.2.0` skipped the current assertions when this flag was set; `0.3.0` executes them. Tests relying on the old skip behavior must review their current Lab's assertions. Public method signatures are unchanged.
 
 ### 4-4. Change Mock First and Verify State Changes
 
@@ -589,7 +597,7 @@ In other words, the actual operation is executed in only one place, while surrou
 
 ### 6-1. Run All Paths
 
-The most common execution method is `Run(...)`. It expands every possible path up to the specified depth, and if `printResult` is enabled, it stores and opens the XML report.
+The most common execution method is `Run(...)`. It expands every possible path up to the specified depth, and if `printResult` is enabled, it stores and opens the JSON report.
 
 ```csharp
 await new SingleState.Project()
@@ -603,6 +611,8 @@ await new SingleState.Project()
 ```
 
 `processLimit` is the limit on the number of executed Nodes, and `timeLimit` is the time limit in seconds. If both are `-1`, there is no limit.
+
+Exceeding a limit requests cancellation; it does not forcibly terminate a synchronous callback that is already running. `Run` waits for active work before aggregating the result, so it can return after `timeLimit`. If `CreateLabs`, an Actor, or another callback never finishes, shutdown continues waiting. The runner requests and logs cancellation due to exceeded limits only once per run.
 
 ### 6-2. Re-Run Only Failed Paths
 
@@ -620,6 +630,10 @@ await new SingleState.Project()
 ```
 
 This method is used when reproducing only the path where the problem occurred quickly, without re-running the full combination.
+
+When calling `Execute(ids)` directly, a Lab ID unavailable in the current state raises an `ArgumentException` to the caller. Other non-cancellation exceptions during Lab lookup or path construction also propagate to the caller. `Run(..., executionIDs)` logs these exceptions and returns `false`. Failures within a Lab's execution remain recorded in the result Node.
+
+`Execute(depth)` and `ExecuteContinuously(...)` follow the same rule. Failures from `CreateLabs` and Lab execution are recorded on Nodes and returned in the result tree; any other non-cancellation exception propagates to the caller instead of returning a partial tree. The `Run` helpers log it and return `false`.
 
 ### 6-3. Long Continuous Tests
 
@@ -640,7 +654,7 @@ This method is suitable when the goal is to check whether the state remains stab
 
 ### 6-4. Debug Again at the Code Level
 
-If the XML report alone is not enough to find the cause, a desired Node can be restored from the execution result and re-executed for IDE debugging.
+If the JSON report alone is not enough to find the cause, a desired Node can be restored from the execution result and re-executed for IDE debugging.
 
 ```csharp
 var root = await new SingleState.Project()
@@ -652,17 +666,25 @@ restored.Execute();
 
 `DetachAndRestore()` creates a separated Node that does not modify the original Node graph. After that, placing a breakpoint on `restored.Execute()` lets the same execution history be reproduced and the problem point be inspected again.
 
-### 6-5. Read the XML Report
+### 6-5. Read the JSON Report
 
-The `Run(...)` family internally exports the Node's XML report. When execution succeeds, the full report is saved. When it fails, a report that keeps only the failed Nodes is saved.
+After all workers finish, the `Run(...)` family exports a JSON snapshot. A successful or cancelled run saves the full report only when `printResult` is true; a failed run always saves failures and their ancestors. Reports are not copied to the clipboard. When `printResult` is true, the report folder and file are opened after saving. To save a file without opening it, call `ExportJson` directly:
 
-The three parts to focus on in the report are as follows.
+```csharp
+var root = await new SingleState.Project().Execute(3);
+TestReport report = root.GetReport();
+string json = report.ToJson();
+Tools.ExportJson(report, "result", "reports");
+Tools.ExportJson(root.GetFailedReports(), "failures", "reports");
+```
 
-- Node name: indicates which Lab was executed.
-- `History`: execution history up to the corresponding Node.
-- `Model`: a string used to read the test target and expected state at that point.
+The document has a flat `nodes` array. Reconstruct paths using `nodeId` and `parentId`; `labId` is a value and may repeat at different nodes. `status` is a string, `model` is the captured `Model.ToString()` description, and `history` is the execution history. `error` contains the execution exception's `type`, `message`, and full `details`; `reportError` separately records a diagnostic collection failure. Null fields remain in the JSON. A Lab-less root has null `labId` and `parentId`.
 
-Therefore, it is important to write `Model.ToString()` in an easy-to-read form. This is because the XML report is ultimately a tool for reading "what state it was in and which Lab was executed" on the failed path.
+`GetReport()` on a non-root node includes its ancestor path and subtree, without unrelated siblings. Failure filtering keeps the full report's node IDs, so gaps are expected; if there are no failures, the first node alone remains. Reports are independent snapshots. Call these methods after execution completes, not while workers or another caller mutate the tree.
+
+Lab IDs can contain spaces, Korean text, `%`, quotes, and other punctuation. `/` remains reserved for `Execute("A/B")` and is rejected at Node construction. Paths and deterministic seed calculations retain their existing format.
+
+This is a breaking change in `0.3.0`; the local package `0.2.0` used XML. Migrate `node.Report` to `node.GetReport()`, `GetFailedReports().OuterXml` to `GetFailedReports().ToJson()`, and `ExportXml(...)` to `ExportJson(...)`. Consumers should also change filename expectations from `.xml` to `.json`. There is no XML compatibility API or XML import conversion.
 
 In summary, the Uni Test usage flow is as follows.
 

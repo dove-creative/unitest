@@ -38,10 +38,7 @@ namespace UniTest
                 else
                 {
                     if (ct.IsCancellationRequested)
-                    {
-                        _parent._completedDesigners.Enqueue(this);
                         return;
-                    }
 
                     await Task.Run(() => ExecuteCore(ct), ct);
                 }
@@ -50,10 +47,7 @@ namespace UniTest
             void ExecuteCore(CancellationToken ct)
             {
                 if (ct.IsCancellationRequested)
-                {
-                    _parent._completedDesigners.Enqueue(this);
                     return;
-                }
 
                 Node<TModel> currentNode = _node;
                 IEnumerable<ILab<TModel>> labs;
@@ -68,7 +62,6 @@ namespace UniTest
                         $"An exception occurred while creating labs for node '{_node}'.", ex);
 
                     currentNode.SetExternalException(ex, Node<TModel>.NodeStatus.Failure);
-                    _parent._completedDesigners.Enqueue(this);
 
                     throw ex;
                 }
@@ -84,6 +77,8 @@ namespace UniTest
 
                         lock (_parent._preparedLock)
                             _parent._preparedNodes.Enqueue(currentNode);
+
+                        _parent.SignalStateChange();
                     }
                 }
                 catch (OperationCanceledException ex)
@@ -97,10 +92,6 @@ namespace UniTest
 
                     _node.SetExternalException(ex, Node<TModel>.NodeStatus.Failure);
                     throw ex;
-                }
-                finally
-                {
-                    _parent._completedDesigners.Enqueue(this);
                 }
             }
         }

@@ -102,16 +102,6 @@ namespace UniTest
             }
 
 
-            if (model.MetadataGroup.Values.Any(md => md.ToUncontinuable))
-            {
-                SetMetadata();
-                model.Continuable = false;
-
-                exception = null;
-                return;
-            }
-
-
             foreach (var lab in _labs.Reverse<Lab<TModel>>())
             {
                 try
@@ -151,6 +141,9 @@ namespace UniTest
                 {
                     model.Sustainable = false;
                 }
+
+                if (model.MetadataGroup.Values.Any(md => md.ToUncontinuable))
+                    model.Continuable = false;
             }
         }
 

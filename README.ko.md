@@ -19,11 +19,24 @@ AI 에이전트는 UniTest 기반 테스트 작성이나 CLI 반복 검증을 �
 - 경로 확장: `Node<TModel>`가 실행 이력을 보존하고 다음 테스트 상태를 독립적으로 생성한다.
 - 다중 상태 조합: `TestCase`, `Merge(...)`, `Extend(...)`로 여러 상태 축을 계층적으로 결합한다.
 - 재실행과 연속 실행: `Run(...)`, `RunContinuously(...)`, `Execute(ids)`로 전체 경로, 긴 단일 경로, 실패 경로 재현을 선택한다.
-- XML 리포트: 실행 결과와 실패 경로를 XML로 저장하고 확인할 수 있다.
+- JSON 리포트: 실행 결과와 실패 경로를 JSON으로 저장하고 확인할 수 있다.
+
+### 리포트 API
+
+`0.3.0`부터 리포트를 들여쓴 UTF-8 JSON으로 저장한다. `0.2.0`은 XML API를 사용했다. `0.2.0`과 호환되지 않는 공개 API 변경이다.
+
+```csharp
+var root = await project.Execute(3);
+TestReport report = root.GetReport();
+Tools.ExportJson(report, "result", "reports");
+string failedJson = root.GetFailedReports().ToJson();
+```
+
+`node.Report`는 `node.GetReport()`로, `ExportXml`은 `ExportJson`으로, `.OuterXml`은 `.ToJson()`으로 바꾼다. 리포트는 `nodeId`와 `parentId`로 연결한 평탄한 `nodes` 배열이며 Lab ID는 값으로 저장한다. 공백·한글·기호는 허용하고 `/`만 재실행 경로 구분자로 예약한다. 자세한 내용은 [JSON 리포트 사용 및 이전 안내](docs/Wiki.ko/04-Usage.md#6-5-json-리포트-읽기)를 참고한다.
 
 ## 설치
 
-소비 프로젝트는 검증된 `BlackThunder.UniTest` 안정 패키지를 사용한다. `BlackThunder.UniTest.0.2.0.nupkg`를 소비 저장소의 `packages/`에 보관하고, 저장소 루트의 `NuGet.config`에 로컬 피드를 등록한다. 현재 배포 방식은 저장소에 보관하는 로컬 패키지이며 공개 NuGet 피드에 게시하지 않는다.
+소비 프로젝트는 검증된 `BlackThunder.UniTest` 안정 패키지를 사용한다. `BlackThunder.UniTest.0.3.0.nupkg`를 소비 저장소의 `packages/`에 보관하고, 저장소 루트의 `NuGet.config`에 로컬 피드를 등록한다. 현재 배포 방식은 저장소에 보관하는 로컬 패키지이며 공개 NuGet 피드에 게시하지 않는다.
 
 ```xml
 <?xml version="1.0" encoding="utf-8"?>
@@ -40,7 +53,7 @@ AI 에이전트는 UniTest 기반 테스트 작성이나 CLI 반복 검증을 �
 
 ```xml
 <ItemGroup>
-  <PackageReference Include="BlackThunder.UniTest" Version="[0.2.0]" />
+  <PackageReference Include="BlackThunder.UniTest" Version="[0.3.0]" />
 </ItemGroup>
 ```
 
@@ -150,7 +163,7 @@ public static class CounterRunner
 
 - `Model`은 실제 대상인 `Counter`와 기대 상태인 `ExpectedValue`를 함께 가진다.
 - `CreateLabs(...)`는 시작 상태에서 `Ignite`를 만들고, 이후 상태에서 `Increment`와 `Decrement`를 만든다.
-- `Run(...)`은 가능한 경로를 실행하고 XML 리포트를 출력한다.
+- `Run(...)`은 가능한 경로를 실행하고 JSON 리포트를 출력한다.
 
 ## 주요 API
 
@@ -163,7 +176,7 @@ public static class CounterRunner
 - `TestCase`: 다중 상태 테스트에서 어떤 동작과 하위 조건을 생성할지 전달한다.
 - `Merge(...)`: 상태 조건 Lab과 실제 동작 template을 하나의 Lab으로 합친다.
 - `Extend(...)`: 기존 Lab 위에 다른 상태 계층의 Arrange/Assert를 덧붙인다.
-- `Run(...)`: 전체 경로나 지정한 실행 이력을 실행하고 XML 리포트를 출력한다.
+- `Run(...)`: 전체 경로나 지정한 실행 이력을 실행하고 JSON 리포트를 출력한다.
 - `RunContinuously(...)`: 가능한 경로 중 하나를 결정적으로 선택해 긴 연속 실행을 수행한다.
 - `Execute(ids)`: `/`로 구분한 실행 이력만 다시 실행한다.
 
@@ -189,9 +202,12 @@ AI 에이전트는 UniTest 기반 테스트를 작성하거나 도메인별 POCO
 테스트 코드는 `tests` 폴더에 있으며 NUnit을 사용한다.
 
 ```powershell
-dotnet test tests/UniTest.Test.UnitTest/UniTest.Test.UnitTest.csproj
-dotnet test tests/UniTest.Test.RecursionTest/UniTest.Test.RecursionTest.csproj
+dotnet restore UniTest.sln
+dotnet build UniTest.sln --configuration Release --no-restore -m:1
+dotnet test UniTest.sln --configuration Release --no-build --no-restore -m:1 --logger trx --results-directory TestResults
 ```
+
+[CI](.github/workflows/ci.yml)는 push·pull request·수동 실행 시 Windows와 Ubuntu에서 .NET SDK 9.0.x로 같은 명령을 실행한다. 운영체제별 TRX 결과는 7일간 보관한다. 샘플은 빌드에 포함하며 대화형 실행이나 패키지 배포는 하지 않는다.
 
 ## 라이선스
 

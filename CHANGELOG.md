@@ -6,6 +6,40 @@ The format follows Keep a Changelog, and version numbers follow Semantic Version
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-10-27
+
+### Changed
+
+- **Behavior change:** `ToUncontinuable` now takes effect after the current Lab's assertions finish. Lab, CompactLab, and CompositeLab run their current assertions, including after an expected exception, and stop only subsequent execution. Existing tests that relied on skipped assertions must review those assertions; public signatures are unchanged.
+- **Breaking:** replace XML reports with independent `TestReport` snapshots containing a flat `nodes` array linked by `nodeId` and `parentId`. Replace `Node.Report` with `GetReport()`, `ExportXml` with `ExportJson`, and `GetFailedReports().OuterXml` with `GetFailedReports().ToJson()`. Reports are UTF-8 `.json` files; no XML compatibility API is retained.
+- Store model descriptions, execution histories, and exception details as diagnostic values; serialize only after execution completes. `Model.ToString()` failures are recorded separately without losing execution errors or children.
+- Preserve ancestor paths in reports for selected subtrees and detached debug nodes. Failure reports retain the full report's node IDs and keep failures and their ancestors, or only the first node when no failures exist.
+- Keep `netstandard2.1` with no package dependencies. Reports are written by a built-in JSON writer, so the assembly can still be copied into hosts that do not restore NuGet dependencies, such as Unity. Existing runner output conditions and window-opening behavior remain unchanged.
+- `Execute(depth)` and `ExecuteContinuously` now propagate non-cancellation errors that were not recorded on a Node, matching `Execute(ids)`, instead of logging them and returning a partial tree. Failures from `CreateLabs` and Lab execution are still recorded on Nodes and returned. The `Run` helpers log these errors and return `false`.
+- Construct the root Node inside each entry point's error handling, so a failing `TModel` constructor propagates through the same path and releases cancellation resources.
+
+### Removed
+
+- **Behavior change:** remove clipboard copying from report export. `Run` and `RunContinuously` no longer copy reports to the clipboard through `clip.exe`, and `ExportJson` no longer has a `copyToClipboard` parameter. `printResult` still opens the saved report folder and file.
+
+### Fixed
+
+- Apply `ToUncontinuable` from any CompositeLab layer after all successful assertions, including flags set during Assert. Assertion failures remain failures and stop remaining assertions.
+- Include ID, depth, and status in `Node.ToString()` diagnostics without invoking the Model's `ToString()`.
+- Correct the executor's duplicate-execution error message and remove the unused test field warning.
+- Allow spaces, Unicode, and punctuation in Lab IDs by storing IDs as JSON values. Reject `/` at Node construction with an argument error because it is reserved for replay paths (F4).
+- Preserve completed children when a `CreateLabs` iterator fails (F5), remove shared XML document mutation (R2), and write consistent UTF-8 report bytes (F7).
+- Preserve the complete replay path when repeatedly restoring a detached node or appending descendants to it, without modifying the original result.
+- Propagate non-cancellation errors from `Execute(ids)`, including unknown Lab IDs, instead of returning a partial result that appears successful. The `Run` helper logs these errors and returns `false`.
+- Replace the busy coordinator loop in `Execute(depth)` with cancellation-aware `SemaphoreSlim` notifications for queued work and completed workers, reducing idle CPU usage in both execution modes.
+- Publish worker completion only after the worker Task has finished, so the coordinator observes its final state and exceptions before removing it from tracking.
+- Wait for all started workers before `Execute(depth)` returns after failure or cancellation, and observe worker faults that occur during shutdown before disposing cancellation resources.
+- Request cancellation only once when a runner limit is exceeded while waiting for workers to finish.
+
+### Added
+
+- Add GitHub Actions CI for Windows and Ubuntu on pushes, pull requests, and manual runs: restore, Release build, full NUnit tests, and per-platform TRX artifacts with .NET SDK 9.0.x. Samples are built but not launched; no package publishing is configured.
+
 ## [0.2.0] - 2026-10-15
 
 ### Added

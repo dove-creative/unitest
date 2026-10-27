@@ -1,5 +1,4 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -19,7 +18,6 @@ public class TestDesignerTest
     Func<Model, IEnumerable<ILab<Model>>> _createLabs;
     ProjectMock _project;
 
-    ICollection _completedDesigners;
     Queue<Node<Model>> _preparedNodes;
     CancellationTokenSource _cts;
 
@@ -27,10 +25,6 @@ public class TestDesignerTest
     void SetUp(Func<Model, IEnumerable<ILab<Model>>> createLabs, bool withRootNode, bool secondFailure = false)
     {
         _project = new ProjectMock(createLabs);
-
-        _completedDesigners = (ICollection)typeof(Project<Model>)
-            .GetField("_completedDesigners", BindingFlags.Instance | BindingFlags.NonPublic)
-            .GetValue(_project);
 
         _preparedNodes = (Queue<Node<Model>>)typeof(Project<Model>)
             .GetField("_preparedNodes", BindingFlags.Instance | BindingFlags.NonPublic)
@@ -81,7 +75,6 @@ public class TestDesignerTest
             _cts.Dispose();
         }
 
-        _completedDesigners = null;
         _preparedNodes = null;
     }
 
@@ -131,7 +124,6 @@ public class TestDesignerTest
         await Execute();
 
         // Assert
-        Assert.That(_completedDesigners, Is.EqualTo(new[] { _testDesigner }));
         Assert.That(_preparedNodes.Select(n => n.Lab), Is.EqualTo(labs));
 
         CheckNode(_node, withRootNode ? Node<Model>.NodeStatus.Root : Node<Model>.NodeStatus.Success,
@@ -170,7 +162,6 @@ public class TestDesignerTest
         await Execute();
 
         // Assert
-        Assert.That(_completedDesigners, Is.EqualTo(new[] { _testDesigner }));
         Assert.That(_preparedNodes, Is.Empty);
 
         CheckNode(_node, withRootNode ? Node<Model>.NodeStatus.Root : Node<Model>.NodeStatus.Success,
@@ -190,7 +181,6 @@ public class TestDesignerTest
         _cts.Cancel();
 
         // Assert
-        Assert.That(_completedDesigners, Is.Empty);
         Assert.That(_preparedNodes, Is.Empty);
 
         CheckNode(_node, withRootNode ? Node<Model>.NodeStatus.Root : Node<Model>.NodeStatus.Success,
@@ -206,7 +196,6 @@ public class TestDesignerTest
         _cts.Cancel();
 
         // Assert
-        Assert.That(_completedDesigners, Is.Empty);
         Assert.That(_preparedNodes, Is.Empty);
 
         CheckNode(_node, withRootNode ? Node<Model>.NodeStatus.Root : Node<Model>.NodeStatus.Success,
@@ -223,7 +212,6 @@ public class TestDesignerTest
         _cts.Cancel();
 
         // Assert
-        Assert.That(_completedDesigners, Is.Empty);
         Assert.That(_preparedNodes, Is.Empty);
         
         CheckNode(_node, Node<Model>.NodeStatus.Success, 0, null, null, null, _lab);
@@ -238,7 +226,6 @@ public class TestDesignerTest
         _cts.Cancel();
 
         // Assert
-        Assert.That(_completedDesigners, Is.Empty);
         Assert.That(_preparedNodes, Is.Empty);
 
         CheckNode(_node, withRootNode ? Node<Model>.NodeStatus.Root : Node<Model>.NodeStatus.Success,
@@ -261,7 +248,6 @@ public class TestDesignerTest
         await Execute();
 
         // Assert
-        Assert.That(_completedDesigners, Is.EqualTo(new[] { _testDesigner }));
         Assert.That(_preparedNodes, Is.Empty);
         CheckNode(_node, withRootNode ? Node<Model>.NodeStatus.Root : Node<Model>.NodeStatus.Success,
             0, null, null, null, _lab);
@@ -277,7 +263,6 @@ public class TestDesignerTest
         await Execute();
 
         // Assert
-        Assert.That(_completedDesigners, Is.EqualTo(new[] { _testDesigner }));
         Assert.That(_preparedNodes, Is.Empty);
         CheckNode(_node, withRootNode ? Node<Model>.NodeStatus.Root : Node<Model>.NodeStatus.Success,
             0, null, null, null, _lab);
@@ -294,7 +279,6 @@ public class TestDesignerTest
         await Execute();
 
         // Assert
-        Assert.That(_completedDesigners, Is.EqualTo(new[] { _testDesigner }));
         Assert.That(_preparedNodes, Is.Empty);
         CheckNode(_node, Node<Model>.NodeStatus.Success, 0, null, _preparedNodes, null, _lab);
     }
@@ -309,7 +293,6 @@ public class TestDesignerTest
         await Execute();
 
         // Assert
-        Assert.That(_completedDesigners, Is.EqualTo(new[] { _testDesigner }));
         Assert.That(_preparedNodes, Is.Empty);
         CheckNode(_node, withRootNode ? Node<Model>.NodeStatus.Root : Node<Model>.NodeStatus.Success,
             0, null, null, null, _lab);
@@ -385,7 +368,6 @@ public class TestDesignerTest
 
 
         // Assert
-        Assert.That(_completedDesigners, Is.EqualTo(new[] { _testDesigner }));
         Assert.That(_preparedNodes, Is.Empty);
         CheckNode(_node, Node<Model>.NodeStatus.Cancelled,
             0, null, null, typeof(OperationCanceledException), _lab);
@@ -423,7 +405,6 @@ public class TestDesignerTest
 
 
         // Assert
-        Assert.That(_completedDesigners, Is.EqualTo(new[] { _testDesigner }));
         Assert.That(_preparedNodes, Is.Empty);
         CheckNode(_node, withRootNode ? Node<Model>.NodeStatus.Root : Node<Model>.NodeStatus.Success,
             0, null, null, null, _lab);

@@ -1,8 +1,6 @@
 using System;
 using System.IO;
-using System.Text;
 using System.Threading.Tasks;
-using System.Xml;
 
 namespace UniTest
 {
@@ -27,6 +25,7 @@ namespace UniTest
         {
             int timespan = 1;
             int times = 1;
+            bool limitCancellationRequested = false;
             var stopwatch = System.Diagnostics.Stopwatch.StartNew();
 
             try
@@ -35,14 +34,16 @@ namespace UniTest
                 {
                     if (!task.IsCompleted)
                     {
-                        if (processLimit > 0 && project.ProcessCount > processLimit)
+                        if (!limitCancellationRequested && processLimit > 0 && project.ProcessCount > processLimit)
                         {
+                            limitCancellationRequested = true;
                             Logger.Log(Project<Model>.DividingLine);
                             Logger.Log($"Cancelling test: process limit exceeded ({project.ProcessCount}/{processLimit})");
                             project.Cancel();
                         }
-                        else if (timeLimit > 0 && stopwatch.Elapsed.TotalSeconds > timeLimit)
+                        else if (!limitCancellationRequested && timeLimit > 0 && stopwatch.Elapsed.TotalSeconds > timeLimit)
                         {
+                            limitCancellationRequested = true;
                             Logger.Log(Project<Model>.DividingLine);
                             Logger.Log($"Cancelling test: time limit exceeded ({stopwatch.Elapsed.TotalSeconds:F1}/{timeLimit})");
                             project.Cancel();
@@ -63,7 +64,7 @@ namespace UniTest
                             Logger.Log($"{projectName} {(!cancelled ? "Succeed" : "Cancelled")} ({project.ProcessCount} / {elapsed:F2}s)");
 
                             if (printResult)
-                                ExportXml(result.Report, projectName, projectPath, true, true);
+                                ExportJson(result.GetReport(), projectName, projectPath, true);
 
                             return true;
                         }
@@ -73,7 +74,7 @@ namespace UniTest
 
                             var report = result.GetFailedReports();
 
-                            ExportXml(report, $"{projectName} - Failed", projectPath, printResult, true);
+                            ExportJson(report, $"{projectName} - Failed", projectPath, printResult);
                             return false;
                         }
                     }
@@ -95,88 +96,20 @@ namespace UniTest
             }
         }
 
-        //static IEnumerable<XmlElement> GetLeaves(XmlElement node, Func<XmlElement, bool> predicate)
-        //{
-        //    if (node == null)
-        //        yield break;
-
-        //    var children = node.ChildNodes.OfType<XmlElement>().ToArray();
-        //    if (children.Length == 0)
-        //    {
-        //        if (predicate(node))
-        //        {
-        //            yield return node;
-        //            yield break;
-        //        }
-        //    }
-
-        //    foreach (var child in children)
-        //    {
-        //        foreach (var leaf in GetLeaves(child, predicate))
-        //            yield return leaf;
-        //    }
-        //}
-
-        public static void ExportXml(XmlNode node, string name, string path, bool open = false, bool copyToClipboard = false)
+        public static void ExportJson(TestReport report, string name, string path, bool open = false)
         {
+            if (report == null)
+                throw new ArgumentNullException(nameof(report));
+
+            var jsonContent = report.ToUtf8Json();
             Directory.CreateDirectory(path);
-            var fullPath = Path.Combine(path, $"{name}.xml");
-
-            var settings = new XmlWriterSettings
-            {
-                Indent = true,
-                OmitXmlDeclaration = false,
-                Encoding = Encoding.UTF8
-            };
-
-            string xmlContent;
-            using (var stringWriter = new StringWriter())
-            using (var xmlWriter = XmlWriter.Create(stringWriter, settings))
-            {
-                node.WriteTo(xmlWriter);
-                xmlWriter.Flush();
-                xmlContent = stringWriter.ToString();
-            }
-
-            File.WriteAllText(fullPath, xmlContent, Encoding.UTF8);
-
-            if (copyToClipboard)
-            {
-                CopyToClipboard(xmlContent);
-            }
+            var fullPath = Path.Combine(path, $"{name}.json");
+            File.WriteAllBytes(fullPath, jsonContent);
 
             if (open)
             {
                 OpenPath(path);
                 OpenPath(fullPath);
-            }
-        }
-
-        static void CopyToClipboard(string content)
-        {
-            try
-            {
-                var startInfo = new System.Diagnostics.ProcessStartInfo("clip.exe")
-                {
-                    CreateNoWindow = true,
-                    RedirectStandardInput = true,
-                    UseShellExecute = false
-                };
-
-                using (var process = System.Diagnostics.Process.Start(startInfo))
-                {
-                    if (process == null)
-                        throw new InvalidOperationException("Failed to start clip.exe.");
-
-                    process.StandardInput.Write(content);
-                    process.StandardInput.Close();
-                    process.WaitForExit();
-                }
-                Logger.Log("Node content has been copied to the clipboard.");
-            }
-            catch (Exception ex)
-            {
-                Logger.LogException(ex);
             }
         }
 

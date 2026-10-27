@@ -9,6 +9,7 @@ namespace UniTest
         public Type ExpectedExceptionType = null;
 
         public bool ToUnsustainable = false;
+        /// <summary>Stops subsequent Labs after the current Lab's assertions complete.</summary>
         public bool ToUncontinuable = false;
         public int RemainingExecutionCount = -1;
 

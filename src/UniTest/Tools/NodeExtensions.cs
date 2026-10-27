@@ -1,5 +1,6 @@
+using System;
+using System.Collections.Generic;
 using System.Linq;
-using System.Xml;
 
 namespace UniTest
 {
@@ -60,28 +61,52 @@ namespace UniTest
             return true;
         }
 
-        public static XmlElement GetFailedReports<TModel>( this Node<TModel> node) where TModel : Model, new()
+        /// <summary>
+        /// Captures this subtree and its ancestor path after execution has finished.
+        /// Concurrent mutation of the execution tree during capture is not supported.
+        /// </summary>
+        public static TestReport GetReport<TModel>(this Node<TModel> node) where TModel : Model, new()
         {
-            var report = (XmlElement)node.Report.CloneNode(true);
+            if (node == null)
+                throw new ArgumentNullException(nameof(node));
 
-            PruneNonFailure(report, Node<TModel>.NodeStatus.Failure.ToString());
-            return report;
-
-
-            bool PruneNonFailure(XmlElement node, string failureText)
+            var nodes = new List<NodeReport>();
+            int? parentId = null;
+            foreach (var ancestor in node.GetAncestors())
             {
-                var children = node.ChildNodes.OfType<XmlElement>().ToList();
-                foreach (var child in children)
-                {
-                    if (PruneNonFailure(child, failureText))
-                        node.RemoveChild(child);
-                }
-
-                if (!node.ChildNodes.OfType<XmlElement>().Any())
-                    return node.InnerText != failureText;
-
-                return false;
+                var id = nodes.Count;
+                nodes.Add(ancestor.Report.WithIdentity(id, parentId));
+                parentId = id;
             }
+
+            var pending = new Stack<(Node<TModel> Node, int? ParentId)>();
+            pending.Push((node, parentId));
+            while (pending.Count > 0)
+            {
+                var current = pending.Pop();
+                var id = nodes.Count;
+                nodes.Add(current.Node.CaptureReport(id, current.ParentId));
+                for (var i = current.Node.Afters.Count - 1; i >= 0; i--)
+                    pending.Push((current.Node.Afters[i], id));
+            }
+            return new TestReport(nodes);
+        }
+
+        /// <summary>Keeps failures and their ancestors, retaining the full report's node IDs.</summary>
+        public static TestReport GetFailedReports<TModel>(this Node<TModel> node) where TModel : Model, new()
+        {
+            var report = node.GetReport();
+            var keep = new bool[report.Nodes.Count];
+            keep[0] = true;
+            for (var i = report.Nodes.Count - 1; i >= 0; i--)
+            {
+                var current = report.Nodes[i];
+                if (current.Status == Node<TModel>.NodeStatus.Failure.ToString())
+                    keep[i] = true;
+                if (keep[i] && current.ParentId.HasValue)
+                    keep[current.ParentId.Value] = true;
+            }
+            return new TestReport(report.Nodes.Where(n => keep[n.NodeId]));
         }
     }
 }

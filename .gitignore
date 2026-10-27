@@ -3,5 +3,6 @@ obj/
 TestResults/
 /artifacts/
 .vs/
+.obsidian/
 *.suo
 *.user

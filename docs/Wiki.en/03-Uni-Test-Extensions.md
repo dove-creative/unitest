@@ -18,7 +18,7 @@ The two functions are implemented as follows.
 
 ## 2. Node Re-Execution and Debugging
 
-When a test fails, the developer can check the main cause through Uni Test's XML report. However, in some cases, the report alone may not be enough to inspect detailed execution flow or state information. In that case, the developer can select the desired node from the Node list returned by Uni Test and re-run it in the IDE, using breakpoints, variable watches, stack traces, and similar tools to analyze the problem point closely.
+When a test fails, the developer can check the main cause through Uni Test's JSON report. However, in some cases, the report alone may not be enough to inspect detailed execution flow or state information. In that case, the developer can select the desired node from the Node list returned by Uni Test and re-run it in the IDE, using breakpoints, variable watches, stack traces, and similar tools to analyze the problem point closely.
 
 The node re-execution procedure is as follows.
 

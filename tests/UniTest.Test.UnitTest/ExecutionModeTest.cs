@@ -1,5 +1,4 @@
 using System;
-using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
@@ -135,7 +134,6 @@ public class ExecutionModeTest
         await ExecuteWorker(workerName, project, node, cancellation.Token);
 
         Assert.That(userCodeRan, Is.False);
-        AssertWorkerCompleted(workerName, project);
         Assert.That(node.Status, Is.EqualTo(workerName == "TestDesigner"
             ? Node<Model>.NodeStatus.Root : Node<Model>.NodeStatus.Cancelled));
         Assert.That(project.ProcessCount, Is.EqualTo(workerName == "TestDesigner" ? 0 : 1));
@@ -161,7 +159,6 @@ public class ExecutionModeTest
 
         Assert.That(node.Status, Is.EqualTo(Node<Model>.NodeStatus.Cancelled));
         Assert.That(node.Exception, Is.InstanceOf<OperationCanceledException>());
-        AssertWorkerCompleted(workerName, project);
         Assert.That(project.ProcessCount, Is.EqualTo(workerName == "TestDesigner" ? 0 : 1));
     }
 
@@ -175,14 +172,6 @@ public class ExecutionModeTest
         var worker = constructor.Invoke(new object[] { project, node });
         var execute = workerType.GetMethod("Execute", new[] { typeof(CancellationToken) });
         return (Task)execute.Invoke(worker, new object[] { cancellationToken });
-    }
-
-    private static void AssertWorkerCompleted(string workerName, Project<Model> project)
-    {
-        var fieldName = workerName == "TestDesigner" ? "_completedDesigners" : "_completedExecutors";
-        var completed = (ICollection)typeof(Project<Model>).GetField(fieldName, BindingFlags.Instance | BindingFlags.NonPublic)
-            .GetValue(project);
-        Assert.That(completed.Count, Is.EqualTo(1));
     }
 
     private sealed class ModeProject : Project<Model>

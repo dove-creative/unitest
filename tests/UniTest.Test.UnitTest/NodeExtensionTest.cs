@@ -118,11 +118,9 @@ public class NodeExtensionTest
     {
         // Act
         var failedReport = _nodes[0].GetFailedReports();
-        var failedReports = failedReport.ChildNodes
-            .OfType<System.Xml.XmlElement>();
 
         // Assert
-        Assert.That(failedReports, Is.Empty);
+        Assert.That(failedReport.Nodes.Select(n => n.NodeId), Is.EqualTo(new[] { 0 }));
     }
     [Test]
     public void GetFailedReports_Single()
@@ -132,12 +130,11 @@ public class NodeExtensionTest
 
         // Act
         var failedReport = _nodes[0].GetFailedReports();
-        var failedReports = failedReport.ChildNodes
-            .OfType<System.Xml.XmlElement>()
-            .Select(n => n.OuterXml);
 
         // Assert
-        Assert.That(failedReports, Is.EquivalentTo(new[] { _nodes[3].Report.OuterXml }));
+        Assert.That(failedReport.Nodes.Select(n => n.NodeId), Is.EqualTo(new[] { 0, 3 }));
+        Assert.That(failedReport.Nodes[1].ParentId, Is.EqualTo(0));
+        Assert.That(failedReport.Nodes[1].Status, Is.EqualTo("Failure"));
     }
     [Test]
     public void GetFailedReports_Multiple()
@@ -149,11 +146,9 @@ public class NodeExtensionTest
 
         // Act
         var failedReport = _nodes[0].GetFailedReports();
-        var failedReports = failedReport.ChildNodes
-            .OfType<System.Xml.XmlElement>()
-            .Select(n => n.OuterXml);
 
         // Assert
-        Assert.That(failedReports, Is.EquivalentTo(new[] { _nodes[3], _nodes[6] }.Select(n => n.Report.OuterXml)));
+        Assert.That(failedReport.Nodes.Select(n => n.NodeId), Is.EqualTo(new[] { 0, 3, 5, 6 }));
+        Assert.That(failedReport.Nodes.Select(n => n.ParentId), Is.EqualTo(new int?[] { null, 0, 3, 0 }));
     }
 }

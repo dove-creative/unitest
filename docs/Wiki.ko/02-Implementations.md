@@ -10,7 +10,7 @@
 
 3. Node의 동작
 	3.1 Node의 동작
-	3.2 Xml 리포트 생성
+	3.2 JSON 리포트 생성
 
 4. Project의 동작
 	4.1 Project 동작 파이프라인
@@ -100,7 +100,7 @@ Lab은 아래의 인자를 가지고 준비 상태를 마친다.
 
 3.  Subject Metadata
     - `ExpectedExceptionType`: Act 수행 시 예상되는 예외 타입
-    - `ToUncontinuable`: true일 경우, 해당 테스트를 마지막으로 종료
+    - `ToUncontinuable`: true일 경우, 현재 Assert까지 완료한 뒤 후속 Lab 실행을 중단
     - `RemainingExecutionCount`: 잔여 테스트 수행 횟수
 
 #### 2-1.2. Do Arrange
@@ -179,19 +179,17 @@ Composite Lab의 Execute는 아래와 같은 순서로 동작한다.
 - 최상위 Lab의 DoAct만 수행한다. 하나의 테스트 흐름에서는 하나의 Act만 수행하는 것이 원칙이기 때문이며, 중복 실행은 의도하지 않은 부작용을 유발할 수 있기 때문이다.
 - 예외가 발생하면 테스트를 중단하고, 해당 Model에 대해 후속 테스트를 금지한다.
 
-#### 2-3.3. 유효성 판단
-
-- 모든 Lab의 SubjectMetadata.ToUncontinuable 값을 검사하여, 하나라도 true인 경우 테스트를 즉시 중지한다. 지속 불가능한 상태가 하나라도 발생했다면, Model 자체가 신뢰할 수 없는 상태로 전환되었을 수 있기 때문이다.
-
-#### 2-3.4. Do Assert (하위 → 상위 순서)
+#### 2-3.3. Do Assert (하위 → 상위 순서)
 
 - 각 Lab의 DoAssert를 하위 Lab부터 상위 Lab까지의 역순으로 실행한다. 확장 상태의 유효성을 먼저 검증한 뒤, 그 위에 쌓인 원본 상태를 검증해야 문제 발생 시 정확한 책임 추적이 가능하기 때문이다.
 
+- `ToUncontinuable=true`여도 현재 Assert를 생략하지 않는다. 예상 예외 조건이 충족된 경우에도 같은 순서로 검증한다.
+
 - 예외가 발생하면 테스트를 중단하고, 해당 Model에 대해 후속 테스트를 금지한다.
 
-#### 2-3.5. 테스트 상태 반영
+#### 2-3.4. 테스트 상태 반영
 
-- 최상위 Lab이 보유한 ModelMetadata에 따라 Model의 테스트 지속 여부, 남은 테스트 횟수 등을 업데이트한 후 테스트를 종료한다.
+- 모든 구성 Lab의 SubjectMetadata를 집계해 Model의 테스트 지속 여부와 남은 실행 횟수를 반영한다. 어느 Lab에든 `ToUncontinuable=true`가 있으면 현재 검증을 마친 뒤 `Model.Continuable=false`를 적용한다. Assert에서 설정한 값도 포함하며 기존 실행 횟수 최솟값 규칙과 `ToUnsustainable` 처리는 유지한다.
 
 ### 2.4 Merge를 통한 Lab의 확장
 
@@ -356,28 +354,25 @@ Node는 아래의 두 방법으로 생성할 수 있다.
 
 Node는 Execute 메서드를 통해 저장된 Lab을 해당 Model에 실행함으로써 테스트를 수행한다. 테스트 수행 도중 테스트 실패 또는 예외가 발생한 경우, Node는 해당 예외를 자신의 Exception 필드에 저장하며, Model.Continuable 값을 false로 설정하여 이후 테스트가 수행되지 않도록 차단한다. 또한 테스트 과정에서 예외가 발생하지 않았더라도, 외부에서 SetExternalException 메서드를 호출하면 사용자 중단, 테스트 환경 오류 등 외부 요인에 의한 강제 중단 예외를 수동으로 주입할 수도 있다.
 
-### 3-2. Xml 리포트 생성
+### 3-2. JSON 리포트 생성
 
-Node는 자신의 상태, 테스트 결과, 후속 Node의 연결 관계 등 테스트 실행 흐름에 대한 정보를 Xml 형식으로 보관한다. 이 리포트는 사용자가 테스트 전개 과정을 추적하고, 어떤 테스트가 어떤 맥락에서 실패했는지를 확인할 수 있도록 한다.
+Node는 실행 트리와 진단값을 C# 데이터로 보관한다. 작업자가 실행되는 동안 공유 리포트 문서를 변경하지 않는다. 실행이 끝난 뒤 `GetReport()`를 호출하면 선택한 하위 트리와 조상 경로를 독립적인 `TestReport`로 복사하며, 관계없는 형제 노드는 제외한다. 실행 중이거나 다른 호출자가 트리를 변경하는 동안에는 리포트를 생성하지 않는다.
 
-Node는 아래의 Xml 정보를 가진다.
+리포트는 평탄한 `nodes` 배열을 사용하므로 실행 경로가 길어져도 JSON 중첩 깊이가 증가하지 않는다. 각 `NodeReport`의 필드는 다음과 같다.
 
-- Inner Text: 테스트 진행 정보
-- Root Node: 테스트의 시작 지점이며, Model과 Lab을 가지지 않음
-- Waiting For Execution: 테스트가 아직 실행되지 않은 상태
-- Success/Failed: 진행된 테스트의 성공/실패 여부
-- Report: 실패 예외 정보
-- Model: 현재 Node가 보유한 테스트 대상 모델 객체 정보
-- History: 현재까지 Model에 수행된 Lab들의 ID 목록
-- Continuable: 이후 테스트를 수행할 수 있는 상태인지 여부
-- Error: XML 리포트 생성 중 오류가 발생한 경우 해당 예외 정보
-- Child Node: 이후 진행된 Node의 Xml 파일
+- `nodeId`, `parentId`: 부모 우선 순서로 부여하는 리포트 내부 번호이다. 첫 노드의 부모는 null이며, 다른 실행 사이에 유지되는 식별자는 아니다.
+- `labId`, `depth`, `status`: Lab ID, 원래 실행 깊이, `Root`, `Ready`, `Success`, `Failure`, `Cancelled` 등의 문자열 상태이다. Lab이 없는 루트의 `labId`는 null이다.
+- `model`, `history`, `continuable`: 모델 설명, `/`로 연결한 실행 이력, 후속 실행 가능 여부이다.
+- `error`: 실행 예외의 `type`, `message`, `details`이다. `details`에는 내부 예외와 스택 추적도 포함한다.
+- `reportError`: 진단 정보 수집 중 발생한 예외이며, 실행 예외와 별도로 기록한다.
 
-사용자는 아래 확장 메서드를 사용하여 실험 정보를 선택적으로 가져올 수 있다.
+모델 설명과 실행 이력은 노드 실행 및 외부 오류 처리 시 값으로 저장한다. 아직 실행하지 않은 노드의 모델 설명은 null이며, 이력에는 재실행한 조상 경로만 들어간다. `Model.ToString()`이 실패하면 `model`은 null이 되지만 실행 예외, 이력, 자식 관계는 유지한다. Model, Subject, Lab 실행 함수, 부모 객체 참조 자체는 리포트에 넣지 않는다.
 
-- Count(Node) => int : 해당 Node 이후 생성된 Node의 수
-- All Succeed(Node) => bool : 해당 Node 이후 모든 테스트가 성공했는지의 여부
-- Get Failed Nodes(Node) => XmlNode : 해당 Node 이후 실패한 모든 테스트 Node의 Xml 정보 반환
+`GetFailedReports()`는 실패 노드와 그 조상만 남기며 전체 리포트에서 부여한 번호를 유지한다. 실패한 부모 아래의 성공한 자식도 다른 실패로 이어지는 조상이 아니면 제외한다. 실패가 없으면 첫 노드만 남긴다. `GetCount()`와 `AllSucceed(out cancelled)`는 기존처럼 실행 트리를 대상으로 동작한다.
+
+`TestReport.ToJson()`은 들여쓴 JSON 문자열을 반환한다. `Tools.ExportJson(report, name, path, open: false)`은 BOM 없는 UTF-8 `.json` 파일을 저장한다. Lab ID에 공백, 한글, 기호를 사용할 수 있지만 `/`는 재실행 경로 구분자이므로 Node 생성 시 거부한다.
+
+`DetachAndRestore()`는 진단 정보의 조상 경로를 복사하고 재실행에 필요한 조상 Lab을 보관한다. 반복 복원과 복원 노드에서의 후속 실행도 이전 경로를 재실행하며 원본 트리에 노드를 추가하지 않는다.
 
 ## 4.Project의 동작
 
@@ -562,7 +557,7 @@ public class Model : UniTest.Model
 - `Assets`: 실험에 사용할 객체들이다.
 	- `Target Rider`: 동일한 `Rider`가 재탑승하는 상황을 테스트하기 위해 사용한다.
 	- `OnRide`: `Kickboard.OnRide` 대리자가 정상적으로 호출되었는지를 확인하기 위해 사용한다.
-- `Content`: 기타 실험에 필요한 메서드이다. `ToString`의 경우, `Model`을 `Node`의 Xml 파일에 기록할 때 사용할 문자열을 보기 편하게 제공하는 역할을 한다.
+- `Content`: 기타 실험에 필요한 메서드이다. `ToString`의 경우, Node 실행이 끝날 때 저장해 두었다가 JSON 리포트에 포함할 모델 설명을 보기 편하게 제공하는 역할을 한다.
 
 #### 5-1.3. Project 정의
 
@@ -699,7 +694,7 @@ protected override IEnumerable<ILab<Model>> CreateLabs(Model model)
 ```
 
 - Mount 동작을 테스트하는 테스트의 경우 사용자가 면허가 있는 경우, Targeted Rider인 경우, 면허가 없는 경우, null인 경우를 각각 테스트하며, 예외 발생 여부와 상태 일치를 검증한다.
-- 필요 시 Compact Lab에 존재하는 ToUncontinuable = true 플래그를 통해 테스트 실패 시 후속 테스트 생성을 중단하도록 지정한다.
+- 필요 시 Compact Lab의 `ToUncontinuable=true`로 현재 검증 이후 후속 테스트 생성을 중단하도록 지정한다. 현재 Assert는 수행하며, 예상 예외를 검증하는 테스트에도 사용할 수 있다.
 - 모든 테스트의 설계가 완료되었을 경우, 테스트들을 Lab의 형식으로 변환하여 반환한다.
 
 #### 5-1.4. Project 실행
@@ -714,7 +709,7 @@ Project.Execute 메서드를 호출하면 작성한 테스트를 비동기로 �
 - 실패 시 실패한 테스트만 반환: 테스트 수행 중 실패한 경우, 전체 실행 결과 중 실패한 테스트만 필터링하여 반환한다.
 	이를 통해 실패 원인 분석을 보다 빠르게 진행할 수 있다.
 
-- Xml 출력: 테스트 결과를 XML 형식으로 지정된 경로에 저장한다.
+- JSON 출력: 테스트 결과를 JSON 형식으로 지정된 경로에 저장한다.
 	이를 외부 시각화 도구로 불러오면 테스트 흐름과 결과를 시각적으로 확인할 수 있다.
 
 ### 5-2. 다수의 독립된 상태를 가지는 시스템의 테스트 설계

@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
-using System.Xml;
 
 namespace UniTest
 {
@@ -24,7 +23,6 @@ namespace UniTest
         public NodeStatus Status { get; private set; } = NodeStatus.None;
 
         public int Depth { get; private set; } 
-        public XmlElement Report { get; private set; }
 
         public Node<TModel> Before { get; }
         public List<Node<TModel>> Afters { get; } = new();
@@ -40,18 +38,35 @@ namespace UniTest
 
         // Internal
         volatile bool _executed = false;
+        string _modelDescription;
+        string _history = string.Empty;
+        ReportException _error;
+        ReportException _reportError;
+        IReadOnlyList<TraceEntry> _restoredAncestors = Array.Empty<TraceEntry>();
+
+        internal sealed class TraceEntry
+        {
+            internal ILab<TModel> Lab { get; }
+            internal NodeReport Report { get; }
+
+            internal TraceEntry(ILab<TModel> lab, NodeReport report)
+            {
+                Lab = lab;
+                Report = report;
+            }
+        }
 
         
         // Content
         public Node(ILab<TModel> lab)
         {
+            ValidateLabId(lab);
             Depth = 0;
 
             Model = new();
             Lab = lab;
 
             Status = lab != null ? NodeStatus.Ready : NodeStatus.Root;
-            SetXmlNode(null);
         }
         public Node(Node<TModel> before, ILab<TModel> lab, CancellationToken ct)
         {
@@ -63,43 +78,32 @@ namespace UniTest
                 throw new InvalidOperationException($"Before Node must be in 'Continuable' state(Root or Succeded) but was '{before.Status}'.");
 
             ct.ThrowIfCancellationRequested();
+            ValidateLabId(lab);
 
             Depth = before.Depth + 1;
 
             Model = new();
             Lab = lab;
 
-            Rerun(before.GetTrace().Select(n => n.Lab), ct);
+            Rerun(before.GetReplayLabs(), ct);
+            _history = Model.GetExecutionHistory();
 
             Status = NodeStatus.Ready;
-            SetXmlNode(before.Report);
 
             Before = before;
             before.Afters.Add(this);
         }
-        void SetXmlNode(XmlNode parent)
+        static void ValidateLabId(ILab<TModel> lab)
         {
-            if (parent == null)
-            {
-                var doc = new XmlDocument();
-                Report = doc.CreateElement(ID);
-            }
-            else
-            {
-                Report = parent.OwnerDocument.CreateElement(ID);
-                parent.AppendChild(Report);
-            }
-
-            if (Lab != null)
-                Report.InnerText = "Waiting for execution";
-            else
-                Report.InnerText = "Root Node";
+            if (lab?.ID?.Contains(UniTest.Model.Separator) == true)
+                throw new ArgumentException($"Lab ID '{lab.ID}' cannot contain '{UniTest.Model.Separator}', the execution path separator.", nameof(lab));
         }
 
         public Node<TModel> Append(ILab<TModel> lab, CancellationToken ct) => new(this, lab, ct);
 
         /// <summary>
-        /// Restore creates a detached debug node with a copied report lineage, without mutating the original graph or report tree.
+        /// Creates a detached debug node with its replay path and diagnostic ancestry,
+        /// without mutating the original graph or previously captured reports.
         /// </summary>
         public Node<TModel> DetachAndRestore(CancellationToken ct = default)
         {
@@ -109,49 +113,27 @@ namespace UniTest
             var node = new Node<TModel>(Lab)
             {
                 Depth = Depth,
-                Status = NodeStatus.Ready
+                Status = NodeStatus.Ready,
+                _restoredAncestors = GetAncestors()
             };
 
-            var trace = GetTrace();
-            node.Rerun(trace.Take(trace.Count - 1).Select(n => n.Lab), ct);
-
-            node.SetXmlNode(CopyReportLineage());
+            node.Rerun(node._restoredAncestors.Select(entry => entry.Lab), ct);
+            node._history = node.Model.GetExecutionHistory();
             return node;
         }
-        XmlNode CopyReportLineage()
+        internal IReadOnlyList<TraceEntry> GetAncestors()
         {
-            var doc = new XmlDocument();
-            XmlElement parent = null;
-            var lineage = new Stack<XmlElement>();
-
-            var current = Report.ParentNode;
-            while (current is XmlElement element)
-            {
-                lineage.Push(element);
-                current = element.ParentNode;
-            }
-
-            foreach (var element in lineage)
-            {
-                var copy = (XmlElement)doc.ImportNode(element, false);
-
-                foreach (XmlNode child in element.ChildNodes)
-                {
-                    if (child is XmlElement)
-                        continue;
-
-                    copy.AppendChild(doc.ImportNode(child, true));
-                }
-
-                if (parent == null)
-                    doc.AppendChild(copy);
-                else
-                    parent.AppendChild(copy);
-
-                parent = copy;
-            }
-
-            return parent;
+            var trace = GetTrace();
+            var lineage = new List<TraceEntry>(trace[0]._restoredAncestors);
+            foreach (var ancestor in trace.Take(trace.Count - 1))
+                lineage.Add(new TraceEntry(ancestor.Lab, ancestor.CaptureReport(0, null)));
+            return lineage.AsReadOnly();
+        }
+        IEnumerable<ILab<TModel>> GetReplayLabs()
+        {
+            var trace = GetTrace();
+            return trace[0]._restoredAncestors.Select(entry => entry.Lab)
+                .Concat(trace.Select(node => node.Lab));
         }
         void Rerun(IEnumerable<ILab<TModel>> labs, CancellationToken ct)
         {
@@ -160,7 +142,7 @@ namespace UniTest
                 if (lab == null)
                     continue;
 
-                var id = lab.ID;
+                ValidateLabId(lab);
                 lab.Execute(Model, out var ex);
 
                 if (ex != null)
@@ -212,7 +194,7 @@ namespace UniTest
                 else
                     Status = NodeStatus.Failure;
 
-                UpdateXml();
+                CaptureDiagnostics();
             }
         }
 
@@ -231,41 +213,27 @@ namespace UniTest
             Status = status;
             Exception = ex;
 
-            UpdateXml();
+            CaptureDiagnostics();
         }
-        void UpdateXml()
+        void CaptureDiagnostics()
         {
-            XmlAttribute attr;
-
-            Report.InnerText = Status.ToString();
-
-            if (Exception != null)
-            {
-                attr = Report.OwnerDocument.CreateAttribute("Report");
-                attr.Value = Exception.ToString();
-                Report.Attributes.Append(attr);
-            }
-            
+            _history = Model.GetExecutionHistory();
+            _error = ReportException.Capture(Exception);
+            _modelDescription = null;
+            _reportError = null;
             try
             {
-                attr = Report.OwnerDocument.CreateAttribute("Model");
-                attr.Value = Model.ToString();
-                Report.Attributes.Append(attr);
-
-                attr = Report.OwnerDocument.CreateAttribute("History");
-                attr.Value = Model.GetExecutionHistory();
-                Report.Attributes.Append(attr);
-
-                attr = Report.OwnerDocument.CreateAttribute("Continuable");
-                attr.Value = Continuable.ToString();
-                Report.Attributes.Append(attr);
+                _modelDescription = Model.ToString();
             }
             catch (Exception ex)
             {
-                attr = Report.OwnerDocument.CreateAttribute("Error");
-                attr.Value = ex.ToString();
-                Report.Attributes.Append(attr);
+                _reportError = ReportException.Capture(ex);
             }
         }
+
+        internal NodeReport CaptureReport(int nodeId, int? parentId) => new(nodeId, parentId,
+            Lab?.ID, Depth, Status.ToString(), _modelDescription, _history, Continuable, _error, _reportError);
+
+        public override string ToString() => $"Node '{ID}' (Depth={Depth}, Status={Status})";
     }
 }

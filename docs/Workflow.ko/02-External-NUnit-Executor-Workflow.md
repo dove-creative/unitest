@@ -31,7 +31,7 @@ CLI 테스트 자동화는 다음 흐름에 배치한다.
 domain-framework/
   NuGet.config
   packages/
-    BlackThunder.UniTest.0.2.0.nupkg
+    BlackThunder.UniTest.0.3.0.nupkg
   src/
     Domain/
       Domain.csproj
@@ -60,7 +60,7 @@ domain-framework/
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="BlackThunder.UniTest" Version="[0.2.0]" />
+    <PackageReference Include="BlackThunder.UniTest" Version="[0.3.0]" />
     <PackageReference Include="NUnit" Version="3.14.0" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.6.0" />
     <PackageReference Include="NUnit3TestAdapter" Version="6.2.0" />

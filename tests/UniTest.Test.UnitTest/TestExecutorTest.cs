@@ -1,5 +1,4 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Threading;
@@ -15,10 +14,8 @@ public class TestExecutorTest
     Lab<Model> _lab;
     Node<Model> _node;
 
-    Func<Model, IEnumerable<ILab<Model>>> _createLabs;
     ProjectMock _project;
 
-    ICollection _completedExecutors;
     Queue<Node<Model>> _idleNodes;
     CancellationTokenSource _cts;
 
@@ -26,10 +23,6 @@ public class TestExecutorTest
     void SetUp(Lab<Model> lab, int targetDepth = int.MaxValue, ExecutionMode executionMode = ExecutionMode.ThreadPool)
     {
         _project = new ProjectMock(executionMode).SetTargetDepth(targetDepth);
-
-        _completedExecutors = (ICollection)typeof(Project<Model>)
-            .GetField("_completedExecutors", BindingFlags.Instance | BindingFlags.NonPublic)
-            .GetValue(_project);
 
         _idleNodes = (Queue<Node<Model>>)typeof(Project<Model>)
             .GetField("_idleNodes", BindingFlags.Instance | BindingFlags.NonPublic)
@@ -66,7 +59,6 @@ public class TestExecutorTest
             _cts.Dispose();
         }
 
-        _completedExecutors = null;
         _idleNodes = null;
     }
 
@@ -115,7 +107,6 @@ public class TestExecutorTest
         await Execute();
         
         // Assert
-        Assert.That(_completedExecutors, Is.EqualTo(new[] { _testExecutor }));
         Assert.That(_idleNodes, Is.EqualTo(new[] { _node }));
         CheckNode(_node, Node<Model>.NodeStatus.Success, 0, null, null, null, _lab);
     }
@@ -129,7 +120,6 @@ public class TestExecutorTest
         await Execute();
 
         // Assert
-        Assert.That(_completedExecutors, Is.EqualTo(new[] { _testExecutor }));
         Assert.That(_idleNodes, Is.Empty);
         CheckNode(_node, Node<Model>.NodeStatus.Failure, 0, null, null, typeof(ExecutionException), _lab);
     }
@@ -143,7 +133,6 @@ public class TestExecutorTest
         await Execute();
 
         // Assert
-        Assert.That(_completedExecutors, Is.EqualTo(new[] { _testExecutor }));
         Assert.That(_idleNodes, Is.Empty);
         CheckNode(_node, Node<Model>.NodeStatus.Success, 0, null, null, null, _lab);
     }
@@ -169,7 +158,6 @@ public class TestExecutorTest
         _cts.Cancel();
 
         // Assert
-        Assert.That(_completedExecutors, Is.Empty);
         Assert.That(_idleNodes, Is.Empty);
         CheckNode(_node, Node<Model>.NodeStatus.Ready, 0, null, null, null, _lab);
     }
@@ -183,7 +171,6 @@ public class TestExecutorTest
         _cts.Cancel();
 
         // Assert
-        Assert.That(_completedExecutors, Is.Empty);
         Assert.That(_idleNodes, Is.Empty);
         CheckNode(_node, Node<Model>.NodeStatus.Ready, 0, null, null, null, _lab);
     }
@@ -197,7 +184,6 @@ public class TestExecutorTest
         _cts.Cancel();
 
         // Assert
-        Assert.That(_completedExecutors, Is.Empty);
         Assert.That(_idleNodes, Is.Empty);
         CheckNode(_node, Node<Model>.NodeStatus.Ready, 0, null, null, null, _lab);
     }
@@ -211,7 +197,6 @@ public class TestExecutorTest
         _cts.Cancel();
 
         // Assert
-        Assert.That(_completedExecutors, Is.Empty);
         Assert.That(_idleNodes, Is.Empty);
         CheckNode(_node, Node<Model>.NodeStatus.Root, 0, null, null, null, _lab);
     }
@@ -231,7 +216,6 @@ public class TestExecutorTest
         await Execute();
 
         // Assert
-        Assert.That(_completedExecutors, Is.EqualTo(new[] { _testExecutor }));
         Assert.That(_idleNodes, Is.Empty);
         CheckNode(_node, Node<Model>.NodeStatus.Cancelled, 0, null, null, typeof(OperationCanceledException), _lab);
     }
@@ -246,7 +230,6 @@ public class TestExecutorTest
         await Execute();
 
         // Assert
-        Assert.That(_completedExecutors, Is.EqualTo(new[] { _testExecutor }));
         Assert.That(_idleNodes, Is.Empty);
         CheckNode(_node, Node<Model>.NodeStatus.Cancelled, 0, null, null, typeof(OperationCanceledException), _lab);
     }
@@ -261,7 +244,6 @@ public class TestExecutorTest
         await Execute();
 
         // Assert
-        Assert.That(_completedExecutors, Is.EqualTo(new[] { _testExecutor }));
         Assert.That(_idleNodes, Is.Empty);
         CheckNode(_node, Node<Model>.NodeStatus.Cancelled, 0, null, null, typeof(OperationCanceledException), _lab);
     }
@@ -276,7 +258,6 @@ public class TestExecutorTest
         await Execute();
 
         // Assert
-        Assert.That(_completedExecutors, Is.EqualTo(new[] { _testExecutor }));
         Assert.That(_idleNodes, Is.Empty);
         CheckNode(_node, Node<Model>.NodeStatus.Cancelled, 0, null, null, typeof(OperationCanceledException), _lab);
     }
@@ -336,7 +317,6 @@ public class TestExecutorTest
         await task;
 
         // Assert
-        Assert.That(_completedExecutors, Is.EqualTo(new[] { _testExecutor }));
         Assert.That(_idleNodes, Is.Empty);
         CheckNode(_node, Node<Model>.NodeStatus.Cancelled, 0, null, null, typeof(OperationCanceledException), _lab);
     }
@@ -352,7 +332,6 @@ public class TestExecutorTest
         {
             var task = Execute();
             Assert.That(task.IsCompleted, Is.False);
-            Assert.That(_completedExecutors, Is.Empty);
             Assert.That(_node.Status, Is.EqualTo(Node<Model>.NodeStatus.Root));
 
             // Execute has queued its Inline continuation, but the core has not run yet.
@@ -361,7 +340,6 @@ public class TestExecutorTest
         });
 
         // Assert
-        Assert.That(_completedExecutors, Is.EqualTo(new[] { _testExecutor }));
         Assert.That(_idleNodes, Is.Empty);
         CheckNode(_node, Node<Model>.NodeStatus.Cancelled, 0, null, null, typeof(OperationCanceledException), _lab);
     }

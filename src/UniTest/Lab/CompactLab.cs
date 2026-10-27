@@ -12,6 +12,7 @@ namespace UniTest
         public Action<TModel> Asserter;
 
         public bool ToUnsustainable = false;
+        /// <summary>Stops subsequent Labs after this Lab's assertions complete.</summary>
         public bool ToUncontinuable = false;
         public int RemainingExecutionCount = -1;
 
@@ -39,4 +40,3 @@ namespace UniTest
             remainingExecutionCount: RemainingExecutionCount);
     }
 }
- 

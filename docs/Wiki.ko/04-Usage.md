@@ -15,10 +15,10 @@
 
 ### 1-1. 안정 패키지를 참조한다
 
-소비 저장소의 `packages/`에 검증된 `BlackThunder.UniTest.0.2.0.nupkg`를 보관하고, 루트 `NuGet.config`에 로컬 피드를 등록한다. 테스트 프로젝트는 다음과 같이 정확한 버전을 참조한다. 설정 예시는 [README 설치 안내](../../README.ko.md#설치)를 따른다.
+소비 저장소의 `packages/`에 검증된 `BlackThunder.UniTest.0.3.0.nupkg`를 보관하고, 루트 `NuGet.config`에 로컬 피드를 등록한다. 테스트 프로젝트는 다음과 같이 정확한 버전을 참조한다. 설정 예시는 [README 설치 안내](../../README.ko.md#설치)를 따른다.
 
 ```xml
-<PackageReference Include="BlackThunder.UniTest" Version="[0.2.0]" />
+<PackageReference Include="BlackThunder.UniTest" Version="[0.3.0]" />
 ```
 
 `Project<TModel>`, `Model`, `Lab<TModel>` 같은 핵심 타입은 `UniTest` 네임스페이스로 제공되며 별도 컴파일 심볼이 필요하지 않다. 타입을 찾지 못한다면 로컬 피드 설정, 패키지 복원 결과, `netstandard2.1` 호환성을 먼저 확인한다. UniTest 자체 개발용 테스트와 샘플은 소스 프로젝트 참조를 유지한다.
@@ -93,6 +93,10 @@ public Project()
 
 두 모드 모두 기존 비동기 `Execute` API와 취소·실패 처리를 유지한다. `Inline`은 동기 실행이나 같은 OS 스레드에서의 실행을 보장하지 않는다. 정의되지 않은 enum 값은 생성 시 `ArgumentOutOfRangeException`으로 거부하며, `UNITEST_SINGLETHREAD` 빌드 심볼은 더 이상 사용하지 않는다.
 
+두 모드의 `Execute(depth)` 조정 루프는 처리할 일이 없으면 작업 등록·완료 신호를 비동기로 기다린다. 설계자가 Lab을 생성하는 중에도 먼저 준비된 Lab은 실행할 수 있으며, 대기 중 취소 요청에도 반응한다.
+
+`Execute(depth)`는 실패로 중단하거나 취소할 때 새 작업 등록을 멈추고, 이미 시작한 설계·실행 작업이 모두 끝난 뒤 결과를 반환한다. 종료 대기 중 발생한 작업자 예외도 확인하며, 반환 후에는 작업자가 결과 트리나 실행 횟수를 변경하지 않는다.
+
 ## 2. 가장 짧은 시작 흐름
 
 가장 단순한 사용 흐름은 아래 여섯 단계이다.
@@ -102,7 +106,7 @@ public Project()
 3. `CreateLabs(Model model)`에서 현재 상태에 맞는 `Lab` 목록을 반환한다.
 4. 각 `Lab`에 Arrange, Act, Assert를 넣는다.
 5. `Run(...)` 또는 `Execute(...)`로 테스트를 실행한다.
-6. XML 리포트나 실패한 실행 이력을 읽는다.
+6. JSON 리포트나 실패한 실행 이력을 읽는다.
 
 ```csharp
 using UniTest;
@@ -164,7 +168,7 @@ Uni Test 코드는 처음 보면 타입이 많아 보이지만, 사용자가 직
 | `TestCase` | 다중 상태 테스트에서 어떤 동작을 만들지 전달할 때 | 하위/상위 테스트 생성기 사이의 선택 조건 전달 |
 | `Merge(...)` | 현재 Lab에 실제 동작 template을 합칠 때 | 하나의 Lab 안에 상태 조건과 실제 Act를 결합 |
 | `Extend(...)` | 기존 Lab 위에 상태 검증 계층을 덧붙일 때 | `CompositeLab`을 만들어 Arrange/Assert 계층을 추가 |
-| `Run(...)` | 실행 결과 XML까지 만들고 싶을 때 | 전체 실행과 XML export를 함께 처리 |
+| `Run(...)` | 실행 결과 JSON까지 만들고 싶을 때 | 전체 실행과 JSON export를 함께 처리 |
 | `RunContinuously(...)` | 모든 조합 대신 하나의 지속 가능한 경로를 길게 보고 싶을 때 | 임의 경로를 선택해 긴 연속 테스트 수행 |
 | `Execute(ids)` | 실패한 경로를 다시 실행하고 싶을 때 | 지정된 실행 이력만 재현 |
 
@@ -267,7 +271,11 @@ case KickboardState.Idle:
     break;
 ```
 
-`ToUncontinuable`은 이 테스트 이후 같은 경로를 더 확장하지 않겠다는 의미이다. 실패를 기대하는 동작이나 의미상 종료된 경로에 붙이면, 불필요한 후속 테스트 생성을 줄일 수 있다.
+`ToUncontinuable`은 현재 Lab의 Arrange·Act·Assert를 마친 뒤 같은 경로를 더 확장하지 않겠다는 의미이다. 예상 예외 조건이 충족되면 Assert도 수행하고, 검증까지 성공하면 Node는 `Success`, Model은 `Continuable=false`가 된다. Arrange·Act의 예상하지 않은 예외나 Assert 실패는 기존처럼 실패로 처리한다.
+
+CompositeLab도 하위에서 상위 순서로 Assert를 수행한 뒤, 어느 구성 Lab에든 `ToUncontinuable=true`가 있으면 후속 실행을 막는다. Assert 중 설정한 플래그도 마지막에 반영한다. 실제 Assert 실패가 발생하면 남은 Assert는 실행하지 않는다.
+
+**`0.3.0` 동작 변경:** 기존 `0.2.0`에서는 이 플래그가 현재 Assert까지 생략했지만, `0.3.0`에서는 Assert를 실행한다. 이전 생략 동작에 의존한 테스트는 현재 Lab의 검증 내용을 확인해야 한다. 공개 메서드의 시그니처는 바뀌지 않는다.
 
 ### 4-4. 상태 변화는 mock을 먼저 바꾸고 검증한다
 
@@ -589,7 +597,7 @@ labs.AddRange(new Lab<Model>("available", asserter: Check)
 
 ### 6-1. 전체 경로 실행
 
-가장 일반적인 실행은 `Run(...)`이다. 지정한 깊이까지 가능한 모든 경로를 전개하고, `printResult`가 켜져 있으면 XML 리포트를 저장하고 연다.
+가장 일반적인 실행은 `Run(...)`이다. 지정한 깊이까지 가능한 모든 경로를 전개하고, `printResult`가 켜져 있으면 JSON 리포트를 저장하고 연다.
 
 ```csharp
 await new SingleState.Project()
@@ -603,6 +611,8 @@ await new SingleState.Project()
 ```
 
 `processLimit`은 실행한 Node 수 제한이고, `timeLimit`은 초 단위 시간 제한이다. 둘 다 `-1`이면 제한하지 않는다.
+
+제한 초과는 취소 요청이며 실행 중인 동기 콜백을 강제로 종료하지 않는다. `Run`은 진행 중인 작업이 끝난 뒤 결과를 집계하므로 실제 반환 시각은 `timeLimit`을 넘을 수 있다. `CreateLabs`나 Actor 등이 끝나지 않으면 종료 대기도 계속된다. 제한 초과에 따른 취소 요청과 해당 로그는 실행당 한 번만 발생한다.
 
 ### 6-2. 실패한 경로만 다시 실행
 
@@ -620,6 +630,10 @@ await new SingleState.Project()
 ```
 
 이 방식은 전체 조합을 다시 돌리지 않고, 문제가 발생한 경로만 빠르게 재현할 때 사용한다.
+
+`Execute(ids)`를 직접 호출할 때 현재 상태에서 찾을 수 없는 Lab ID가 있으면 `ArgumentException`이 호출자에게 전달된다. Lab 조회·경로 구성 중 발생하는 일반 예외도 호출자에게 전달된다. `Run(..., executionIDs)`는 이 예외를 로그에 남기고 `false`를 반환한다. Lab 자체의 실행 실패는 기존처럼 결과 Node에 기록된다.
+
+`Execute(depth)`와 `ExecuteContinuously(...)`도 같은 규칙을 따른다. `CreateLabs`와 Lab 실행에서 발생한 실패는 Node에 기록되어 결과 트리로 반환되고, 그 밖의 취소가 아닌 예외는 일부만 채워진 트리를 반환하는 대신 호출자에게 전달된다. `Run` 계열은 이 예외를 로그에 남기고 `false`를 반환한다.
 
 ### 6-3. 긴 연속 테스트
 
@@ -640,7 +654,7 @@ await new MultiState.Project()
 
 ### 6-4. 코드 레벨에서 다시 디버그하기
 
-XML 리포트만으로 원인을 찾기 어렵다면, 실행 결과에서 원하는 Node를 복원해 IDE 디버깅용으로 다시 실행할 수 있다.
+JSON 리포트만으로 원인을 찾기 어렵다면, 실행 결과에서 원하는 Node를 복원해 IDE 디버깅용으로 다시 실행할 수 있다.
 
 ```csharp
 var root = await new SingleState.Project()
@@ -652,17 +666,25 @@ restored.Execute();
 
 `DetachAndRestore()`는 원본 Node 그래프를 바꾸지 않는 분리된 Node를 만든다. 이후 `restored.Execute()`에 중단점을 걸면 같은 실행 이력을 재현한 상태에서 문제 지점을 다시 볼 수 있다.
 
-### 6-5. XML 리포트 읽기
+### 6-5. JSON 리포트 읽기
 
-`Run(...)` 계열은 내부적으로 Node의 XML report를 export한다. 성공한 경우에는 전체 report를, 실패한 경우에는 실패 Node만 남긴 report를 저장한다.
+`Run(...)` 계열은 모든 작업자의 종료 후 JSON 스냅샷을 저장한다. 성공 또는 취소 시에는 `printResult=true`일 때 전체 리포트를 저장하고, 실패 시에는 항상 실패 노드와 그 조상을 저장한다. 리포트를 클립보드에 복사하지 않는다. `printResult=true`이면 저장 후 리포트 폴더와 파일을 연다. 창을 열지 않고 파일만 저장하려면 `ExportJson`을 직접 호출한다.
 
-리포트에서 특히 볼 부분은 아래 세 가지이다.
+```csharp
+var root = await new SingleState.Project().Execute(3);
+TestReport report = root.GetReport();
+string json = report.ToJson();
+Tools.ExportJson(report, "result", "reports");
+Tools.ExportJson(root.GetFailedReports(), "failures", "reports");
+```
 
-- Node 이름: 어떤 Lab이 실행되었는지 나타낸다.
-- `History`: 해당 Node까지 도달한 실행 이력이다.
-- `Model`: 그 시점의 테스트 대상과 예상 상태를 읽기 위한 문자열이다.
+문서는 평탄한 `nodes` 배열을 가진다. `nodeId`와 `parentId`로 경로를 연결하며, `labId`는 값이므로 서로 다른 노드에서 반복될 수 있다. `status`는 문자열 상태, `model`은 저장된 `Model.ToString()` 설명, `history`는 실행 이력이다. `error`는 실행 예외의 `type`, `message`, 전체 `details`를 담고, `reportError`는 진단 정보 수집 실패를 별도로 담는다. null 필드도 JSON에 포함한다. Lab이 없는 루트의 `labId`와 `parentId`는 null이다.
 
-따라서 `Model.ToString()`을 보기 좋게 작성해 두는 것이 중요하다. XML 리포트는 결국 실패한 경로에서 "어떤 상태였고, 어떤 Lab을 실행했는가"를 읽기 위한 도구이기 때문이다.
+루트가 아닌 노드의 `GetReport()`는 조상 경로와 하위 트리를 포함하며 관계없는 형제는 제외한다. 실패 필터링 후에도 전체 리포트의 노드 번호를 유지하므로 번호에 빈 구간이 생길 수 있다. 실패가 없으면 첫 노드만 남긴다. 리포트는 독립적인 스냅샷이다. 작업자나 다른 호출자가 트리를 변경하는 동안에는 생성하지 않고 실행 완료 후에 호출한다.
+
+Lab ID에는 공백, 한글, `%`, 따옴표 등 기호를 사용할 수 있다. `/`는 `Execute("A/B")`의 구분자이므로 Node 생성 시 거부한다. 경로와 시드 계산에 쓰는 기존 문자열 형식은 유지한다.
+
+이 변경은 `0.3.0`의 호환성을 깨는 변경이다. 로컬 패키지 `0.2.0`은 XML API를 사용했다. `node.Report`는 `node.GetReport()`로, `GetFailedReports().OuterXml`은 `GetFailedReports().ToJson()`으로, `ExportXml(...)`은 `ExportJson(...)`으로 바꾼다. 파일 확장자도 `.xml`에서 `.json`으로 바꾼다. XML 호환 API나 이전 파일 변환 기능은 제공하지 않는다.
 
 정리하면 Uni Test 사용 흐름은 아래와 같다.
 

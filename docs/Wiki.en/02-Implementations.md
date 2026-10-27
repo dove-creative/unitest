@@ -10,7 +10,7 @@
 
 3. Node Behavior
 	3.1 Node Behavior
-	3.2 Xml Report Generation
+	3.2 JSON Report Generation
 
 4. Project Behavior
 	4.1 Project Behavior Pipeline
@@ -100,7 +100,7 @@ Lab is prepared with the following arguments.
 
 3.  Subject Metadata
     - `ExpectedExceptionType`: the exception type expected when Act is performed
-    - `ToUncontinuable`: when true, the test ends as the final test
+    - `ToUncontinuable`: when true, complete the current assertions, then stop subsequent Labs
     - `RemainingExecutionCount`: remaining test execution count
 
 #### 2-1.2. Do Arrange
@@ -178,19 +178,17 @@ Composite Lab's Execute operates in the following order.
 - Perform only the top-level Lab's DoAct. This is because in one test flow, the principle is to perform only one Act, and duplicate execution can cause unintended side effects.
 - If an exception occurs, stop the test and prohibit subsequent tests for that Model.
 
-#### 2-3.3. Validity Decision
-
-- Check SubjectMetadata.ToUncontinuable for every Lab, and immediately stop the test if any value is true. If even one non-continuable state occurs, the Model itself may have transitioned to an unreliable state.
-
-#### 2-3.4. Do Assert (lower -> upper order)
+#### 2-3.3. Do Assert (lower -> upper order)
 
 - Run each Lab's DoAssert in reverse order, from the lower Lab to the upper Lab. The extension state must be verified first, and then the original state stacked above it must be verified so that responsibility can be traced accurately when a problem occurs.
 
+- `ToUncontinuable=true` does not skip the current assertions. A satisfied expected-exception condition proceeds through the same assertion order.
+
 - If an exception occurs, stop the test and prohibit subsequent tests for that Model.
 
-#### 2-3.5. Apply Test State
+#### 2-3.4. Apply Test State
 
-- Update whether the Model can continue testing, the remaining test count, and so on according to the ModelMetadata held by the top-level Lab, then end the test.
+- Aggregate SubjectMetadata from all constituent Labs to update continuability and remaining execution count. If any Lab has `ToUncontinuable=true`, set `Model.Continuable=false` after the current assertions finish, including flags set during Assert. Keep the existing minimum remaining-count rule and `ToUnsustainable` handling.
 
 ### 2.4 Extending Labs Through Merge
 
@@ -355,28 +353,25 @@ Node can be created in the following two ways.
 
 Node performs a test by executing the stored Lab on the corresponding Model through the Execute method. If a test failure or exception occurs during test execution, Node stores the exception in its Exception field and sets Model.Continuable to false so that later tests are blocked. Also, even if no exception occurred during the test process, an external forced-stop exception caused by user interruption, test environment error, or another external factor can be manually injected by calling the SetExternalException method from outside.
 
-### 3-2. Xml Report Generation
+### 3-2. JSON Report Generation
 
-Node stores information about the test execution flow, such as its own state, test result, and connections to subsequent Nodes, in Xml form. This report allows users to trace the test expansion process and confirm which test failed in which context.
+Nodes keep the execution tree and diagnostic values in C#. No shared report document is changed while workers execute. After execution finishes, `GetReport()` copies the selected subtree and its ancestor path into an independent `TestReport`; unrelated siblings are excluded. Do not capture a report while execution or another caller is modifying the tree.
 
-Node has the following Xml information.
+A report contains a flat `nodes` array, so long execution paths do not create deeply nested JSON. Each `NodeReport` has these fields:
 
-- Inner Text: test progress information
-- Root Node: the starting point of the test and does not have Model or Lab
-- Waiting For Execution: the state where the test has not been executed yet
-- Success/Failed: whether the executed test succeeded or failed
-- Report: failure exception information
-- Model: information about the test target model object held by the current Node
-- History: the list of Lab IDs performed on the Model so far
-- Continuable: whether subsequent tests can be performed
-- Error: exception information when an error occurs during XML report generation
-- Child Node: Xml files for subsequent Nodes
+- `nodeId`, `parentId`: report-local identifiers assigned in parent-first order. The first node has no parent; IDs are not persistent identifiers across runs.
+- `labId`, `depth`, `status`: the Lab ID, original execution depth, and a string such as `Root`, `Ready`, `Success`, `Failure`, or `Cancelled`. A Lab-less root has a null `labId`.
+- `model`, `history`, `continuable`: the model description, executed Lab IDs joined by `/`, and whether this node can continue.
+- `error`: execution exception `type`, `message`, and full `details`, including inner exceptions and stack traces.
+- `reportError`: an exception raised while collecting diagnostics, independent of the execution error.
 
-Users can selectively retrieve experiment information using the following extension methods.
+Node execution and external error handling capture model descriptions and histories as values. A node that has not executed has a null model description; its history contains only its replayed ancestors. A failed `Model.ToString()` leaves `model` null but does not remove the execution error, history, or children. Reports contain no live Model, Subject, Lab delegate, or parent-object references.
 
-- Count(Node) => int : the number of Nodes created after the corresponding Node
-- All Succeed(Node) => bool : whether every test after the corresponding Node succeeded
-- Get Failed Nodes(Node) => XmlNode : returns Xml information for every failed test Node after the corresponding Node
+`GetFailedReports()` returns failures and their ancestors, retaining the IDs assigned to the full report. Successful descendants of a failed parent are excluded unless they lead to another failure. If there are no failures, only the first node remains. `GetCount()` and `AllSucceed(out cancelled)` continue to operate on the execution tree.
+
+`TestReport.ToJson()` produces indented JSON. `Tools.ExportJson(report, name, path, open: false)` writes a UTF-8 `.json` file without a BOM. Lab IDs may contain spaces, Unicode, and punctuation; `/` is rejected when a Node is constructed because it separates IDs in replay paths.
+
+`DetachAndRestore()` copies diagnostic ancestry and retains the ancestor Labs needed for replay. Repeated restoration and appending to a restored node replay the same preceding path without attaching anything to the original tree.
 
 ## 4.Project Behavior
 
@@ -561,7 +556,7 @@ Components
 - `Assets`: objects to use in the experiment.
 	- `Target Rider`: used to test the situation where the same `Rider` boards again.
 	- `OnRide`: used to check whether the `Kickboard.OnRide` delegate was called normally.
-- `Content`: other methods required for the experiment. In the case of `ToString`, it provides an easy-to-read string used when recording `Model` in the `Node` Xml file.
+- `Content`: other methods required for the experiment. In the case of `ToString`, it provides an easy-to-read model description captured by the Node when execution finishes and later included in JSON reports.
 
 #### 5-1.3. Define the Project
 
@@ -698,7 +693,7 @@ protected override IEnumerable<ILab<Model>> CreateLabs(Model model)
 ```
 
 - Tests for the Mount operation test cases where the user is licensed, is the Targeted Rider, is not licensed, and is null, and verify exception occurrence and state matching.
-- If needed, the ToUncontinuable = true flag in Compact Lab specifies that subsequent test generation should stop after the test fails.
+- If needed, Compact Lab's `ToUncontinuable=true` stops subsequent test generation after the current validation. The current Assert still runs, including in tests that verify expected exceptions.
 - When the design of every test is complete, convert the tests to Lab form and return them.
 
 #### 5-1.4. Project Execution
@@ -713,7 +708,7 @@ The Project.Run extension method can also be used to add the following functions
 - Return only failed tests on failure: if a failure occurs during test execution, only the failed tests are filtered from the full execution result and returned.
 	This allows the cause of failure to be analyzed more quickly.
 
-- Xml output: test results are stored in XML format at the specified path.
+- JSON output: test results are stored in JSON format at the specified path.
 	When loaded into an external visualization tool, the test flow and results can be checked visually.
 
 ### 5-2. Test Design for Systems with Multiple Independent States

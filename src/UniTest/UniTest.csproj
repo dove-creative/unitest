@@ -3,7 +3,7 @@
     <TargetFramework>netstandard2.1</TargetFramework>
     <AssemblyName>UniTest</AssemblyName>
     <RootNamespace>UniTest</RootNamespace>
-    <Version>0.2.0</Version>
+    <Version>0.3.0</Version>
     <PackageId>BlackThunder.UniTest</PackageId>
     <Authors>dove-creative</Authors>
     <Description>A model-based .NET testing framework that generates and verifies executable state-action paths.</Description>

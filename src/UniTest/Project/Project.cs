@@ -37,13 +37,14 @@ namespace UniTest
         readonly object _idleLock = new();
         readonly object _preparedLock = new();
 
-        readonly HashSet<TestDesigner> _designers = new();
         readonly Dictionary<TestDesigner, Task> _designerTasks = new();
         readonly ConcurrentQueue<TestDesigner> _completedDesigners = new();
 
-        readonly HashSet<TestExecutor> _executors = new();
         readonly Dictionary<TestExecutor, Task> _executorTasks = new();
         readonly ConcurrentQueue<TestExecutor> _completedExecutors = new();
+
+        readonly object _signalLock = new();
+        SemaphoreSlim _stateChanged;
 
         readonly CancellationTokenSource _cts = new();
         CancellationTokenRegistration _externalCancellationRegistration;
@@ -75,47 +76,59 @@ namespace UniTest
             _targetDepth = depth;
 
             var ct = _cts.Token;
-            var rootNode = new Node<TModel>(null);
-            _idleNodes.Enqueue(rootNode);
+            var stateChanged = _stateChanged = new SemaphoreSlim(0, 1);
+            Node<TModel> rootNode = null;
 
             try
             {
+                // Model construction runs user code, so it shares the error and cleanup paths.
+                rootNode = new Node<TModel>(null);
+                _idleNodes.Enqueue(rootNode);
+
                 while (true)
                 {
                     ct.ThrowIfCancellationRequested();
 
+                    // Consume the previous notification before inspecting state.
+                    // Changes during this pass retain a notification for the next wait.
+                    stateChanged.Wait(0);
 
                     lock (_idleLock)
                     {
-                        while (_idleNodes.TryDequeue(out var node))
+                        while (_idleNodes.Count > 0)
                         {
-                            var designer = new TestDesigner(this, node);
-                            _designers.Add(designer);
+                            ct.ThrowIfCancellationRequested();
+                            if (stopOnFailure && _failureOccurred)
+                                break;
 
-                            _designerTasks[designer] = designer.Execute(ct);
+                            var node = _idleNodes.Dequeue();
+                            var designer = new TestDesigner(this, node);
+                            TrackTask(_designerTasks, _completedDesigners, designer, designer.Execute(ct));
                         }
                     }
 
                     while (_completedDesigners.TryDequeue(out var designer))
                     {
-                        _designers.Remove(designer);
                         ObserveTask(_designerTasks, designer);
                     }
 
                     lock (_preparedLock)
                     {
-                        while (_preparedNodes.TryDequeue(out var node))
+                        while (_preparedNodes.Count > 0)
                         {
+                            ct.ThrowIfCancellationRequested();
+                            if (stopOnFailure && _failureOccurred)
+                                break;
+
+                            var node = _preparedNodes.Dequeue();
                             var executor = new TestExecutor(this, node);
 
-                            _executors.Add(executor);
-                            _executorTasks[executor] = executor.Execute(ct);
+                            TrackTask(_executorTasks, _completedExecutors, executor, executor.Execute(ct));
                         }
                     }
 
                     while (_completedExecutors.TryDequeue(out var executor))
                     {
-                        _executors.Remove(executor);
                         ObserveTask(_executorTasks, executor);
                     }
 
@@ -129,7 +142,7 @@ namespace UniTest
                         return rootNode;
                     }
 
-                    if (_designers.Count == 0 && _executors.Count == 0)
+                    if (_designerTasks.Count == 0 && _executorTasks.Count == 0)
                     {
                         bool isEmpty = true;
 
@@ -143,7 +156,7 @@ namespace UniTest
                             break;
                     }
 
-                    await Task.Yield();
+                    await stateChanged.WaitAsync(ct);
                 }
 
                 return rootNode;
@@ -153,16 +166,23 @@ namespace UniTest
                 Logger.LogWarning("The operation has been cancelled.");
                 return rootNode;
             }
-            catch (Exception ex)
+            catch
             {
-                Logger.LogException(ex);
-
+                // Worker failures are recorded on Nodes and observed above;
+                // anything reaching here was not recorded, so it must not look like a result.
                 Cancel();
-                return rootNode;
+                throw;
             }
             finally
             {
-                CompleteExecution();
+                try
+                {
+                    await WaitForWorkers();
+                }
+                finally
+                {
+                    CompleteExecution();
+                }
             }
         }
 
@@ -176,11 +196,13 @@ namespace UniTest
             DoExecute(cancellationToken);
 
             var ct = _cts.Token;
-            var rootNode = new Node<TModel>(null);
-            var node = rootNode;
+            Node<TModel> rootNode = null;
 
             try
             {
+                rootNode = new Node<TModel>(null);
+                var node = rootNode;
+
                 foreach (var id in ids.Split(Model.Separator))
                 {
                     await Task.Yield();
@@ -212,12 +234,10 @@ namespace UniTest
                 Logger.LogWarning("The operation has been cancelled.");
                 return rootNode;
             }
-            catch (Exception ex)
+            catch
             {
-                Logger.LogException(ex);
-
                 Cancel();
-                return rootNode;
+                throw;
             }
             finally
             {
@@ -240,11 +260,13 @@ namespace UniTest
             DoExecute(cancellationToken);
 
             var ct = _cts.Token;
-            var rootNode = new Node<TModel>(null);
-            var node = rootNode;
+            Node<TModel> rootNode = null;
 
             try
             {
+                rootNode = new Node<TModel>(null);
+                var node = rootNode;
+
                 for (int i = 0; i < depth; i++)
                 {
                     await Task.Yield();
@@ -253,9 +275,6 @@ namespace UniTest
 
                     await new TestDesigner(this, node).Execute(ct);
                     await Task.WhenAll(_preparedNodes.Select(n => new TestExecutor(this, n).Execute(ct)));
-
-                    _completedDesigners.Clear();
-                    _completedExecutors.Clear();
 
                     if (stopOnFailure && _failureOccurred)
                     {
@@ -285,12 +304,18 @@ namespace UniTest
                 Logger.LogWarning("The operation has been cancelled.");
                 return rootNode;
             }
-            catch (Exception ex)
+            catch (ExecutionException ex)
             {
+                // Designers and executors record their failure on a Node before throwing.
                 Logger.LogException(ex);
 
                 Cancel();
                 return rootNode;
+            }
+            catch
+            {
+                Cancel();
+                throw;
             }
             finally
             {
@@ -306,6 +331,29 @@ namespace UniTest
             RegisterExternalCancellation(cancellationToken);
         }
 
+        void SignalStateChange()
+        {
+            lock (_signalLock)
+            {
+                // Coalesce notifications; the coordinator inspects all queues on wake-up.
+                if (_stateChanged != null && _stateChanged.CurrentCount == 0)
+                    _stateChanged.Release();
+            }
+        }
+
+        void TrackTask<TWorker>(Dictionary<TWorker, Task> tasks, ConcurrentQueue<TWorker> completed, TWorker worker, Task task)
+        {
+            tasks.Add(worker, task);
+
+            // Publish completion only after the entire async worker Task has ended,
+            // including faults and cancellation before its core starts running.
+            _ = task.ContinueWith(_ =>
+            {
+                completed.Enqueue(worker);
+                SignalStateChange();
+            }, CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
+        }
+
         void ObserveTask<TWorker>(Dictionary<TWorker, Task> tasks, TWorker worker)
         {
             if (!tasks.TryGetValue(worker, out var task))
@@ -313,14 +361,39 @@ namespace UniTest
 
             tasks.Remove(worker);
 
-            if (task == null || !task.IsCompleted)
-                return;
-
             if (task.IsFaulted)
             {
                 _failureOccurred = true;
                 Logger.LogException(task.Exception.GetBaseException());
             }
+        }
+
+        async Task WaitForWorkers()
+        {
+            // Only the coordinator starts workers and changes these dictionaries.
+            // Once scheduling stops, this snapshot covers every remaining worker.
+            var tasks = _designerTasks.Values.Concat(_executorTasks.Values).ToArray();
+            try
+            {
+                // Do not cancel this wait: callbacks must finish before the result
+                // is returned or cancellation resources are disposed.
+                await Task.WhenAll(tasks);
+            }
+            catch
+            {
+                // WhenAll waits for every worker, even if one faults or cancels.
+                // Inspect each worker below so late failures are also observed.
+            }
+
+            foreach (var designer in _designerTasks.Keys.ToArray())
+                ObserveTask(_designerTasks, designer);
+            foreach (var executor in _executorTasks.Keys.ToArray())
+                ObserveTask(_executorTasks, executor);
+
+            _idleNodes.Clear();
+            _preparedNodes.Clear();
+            _completedDesigners.Clear();
+            _completedExecutors.Clear();
         }
 
         void RegisterExternalCancellation(CancellationToken cancellationToken)
@@ -334,6 +407,14 @@ namespace UniTest
 
         void CompleteExecution()
         {
+            lock (_signalLock)
+            {
+                // Completion notifications can still be finishing after worker
+                // Tasks end. They must not release a disposed semaphore.
+                _stateChanged?.Dispose();
+                _stateChanged = null;
+            }
+
             if (_externalCancellationRegistered)
             {
                 _externalCancellationRegistration.Dispose();

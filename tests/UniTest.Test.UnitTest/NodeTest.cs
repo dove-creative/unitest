@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Xml;
 using NUnit.Framework;
 using UniTest;
 
@@ -618,29 +617,26 @@ public class NodeTest
         var after = _node.Append(_lab1, _cts.Token);
         after.Execute();
 
-        var originalReport = after.Report;
-        var originalParentReport = after.Report.ParentNode;
+        var originalReport = after.GetReport().ToJson();
 
         // Act
         var restored = after.DetachAndRestore(_cts.Token);
 
         // Assert
-        Assert.That(after.Report, Is.SameAs(originalReport));
-        Assert.That(after.Report.ParentNode, Is.SameAs(originalParentReport));
-        Assert.That(after.Report.InnerText, Is.EqualTo(Node<Model>.NodeStatus.Failure.ToString()));
+        Assert.That(after.GetReport().ToJson(), Is.EqualTo(originalReport));
+        Assert.That(after.Status, Is.EqualTo(Node<Model>.NodeStatus.Failure));
 
-        Assert.That(restored.Report, Is.Not.SameAs(originalReport));
         Assert.That(restored.Before, Is.Null);
         Assert.That(_node.Afters, Is.EqualTo(new[] { after }));
         Assert.That(restored.Afters, Is.Empty);
 
-        var restoredParentReport = restored.Report.ParentNode;
-        Assert.That(restoredParentReport, Is.Not.Null);
-        Assert.That(restoredParentReport.Name, Is.EqualTo(_node.Report.Name));
-        Assert.That(restoredParentReport, Is.Not.SameAs(_node.Report));
-        Assert.That(restoredParentReport.ParentNode, Is.InstanceOf<XmlDocument>());
-        Assert.That(restored.Report.Name, Is.EqualTo(after.ID));
-        Assert.That(restored.Report.InnerText, Is.EqualTo("Waiting for execution"));
+        var report = restored.GetReport();
+        Assert.That(report.Nodes.Count, Is.EqualTo(2));
+        Assert.That(report.Nodes[0].LabId, Is.Null);
+        Assert.That(report.Nodes[0].ParentId, Is.Null);
+        Assert.That(report.Nodes[1].LabId, Is.EqualTo(after.ID));
+        Assert.That(report.Nodes[1].ParentId, Is.EqualTo(0));
+        Assert.That(report.Nodes[1].Status, Is.EqualTo("Ready"));
     }
     [Test]
     public void DetachAndRestore_PreservesFailure()
@@ -663,20 +659,16 @@ public class NodeTest
         Assert.That(restored.Status, Is.EqualTo(Node<Model>.NodeStatus.Success));
         Assert.That(_node.Afters, Is.EqualTo(new[] { after }));
 
-        var originalFailureReport = _node.Report.ChildNodes.OfType<XmlElement>().Single();
-        Assert.That(originalFailureReport, Is.SameAs(after.Report));
-        Assert.That(_node.Report.ChildNodes.OfType<XmlElement>().Count(), Is.EqualTo(1));
-        Assert.That(restored.Report.ParentNode, Is.Not.SameAs(_node.Report));
-        Assert.That(after.Report.InnerText, Is.EqualTo(Node<Model>.NodeStatus.Failure.ToString()));
-        Assert.That(restored.Report.InnerText, Is.EqualTo(Node<Model>.NodeStatus.Success.ToString()));
+        Assert.That(_node.GetReport().Nodes.Count, Is.EqualTo(2));
+        Assert.That(after.GetReport().Nodes.Last().Status, Is.EqualTo("Failure"));
+        Assert.That(restored.GetReport().Nodes.Last().Status, Is.EqualTo("Success"));
 
         Assert.That(_node.AllSucceed(out var cancelled), Is.False);
         Assert.That(cancelled, Is.False);
 
         var failedReport = _node.GetFailedReports();
-        var failedReports = failedReport.ChildNodes.OfType<XmlElement>().ToArray();
-        Assert.That(failedReports.Length, Is.EqualTo(1));
-        Assert.That(failedReports[0].OuterXml, Is.EqualTo(after.Report.OuterXml));
+        Assert.That(failedReport.Nodes.Count, Is.EqualTo(2));
+        Assert.That(failedReport.ToJson(), Is.EqualTo(after.GetReport().ToJson()));
     }
     [Test]
     public void DetachAndRestore_ReplaysPreviousTrace()
@@ -707,18 +699,9 @@ public class NodeTest
         Assert.That(_node.Afters, Is.EqualTo(new[] { before, sibling }));
         Assert.That(before.Afters, Is.EqualTo(new[] { after }));
 
-        var copiedBeforeReport = restored.Report.ParentNode;
-        Assert.That(copiedBeforeReport, Is.Not.Null);
-        Assert.That(copiedBeforeReport.Name, Is.EqualTo(before.Report.Name));
-        Assert.That(copiedBeforeReport, Is.Not.SameAs(before.Report));
-
-        var copiedRootReport = copiedBeforeReport.ParentNode;
-        Assert.That(copiedRootReport, Is.Not.Null);
-        Assert.That(copiedRootReport.Name, Is.EqualTo(_node.Report.Name));
-        Assert.That(copiedRootReport, Is.Not.SameAs(_node.Report));
-        var copiedRootChildren = copiedRootReport.ChildNodes.OfType<XmlElement>().ToArray();
-        Assert.That(copiedRootChildren.Length, Is.EqualTo(1));
-        Assert.That(copiedRootChildren[0], Is.SameAs(copiedBeforeReport));
+        var report = restored.GetReport();
+        Assert.That(report.Nodes.Select(n => n.LabId), Is.EqualTo(new[] { null, before.ID, after.ID }));
+        Assert.That(report.Nodes.Select(n => n.ParentId), Is.EqualTo(new int?[] { null, 0, 1 }));
 
         Assert.That(restored.Depth, Is.EqualTo(2));
         Assert.That(restored.Model.ExecutionCount, Is.EqualTo(2));
@@ -747,12 +730,11 @@ public class NodeTest
         Assert.That(restored.Afters, Is.Empty);
         Assert.That(restoredAgain.Afters, Is.Empty);
 
-        var copiedRootReport = restoredAgain.Report.ParentNode;
-        Assert.That(copiedRootReport, Is.Not.Null);
-        Assert.That(copiedRootReport.Name, Is.EqualTo(_node.Report.Name));
-        Assert.That(copiedRootReport, Is.Not.SameAs(_node.Report));
-        Assert.That(copiedRootReport, Is.Not.SameAs(restored.Report.ParentNode));
-        Assert.That(restoredAgain.Report.InnerText, Is.EqualTo("Waiting for execution"));
+        var report = restoredAgain.GetReport();
+        Assert.That(report.Nodes.Count, Is.EqualTo(2));
+        Assert.That(report.Nodes[0].LabId, Is.Null);
+        Assert.That(report.Nodes[1].ParentId, Is.EqualTo(0));
+        Assert.That(report.Nodes[1].Status, Is.EqualTo("Ready"));
     }
     #endregion
 }

@@ -33,7 +33,7 @@ dotnet build UniTest.sln --no-restore
 - Nullable annotations remain disabled for compatibility with existing consumers.
 - Do not add new dependencies unless the change explicitly requires them.
 - Do not vendor restored NuGet packages or generated build output.
-- Update tests when changing shared behavior such as `Project<TModel>`, `Node<TModel>`, `Lab<TModel>`, `Model`, `TestCase`, XML reports, or execution replay.
+- Update tests when changing shared behavior such as `Project<TModel>`, `Node<TModel>`, `Lab<TModel>`, `Model`, `TestCase`, JSON reports, or execution replay.
 
 ## Documentation Style
 
@@ -45,17 +45,17 @@ When changing test authoring or external execution guidance, update the workflow
 
 ## Stable Packages
 
-The library package ID is `BlackThunder.UniTest`, currently version `0.2.0`. The assembly name, namespace, and `netstandard2.1` target remain unchanged. Packages are stored in consumer repositories; publishing to a public NuGet feed is not part of this workflow.
+The library package ID is `BlackThunder.UniTest`, currently version `0.3.0`. The assembly name, namespace, and `netstandard2.1` target remain unchanged. Packages are stored in consumer repositories; publishing to a public NuGet feed is not part of this workflow.
 
 After verification passes, commit the library changes and package that source commit with repository provenance.
 
 ```powershell
 $sourceCommit = git rev-parse HEAD
 dotnet pack src/UniTest/UniTest.csproj --configuration Release -o artifacts/packages -p:RepositoryCommit=$sourceCommit
-Get-FileHash artifacts/packages/BlackThunder.UniTest.0.2.0.nupkg -Algorithm SHA256
+Get-FileHash artifacts/packages/BlackThunder.UniTest.0.3.0.nupkg -Algorithm SHA256
 ```
 
-Copy the validated `.nupkg` into the consumer's `packages/` folder, register that local feed in its root `NuGet.config`, and use `Version="[0.2.0]"` in its `PackageReference`. Record the version, source commit, SHA-256, and verification results in the consumer repository. Only validated first-party release packages are tracked; restored packages and generated build output remain untracked. Do not overwrite an existing package at the same version: increment the version for any replacement.
+Copy the validated `.nupkg` into the consumer's `packages/` folder, register that local feed in its root `NuGet.config`, and use `Version="[0.3.0]"` in its `PackageReference`. Record the version, source commit, SHA-256, and verification results in the consumer repository. Only validated first-party release packages are tracked; restored packages and generated build output remain untracked. Do not overwrite an existing package at the same version: increment the version for any replacement.
 
 ## Tests
 

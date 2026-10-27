@@ -119,16 +119,6 @@ namespace UniTest
             }
 
 
-            if (model.MetadataGroup[this].ToUncontinuable)
-            {
-                SetMetadata();
-                model.Continuable = false;
-
-                exception = null;
-                return;
-            }
-
-
             try
             {
                 DoAssert(model);
