@@ -31,28 +31,28 @@ CLI 테스트 자동화는 다음 흐름에 배치한다.
 domain-framework/
   NuGet.config
   packages/
-    BlackThunder.UniTest.0.3.0.nupkg
+    BlackThunder.UniTest.0.4.0.nupkg
   src/
-    Domain/
-      Domain.csproj
+    BlackThunder.Domain/
+      BlackThunder.Domain.csproj
   tests/
-    Domain.Tests/
-      Domain.Tests.csproj
+    BlackThunder.Domain.Tests/
+      BlackThunder.Domain.Tests.csproj
 ```
 
-테스트 코드와 프로젝트 파일은 같은 폴더에 둔다. 여러 테스트 집합에 같은 전역 타입 이름이 있다면 별도 테스트 프로젝트로 분리한다.
+테스트 코드와 프로젝트 파일은 같은 폴더에 둔다. BlackThunder.Domain.Tests처럼 어셈블리 계층에 맞는 네임스페이스를 사용한다. 필요하면 서로 다른 테스트 세트를 별도 프로젝트로 분리한다.
 
 ## 3. 테스트 프로젝트 구성
 
-검증된 UniTest 패키지는 소비 저장소의 `packages/`에 보관하고, 루트 `NuGet.config`에 해당 로컬 피드와 NUnit 복원용 `nuget.org` 피드를 등록한다. 설정 예시는 [README 설치 안내](../../README.ko.md#설치)를 따른다. 패키지의 원본 커밋·SHA-256·검증 결과를 기록하고 같은 버전의 패키지를 덮어쓰지 않는다.
+검증된 UniTest 패키지는 소비 저장소의 `packages/`에 보관하고, 루트 `NuGet.config`에 해당 로컬 피드와 NUnit 복원용 `nuget.org` 피드를 등록한다. 설정 예시는 [README 설치 안내](../../README.ko.md)를 따른다. 패키지의 원본 커밋·SHA-256·검증 결과를 기록하고 같은 버전의 패키지를 덮어쓰지 않는다.
 
 기본 프로젝트 구성은 다음과 같다.
 
 ```xml
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net9.0</TargetFramework>
-    <LangVersion>latest</LangVersion>
+    <TargetFramework>net10.0</TargetFramework>
+    <LangVersion>9.0</LangVersion>
     <Nullable>disable</Nullable>
     <ImplicitUsings>disable</ImplicitUsings>
     <IsPackable>false</IsPackable>
@@ -60,29 +60,29 @@ domain-framework/
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="BlackThunder.UniTest" Version="[0.3.0]" />
+    <PackageReference Include="BlackThunder.UniTest" Version="[0.4.0]" />
     <PackageReference Include="NUnit" Version="3.14.0" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.6.0" />
     <PackageReference Include="NUnit3TestAdapter" Version="6.2.0" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="../../src/Domain/Domain.csproj" />
+    <ProjectReference Include="../../src/BlackThunder.Domain/BlackThunder.Domain.csproj" />
   </ItemGroup>
 </Project>
 ```
 
 `Microsoft.NET.Test.Sdk`와 `NUnit3TestAdapter`는 `dotnet test`가 테스트를 발견하고 실행하기 위한 패키지이다. 검증된 자사 `.nupkg`만 버전 관리하며, 복원된 의존성이나 생성된 DLL은 포함하지 않는다. 외부 UniTest 개발 저장소가 없어도 복원과 실행이 가능해야 한다.
 
-추가 `Task.Run` 없이 처리해야 하는 테스트 프로젝트는 파생 `Project<TModel>` 또는 `CompactProject<TModel>` 생성자에서 `base(UniTest.ExecutionMode.Inline)`을 선택한다. 기본값은 `ThreadPool`이다. `Inline`도 `Task.Yield()`를 사용하는 비동기 실행이며 같은 OS 스레드를 보장하지 않는다. 별도 `UNITEST_SINGLETHREAD` 빌드 심볼은 필요하지 않다.
+추가 `Task.Run` 없이 처리해야 하는 테스트 프로젝트는 파생 `Project<TModel>` 또는 `CompactProject<TModel>` 생성자에서 `base(BlackThunder.UniTest.ExecutionMode.Inline)`을 선택한다. 기본값은 `ThreadPool`이다. `Inline`도 `Task.Yield()`를 사용하는 비동기 실행이며 같은 OS 스레드를 보장하지 않는다. 별도 `UNITEST_SINGLETHREAD` 빌드 심볼은 필요하지 않다.
 
 ## 4. 실행 흐름
 
 테스트는 `NUnit3TestAdapter`가 발견하고 `dotnet test`가 실행한다.
 
 ```powershell
-dotnet restore tests/Domain.Tests/Domain.Tests.csproj
-dotnet test tests/Domain.Tests/Domain.Tests.csproj --no-restore
+dotnet restore tests/BlackThunder.Domain.Tests/BlackThunder.Domain.Tests.csproj
+dotnet test tests/BlackThunder.Domain.Tests/BlackThunder.Domain.Tests.csproj --no-restore
 ```
 
 테스트 작성 워크플로에서는 실행 결과를 `03-Results.md`의 테스트 실행 결과 요약에 포함한다.

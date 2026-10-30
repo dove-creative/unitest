@@ -1,42 +1,24 @@
 # UniTest
 
-[English README](README.md)
+[English](README.md)
 
-UniTest는 모델과 상태-동작 조합을 기반으로 실행 가능한 테스트 경로를 자동 생성하고 검증하는 .NET 테스트 프레임워크이다.
+UniTest는 모델의 상태와 가능한 동작을 조합해 테스트 경로를 생성하고 검증하는 .NET 테스트 프레임워크이다.
 
-일반 유닛 테스트가 개별 테스트 케이스를 직접 나열하는 데 집중한다면, UniTest는 현재 `Model`에서 가능한 `Lab`을 생성하고 실행 이력에 따라 후속 상태를 확장한다.
-
-## 에이전트 보조와 CLI 자동화
-
-UniTest는 에이전트 보조 테스트 작성과 CLI 기반 반복 검증을 같은 모델 구조 위에서 이어갈 수 있도록, 테스트 작성 흐름과 외부 실행 자동화 워크플로를 함께 제공한다.
-
-AI 에이전트는 UniTest 기반 테스트 작성이나 CLI 반복 검증을 맡는 경우, 실제 작업 절차를 아래 [문서](#문서)의 `docs/Workflow.ko` 항목에서 먼저 확인한다.
+개별 경로를 일일이 나열하는 대신 현재 상태에서 가능한 동작과 기대 결과를 정의하면, 실행 이력을 바탕으로 다음 상태를 탐색한다.
 
 ## 주요 기능
 
-- 상태 기반 테스트 생성: `Project<TModel>.CreateLabs(...)`에서 현재 상태에 맞는 테스트 흐름을 만든다.
-- AAA 실행 단위: `Lab<TModel>`과 `CompactLab<TModel>`로 Arrange, Act, Assert 흐름을 구성한다.
-- 경로 확장: `Node<TModel>`가 실행 이력을 보존하고 다음 테스트 상태를 독립적으로 생성한다.
-- 다중 상태 조합: `TestCase`, `Merge(...)`, `Extend(...)`로 여러 상태 축을 계층적으로 결합한다.
-- 재실행과 연속 실행: `Run(...)`, `RunContinuously(...)`, `Execute(ids)`로 전체 경로, 긴 단일 경로, 실패 경로 재현을 선택한다.
-- JSON 리포트: 실행 결과와 실패 경로를 JSON으로 저장하고 확인할 수 있다.
+- 상태 기반 경로 생성: 현재 Model에서 실행할 수 있는 Lab을 만들어 후속 상태를 탐색한다.
+- AAA 검증: Arrange·Act·Assert로 준비, 실제 동작과 결과 검증을 구분한다.
+- 독립된 상태 조합: TestCase, Merge와 Extend로 여러 상태 축의 테스트를 조합한다.
+- 실패 재현: 저장한 Lab ID 경로를 다시 실행하거나 분리된 디버그 노드에서 실패 상황을 조사한다.
+- 연속 실행과 JSON 리포트: 긴 실행 경로를 검사하고 실행 후 독립된 진단 스냅샷을 저장한다.
 
-### 리포트 API
+## 요구 사항과 설치
 
-`0.3.0`부터 리포트를 들여쓴 UTF-8 JSON으로 저장한다. `0.2.0`은 XML API를 사용했다. `0.2.0`과 호환되지 않는 공개 API 변경이다.
+라이브러리는 `netstandard2.1`을 대상으로 하며 외부 런타임 패키지 의존성이 없다. 저장소의 빌드·테스트·샘플 실행에는 .NET 10 SDK가 필요하다. 모든 프로젝트는 C# 9를 사용한다.
 
-```csharp
-var root = await project.Execute(3);
-TestReport report = root.GetReport();
-Tools.ExportJson(report, "result", "reports");
-string failedJson = root.GetFailedReports().ToJson();
-```
-
-`node.Report`는 `node.GetReport()`로, `ExportXml`은 `ExportJson`으로, `.OuterXml`은 `.ToJson()`으로 바꾼다. 리포트는 `nodeId`와 `parentId`로 연결한 평탄한 `nodes` 배열이며 Lab ID는 값으로 저장한다. 공백·한글·기호는 허용하고 `/`만 재실행 경로 구분자로 예약한다. 자세한 내용은 [JSON 리포트 사용 및 이전 안내](docs/Wiki.ko/04-Usage.md#6-5-json-리포트-읽기)를 참고한다.
-
-## 설치
-
-소비 프로젝트는 검증된 `BlackThunder.UniTest` 안정 패키지를 사용한다. `BlackThunder.UniTest.0.3.0.nupkg`를 소비 저장소의 `packages/`에 보관하고, 저장소 루트의 `NuGet.config`에 로컬 피드를 등록한다. 현재 배포 방식은 저장소에 보관하는 로컬 패키지이며 공개 NuGet 피드에 게시하지 않는다.
+소비 프로젝트는 검증된 `BlackThunder.UniTest.0.4.0.nupkg`를 자신의 `packages` 폴더에 보관한다. 아래 내용을 저장소 루트 `NuGet.config`에 넣고 패키지를 추가한다. 배포 방식은 저장소에 보관하는 로컬 패키지이며 공개 NuGet 피드에는 게시하지 않는다.
 
 ```xml
 <?xml version="1.0" encoding="utf-8"?>
@@ -49,166 +31,104 @@ string failedJson = root.GetFailedReports().ToJson();
 </configuration>
 ```
 
-테스트 프로젝트에서는 정확한 버전을 지정한다.
-
-```xml
-<ItemGroup>
-  <PackageReference Include="BlackThunder.UniTest" Version="[0.3.0]" />
-</ItemGroup>
-```
-
-패키지는 `netstandard2.1`을 대상으로 하며 어셈블리명과 네임스페이스는 `UniTest`이다. 패키지의 원본 커밋·SHA-256·검증 결과를 소비 저장소에 함께 기록하고, 같은 버전의 패키지는 덮어쓰지 않는다.
-
-UniTest 자체 개발용 테스트와 샘플은 이 저장소의 소스를 `ProjectReference`로 참조한다. 샘플은 .NET 9 콘솔 애플리케이션이다.
-
 ```powershell
-dotnet run --project samples/UniTest.Samples/UniTest.Samples.csproj
+dotnet add package BlackThunder.UniTest --version "[0.4.0]"
 ```
 
-실행 후 `sample>` 프롬프트에서 `single`, `single-replay`, `multi`, `single-continuous`, `multi-continuous`, `help`, `exit` 중 하나를 입력한다. 리포트는 샘플 앱 출력 폴더의 `UniTest/Samples/NativeCSharp` 아래에 저장된다.
+패키지 ID, 네임스페이스와 DLL 이름은 각각 `BlackThunder.UniTest`, `BlackThunder.UniTest`, `BlackThunder.UniTest.dll`이다. 이전 버전 사용자는 [0.4.0 이전 안내](docs/Wiki.ko/05-Migration.md)를 따른다. DLL을 직접 사용하는 호스트에는 `lib/netstandard2.1`의 DLL을 전달한다.
 
 ## 빠른 시작
 
-아래 예시는 카운터의 현재 값과 기대값을 함께 들고 가며, 가능한 `Increment`와 `Decrement` 경로를 깊이 3까지 자동 확장한다.
+다음 코드를 패키지를 참조하는 콘솔 프로젝트에서 실행한다. 실제 Counter와 예상 값을 가진 Model을 만들고 Increment 경로를 깊이 3까지 검증한다.
 
 ```csharp
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Threading.Tasks;
-using UniTest;
+using BlackThunder.UniTest;
 
-public sealed class Counter
+namespace Example.CounterTests
 {
-    public int Value { get; private set; }
-
-    public void Increment()
+    public class Counter
     {
-        Value++;
+        public int Value { get; private set; }
+        public void Increment() => Value++;
     }
 
-    public void Decrement()
+    public class CounterModel : Model
     {
-        Value--;
-    }
-}
+        public Counter Counter => (Counter)Subject;
+        public int ExpectedValue;
 
-public sealed class CounterModel : Model
-{
-    public Counter Counter
-    {
-        get => (Counter)Subject;
-        set => Subject = value;
+        public CounterModel() => Subject = new Counter();
     }
 
-    public int ExpectedValue;
-}
-
-public sealed class CounterProject : Project<CounterModel>
-{
-    public override IEnumerable<ILab<CounterModel>> CreateLabs(CounterModel model)
+    public class CounterProject : CompactProject<CounterModel>
     {
-        if (model.Counter == null)
+        public override IEnumerable<CompactLab<CounterModel>> CreateCompactLabs(CounterModel model)
         {
-            yield return new CompactLab<CounterModel>("Ignite")
-            {
-                Actor = m =>
+            yield return new CompactLab<CounterModel>("Increment",
+                arranger: current => current.ExpectedValue++,
+                actor: current => current.Counter.Increment(),
+                asserter: current =>
                 {
-                    m.Counter = new Counter();
-                    m.ExpectedValue = 0;
-                },
-                Asserter = Check
-            }.Build();
-
-            yield break;
+                    if (current.Counter.Value != current.ExpectedValue)
+                        throw new InvalidOperationException("Counter state mismatched.");
+                });
         }
-
-        yield return new CompactLab<CounterModel>("Increment")
-        {
-            Arranger = m => m.ExpectedValue++,
-            Actor = m => m.Counter.Increment(),
-            Asserter = Check
-        }.Build();
-
-        yield return new CompactLab<CounterModel>("Decrement")
-        {
-            Arranger = m => m.ExpectedValue--,
-            Actor = m => m.Counter.Decrement(),
-            Asserter = Check
-        }.Build();
     }
 
-    private static void Check(CounterModel model)
+    public static class Program
     {
-        if (model.Counter.Value != model.ExpectedValue)
-            throw new InvalidOperationException("Counter state mismatched.");
-    }
-}
-
-public static class CounterRunner
-{
-    public static Task<bool> RunAsync()
-    {
-        return new CounterProject()
-            .Run(
-                Path.Combine(AppContext.BaseDirectory, "UniTestReports"),
-                "Counter",
-                depth: 3,
-                printResult: true);
+        public static async Task Main()
+        {
+            var root = await new CounterProject().Execute(3);
+            Console.WriteLine(root.GetReport().ToJson());
+        }
     }
 }
 ```
 
-이 예시는 다음 흐름을 보여준다.
+여러 동작과 상태 조합을 포함한 실행 예제는 [샘플 안내](samples/README.md)를 따른다.
 
-- `Model`은 실제 대상인 `Counter`와 기대 상태인 `ExpectedValue`를 함께 가진다.
-- `CreateLabs(...)`는 시작 상태에서 `Ignite`를 만들고, 이후 상태에서 `Increment`와 `Decrement`를 만든다.
-- `Run(...)`은 가능한 경로를 실행하고 JSON 리포트를 출력한다.
+```powershell
+dotnet run --project samples/BlackThunder.UniTest.Samples.csproj
+dotnet run --project samples/BlackThunder.UniTest.Samples.csproj -- single
+```
+
+인자가 없으면 `sample>` 프롬프트를 열고, 명령 인자가 있으면 한 번 실행한 뒤 종료한다. 리포트는 샘플 실행 파일 옆의 `SampleOutput`에 저장된다.
 
 ## 주요 API
 
-- `Model`: 테스트 대상 `Subject`, 실행 이력, 지속 가능 여부, 리포트에 남길 상태 문자열을 보관한다.
-- `Project<TModel>`: 현재 `Model`에서 실행 가능한 `Lab` 목록을 생성하고 테스트 그래프를 실행한다.
-- `ExecutionMode`: 기본 `ThreadPool` 또는 추가 `Task.Run` 없이 처리하는 `Inline`을 프로젝트 생성 시 선택한다. 구체적인 실행 특성은 [사용 문서](docs/Wiki.ko/04-Usage.md#1-5-실행-모드를-선택한다)를 따른다.
-- `Lab<TModel>`: metadata, 예상 예외, 지속 가능 여부를 포함한 AAA 테스트 단위이다.
-- `CompactLab<TModel>`: 단순한 AAA 흐름을 delegate로 빠르게 작성하는 helper이다.
-- `ILab<TModel>`: `Lab`과 `CompositeLab`이 공유하는 실행 단위 인터페이스이다.
-- `TestCase`: 다중 상태 테스트에서 어떤 동작과 하위 조건을 생성할지 전달한다.
-- `Merge(...)`: 상태 조건 Lab과 실제 동작 template을 하나의 Lab으로 합친다.
-- `Extend(...)`: 기존 Lab 위에 다른 상태 계층의 Arrange/Assert를 덧붙인다.
-- `Run(...)`: 전체 경로나 지정한 실행 이력을 실행하고 JSON 리포트를 출력한다.
-- `RunContinuously(...)`: 가능한 경로 중 하나를 결정적으로 선택해 긴 연속 실행을 수행한다.
-- `Execute(ids)`: `/`로 구분한 실행 이력만 다시 실행한다.
+- `Model`: 실제 대상, 기대 상태와 실행 이력을 보관한다.
+- `Project<TModel>`·`CompactProject<TModel>`: 상태별 Lab을 생성하고 경로를 실행한다.
+- `Lab<TModel>`·`CompactLab<TModel>`·`CompositeLab<TModel>`: 준비·동작·검증을 정의하고 조합한다.
+- `TestCase`·`Merge`·`Extend`: 상태 축의 조건과 동작을 결합한다.
+- `Execute`·`ExecuteContinuously`: 전체 경로, ID 경로 또는 연속 경로를 실행한다.
+- `GetReport`·`GetFailedReports`·`ExportJson`: 실행 결과를 조회하고 JSON으로 저장한다.
 
 ## 문서
 
-자세한 설명은 `docs/Wiki.ko` 폴더에 있다.
-
-- [00-Unit-Test-Guideline.md](docs/Wiki.ko/00-Unit-Test-Guideline.md): 상태-동작 표 작성 기준
-- [01-Overview.md](docs/Wiki.ko/01-Overview.md): 기능의 목적과 큰 흐름
-- [02-Implementations.md](docs/Wiki.ko/02-Implementations.md): 구현 구조와 실행 단위
-- [03-Uni-Test-Extensions.md](docs/Wiki.ko/03-Uni-Test-Extensions.md): 확장 API와 조합 방식
-- [04-Usage.md](docs/Wiki.ko/04-Usage.md): 사용 예시와 호출 기준
-
-AI 에이전트는 UniTest 기반 테스트를 작성하거나 도메인별 POCO 테스트 실행 경로를 정리할 때 `docs/Workflow.ko`의 워크플로 문서를 따른다.
-
-- [01-Test-Authoring-Workflow.md](docs/Workflow.ko/01-Test-Authoring-Workflow.md): 테스트 작성, 계획, 결과 기록 흐름
-- [02-External-NUnit-Executor-Workflow.md](docs/Workflow.ko/02-External-NUnit-Executor-Workflow.md): 도메인별 NUnit 테스트 프로젝트 구성 흐름
-
-영어 문서는 `docs/Wiki.en` 폴더에 있다.
+- [테스트 방법론](docs/Wiki.ko/00-Unit-Test-Guideline.md): 상태-동작 표와 테스트 범위
+- [개요](docs/Wiki.ko/01-Overview.md): 목적, 핵심 구조와 대표 흐름
+- [구현](docs/Wiki.ko/02-Implementations.md): 구성 요소의 책임과 실행·종료 처리
+- [확장 기능](docs/Wiki.ko/03-Uni-Test-Extensions.md): 실패 중단, 재실행과 연속 실행
+- [사용법](docs/Wiki.ko/04-Usage.md): API 선택과 단일·다중 상태 튜토리얼
+- [테스트 작성 워크플로](docs/Workflow.ko/01-Test-Authoring-Workflow.md): 에이전트 보조 작성과 결과 기록
+- [외부 NUnit 실행](docs/Workflow.ko/02-External-NUnit-Executor-Workflow.md): 소비 프로젝트의 CLI 검증
+- [기여 지침](CONTRIBUTING.md): 공통 컨벤션, 개발 환경과 패키지 검증
 
 ## 테스트
 
-테스트 코드는 `tests` 폴더에 있으며 NUnit을 사용한다.
-
 ```powershell
-dotnet restore UniTest.sln
-dotnet build UniTest.sln --configuration Release --no-restore -m:1
-dotnet test UniTest.sln --configuration Release --no-build --no-restore -m:1 --logger trx --results-directory TestResults
+dotnet restore BlackThunder.UniTest.sln
+dotnet build BlackThunder.UniTest.sln --configuration Release --no-restore -m:1
+dotnet test BlackThunder.UniTest.sln --configuration Release --no-build --no-restore -m:1
+pwsh -File .github/scripts/verify-samples.ps1
 ```
 
-[CI](.github/workflows/ci.yml)는 push·pull request·수동 실행 시 Windows와 Ubuntu에서 .NET SDK 9.0.x로 같은 명령을 실행한다. 운영체제별 TRX 결과는 7일간 보관한다. 샘플은 빌드에 포함하며 대화형 실행이나 패키지 배포는 하지 않는다.
+[CI](.github/workflows/ci.yml)는 Windows와 Ubuntu에서 같은 빌드·전체 테스트·샘플 CLI 검증을 실행한다. TRX 결과는 7일간 보관하며 패키지는 배포하지 않는다.
 
 ## 라이선스
 
-UniTest는 MIT 라이선스로 배포된다. 자세한 내용은 [LICENSE.md](LICENSE.md)를 참고한다.
+MIT 라이선스로 배포된다. 자세한 내용은 [LICENSE.md](LICENSE.md)를 참고한다.

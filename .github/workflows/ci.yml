@@ -24,16 +24,20 @@ jobs:
       - name: Install .NET SDK
         uses: actions/setup-dotnet@v6
         with:
-          dotnet-version: 9.0.x
+          dotnet-version: 10.0.x
 
       - name: Restore
-        run: dotnet restore UniTest.sln
+        run: dotnet restore BlackThunder.UniTest.sln
 
       - name: Build
-        run: dotnet build UniTest.sln --configuration Release --no-restore -m:1
+        run: dotnet build BlackThunder.UniTest.sln --configuration Release --no-restore -m:1
 
       - name: Test
-        run: dotnet test UniTest.sln --configuration Release --no-build --no-restore -m:1 --logger trx --results-directory TestResults
+        run: dotnet test BlackThunder.UniTest.sln --configuration Release --no-build --no-restore -m:1 --logger trx --results-directory TestResults
+
+      - name: Verify sample CLI
+        shell: pwsh
+        run: ./.github/scripts/verify-samples.ps1
 
       - name: Upload test results
         if: always()

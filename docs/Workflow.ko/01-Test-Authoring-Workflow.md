@@ -61,7 +61,7 @@
 
 도메인별 테스트 프로젝트는 UniTest 저장소 안에 추가하지 않고 해당 도메인 폴더가 직접 소유한다.
 
-테스트 집합은 `모듈명.Tests.csproj` SDK 프로젝트로 분리한다. 테스트 대상은 `ProjectReference`로 연결하고, UniTest는 소비 저장소의 로컬 피드에서 `BlackThunder.UniTest` 안정 패키지를 정확한 버전 `[0.3.0]`으로 참조한다. UniTest 자체 개발용 테스트와 샘플은 소스 프로젝트 참조를 유지한다.
+테스트 집합은 `모듈명.Tests.csproj` SDK 프로젝트로 분리한다. 테스트 대상은 `ProjectReference`로 연결하고, UniTest는 소비 저장소의 로컬 피드에서 `BlackThunder.UniTest` 안정 패키지를 정확한 버전 `[0.4.0]`으로 참조한다. UniTest 자체 개발용 테스트와 샘플은 소스 프로젝트 참조를 유지한다.
 
 테스트 대상 프레임워크가 POCO라면 [External NUnit Executor 워크플로](02-External-NUnit-Executor-Workflow.md)에 따라 `dotnet test` 빌드와 실행 대상으로 구성한다.
 

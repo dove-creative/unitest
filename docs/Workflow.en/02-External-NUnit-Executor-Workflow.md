@@ -31,28 +31,28 @@ Use the following default layout.
 domain-framework/
   NuGet.config
   packages/
-    BlackThunder.UniTest.0.3.0.nupkg
+    BlackThunder.UniTest.0.4.0.nupkg
   src/
-    Domain/
-      Domain.csproj
+    BlackThunder.Domain/
+      BlackThunder.Domain.csproj
   tests/
-    Domain.Tests/
-      Domain.Tests.csproj
+    BlackThunder.Domain.Tests/
+      BlackThunder.Domain.Tests.csproj
 ```
 
-Keep the test code and project file in the same folder. If multiple test sets contain the same global type names, separate them into distinct test projects.
+Keep the test code and project file in the same folder. Use namespaces matching the assembly hierarchy, such as BlackThunder.Domain.Tests. Separate distinct test sets into their own projects when needed.
 
 ## 3. Test Project Configuration
 
-Keep the validated UniTest package in the consumer repository's `packages/` folder and register that local feed and the `nuget.org` feed for NUnit dependencies in a root `NuGet.config`. See the [README installation guide](../../README.md#installation) for the configuration example. Record the source commit, SHA-256, and verification results, and never overwrite a package at the same version.
+Keep the validated UniTest package in the consumer repository's `packages/` folder and register that local feed and the `nuget.org` feed for NUnit dependencies in a root `NuGet.config`. See the [README installation guide](../../README.md) for the configuration example. Record the source commit, SHA-256, and verification results, and never overwrite a package at the same version.
 
 Use the following basic project configuration.
 
 ```xml
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net9.0</TargetFramework>
-    <LangVersion>latest</LangVersion>
+    <TargetFramework>net10.0</TargetFramework>
+    <LangVersion>9.0</LangVersion>
     <Nullable>disable</Nullable>
     <ImplicitUsings>disable</ImplicitUsings>
     <IsPackable>false</IsPackable>
@@ -60,29 +60,29 @@ Use the following basic project configuration.
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="BlackThunder.UniTest" Version="[0.3.0]" />
+    <PackageReference Include="BlackThunder.UniTest" Version="[0.4.0]" />
     <PackageReference Include="NUnit" Version="3.14.0" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.6.0" />
     <PackageReference Include="NUnit3TestAdapter" Version="6.2.0" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="../../src/Domain/Domain.csproj" />
+    <ProjectReference Include="../../src/BlackThunder.Domain/BlackThunder.Domain.csproj" />
   </ItemGroup>
 </Project>
 ```
 
 `Microsoft.NET.Test.Sdk` and `NUnit3TestAdapter` allow `dotnet test` to discover and run the tests. Only validated first-party `.nupkg` files are versioned; restored dependencies and generated DLLs are not included. Restore and execution must work without an external UniTest development checkout.
 
-Test projects that need processing without an additional `Task.Run` select `base(UniTest.ExecutionMode.Inline)` in the derived `Project<TModel>` or `CompactProject<TModel>` constructor. The default is `ThreadPool`. `Inline` still executes asynchronously through `Task.Yield()` and does not guarantee the same OS thread. No `UNITEST_SINGLETHREAD` build symbol is required.
+Test projects that need processing without an additional `Task.Run` select `base(BlackThunder.UniTest.ExecutionMode.Inline)` in the derived `Project<TModel>` or `CompactProject<TModel>` constructor. The default is `ThreadPool`. `Inline` still executes asynchronously through `Task.Yield()` and does not guarantee the same OS thread. No `UNITEST_SINGLETHREAD` build symbol is required.
 
 ## 4. Execution Flow
 
 `NUnit3TestAdapter` discovers the tests and `dotnet test` executes them.
 
 ```powershell
-dotnet restore tests/Domain.Tests/Domain.Tests.csproj
-dotnet test tests/Domain.Tests/Domain.Tests.csproj --no-restore
+dotnet restore tests/BlackThunder.Domain.Tests/BlackThunder.Domain.Tests.csproj
+dotnet test tests/BlackThunder.Domain.Tests/BlackThunder.Domain.Tests.csproj --no-restore
 ```
 
 Include the execution result in the test result summary in `03-Results.md`.

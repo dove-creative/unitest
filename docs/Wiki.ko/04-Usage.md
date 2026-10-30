@@ -1,4 +1,6 @@
-# 목차
+# UniTest 사용법
+
+## 목차
 
 1. 시작 전에 확인할 것
 2. 가장 짧은 시작 흐름
@@ -7,7 +9,7 @@
 5. 튜토리얼 2. 다중 상태 테스트 조합하기
 6. 실행과 결과 읽기
 
-이 문서는 Uni Test의 구현 구조를 다시 설명하는 문서가 아니라, 상태-동작 표와 Uni Test 구성 요소를 실제 테스트 코드로 옮기는 사용 흐름을 다룬다.
+이 문서는 UniTest의 구현 구조를 다시 설명하는 문서가 아니라, 상태-동작 표와 UniTest 구성 요소를 실제 테스트 코드로 옮기는 사용 흐름을 다룬다.
 
 따라서 설명 순서는 내부 클래스의 상세 구현보다, 테스트 작성자가 먼저 준비해야 할 표와 모델, 가장 짧은 실행 흐름, 단일 상태와 다중 상태 예제 순서를 따른다.
 
@@ -15,17 +17,17 @@
 
 ### 1-1. 안정 패키지를 참조한다
 
-소비 저장소의 `packages/`에 검증된 `BlackThunder.UniTest.0.3.0.nupkg`를 보관하고, 루트 `NuGet.config`에 로컬 피드를 등록한다. 테스트 프로젝트는 다음과 같이 정확한 버전을 참조한다. 설정 예시는 [README 설치 안내](../../README.ko.md#설치)를 따른다.
+소비 저장소의 `packages/`에 검증된 `BlackThunder.UniTest.0.4.0.nupkg`를 보관하고, 루트 `NuGet.config`에 로컬 피드를 등록한다. 테스트 프로젝트는 다음과 같이 정확한 버전을 참조한다. 설정 예시는 [README 설치 안내](../../README.ko.md)를 따른다.
 
 ```xml
-<PackageReference Include="BlackThunder.UniTest" Version="[0.3.0]" />
+<PackageReference Include="BlackThunder.UniTest" Version="[0.4.0]" />
 ```
 
-`Project<TModel>`, `Model`, `Lab<TModel>` 같은 핵심 타입은 `UniTest` 네임스페이스로 제공되며 별도 컴파일 심볼이 필요하지 않다. 타입을 찾지 못한다면 로컬 피드 설정, 패키지 복원 결과, `netstandard2.1` 호환성을 먼저 확인한다. UniTest 자체 개발용 테스트와 샘플은 소스 프로젝트 참조를 유지한다.
+`Project<TModel>`, `Model`, `Lab<TModel>` 같은 핵심 타입은 `BlackThunder.UniTest` 네임스페이스로 제공되며 별도 컴파일 심볼이 필요하지 않다. 타입을 찾지 못한다면 로컬 피드 설정, 패키지 복원 결과, `netstandard2.1` 호환성을 먼저 확인한다. UniTest 자체 개발용 테스트와 샘플은 소스 프로젝트 참조를 유지한다.
 
 ### 1-2. 상태-동작 표를 먼저 만든다
 
-Uni Test는 테스트를 직접 한 줄씩 나열하는 도구가 아니라, 현재 상태에서 가능한 `Lab`을 생성하고 이어지는 상태를 자동으로 확장하는 도구이다. 따라서 코드보다 먼저 아래 두 가지를 정리해야 한다.
+UniTest는 테스트를 직접 한 줄씩 나열하는 도구가 아니라, 현재 상태에서 가능한 `Lab`을 생성하고 이어지는 상태를 자동으로 확장하는 도구이다. 따라서 코드보다 먼저 아래 두 가지를 정리해야 한다.
 
 1. 객체가 가질 수 있는 상태
 2. 각 상태에서 실행할 수 있는 동작과 예상 결과
@@ -38,10 +40,10 @@ Uni Test는 테스트를 직접 한 줄씩 나열하는 도구가 아니라, 현
 
 ### 1-3. Model에는 실제 상태와 예상 상태를 함께 둔다
 
-Uni Test에서 `Model`은 테스트 대상 객체만 담는 곳이 아니다. 실제 객체인 `Subject`, 예상 상태를 나타내는 mock 필드, 테스트 진행에 필요한 asset을 함께 보관한다.
+UniTest에서 `Model`은 테스트 대상 객체만 담는 곳이 아니다. 실제 객체인 `Subject`, 예상 상태를 나타내는 mock 필드, 테스트 진행에 필요한 asset을 함께 보관한다.
 
 ```csharp
-public class Model : UniTest.Model
+public class Model : BlackThunder.UniTest.Model
 {
     public SingleStatedKickboard Kickboard
     {
@@ -49,29 +51,29 @@ public class Model : UniTest.Model
         set => Subject = value;
     }
 
-    public Rider rider;
-    public bool isDisposed;
+    public Rider Rider;
+    public bool IsDisposed;
 
     public Rider TargetedRider;
 }
 ```
 
-여기서 `Kickboard`는 실제 테스트 대상이고, `rider`와 `isDisposed`는 테스트가 기대하는 상태이다. `Asserter`는 이 두 세계가 같은지 확인한다.
+여기서 `Kickboard`는 실제 테스트 대상이고, `Rider`와 `IsDisposed`는 테스트가 기대하는 상태이다. `Asserter`는 이 두 세계가 같은지 확인한다.
 
 ### 1-4. 실제 예시 코드 위치
 
-이 문서의 예시는 `samples/UniTest.Samples` 아래의 실제 테스트 코드를 기준으로 한다.
+이 문서의 예시는 `samples` 아래의 실제 테스트 코드를 기준으로 한다.
 
 | 예시             | 파일                                                                                                                                                                                                                                                                                                                 | 문서에서 보는 내용                             |
 | -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------- |
-| 실행 진입점         | [Program.cs](../../samples/UniTest.Samples/Program.cs)                                                                                                                                                                                                                                              | `Run`, `RunContinuously`, replay 실행 방식 |
-| 단일 상태 모델       | [SingleStateTest/Model.cs](../../samples/UniTest.Samples/SingleStateTest/Model.cs)                                                                                                                                                                                                                  | `Subject`, 예상 상태, 보조 데이터 구성             |
-| 단일 상태 프로젝트     | [SingleStateTest/Project.cs](../../samples/UniTest.Samples/SingleStateTest/Project.cs)                                                                                                                                                                                                              | `CreateLabs`, 상태별 Lab 생성               |
-| 다중 상태 모델       | [MultiStateTest/Model.cs](../../samples/UniTest.Samples/MultiStateTest/Model.cs)                                                                                                                                                                                                                    | 배터리, 충전, 탑승 상태의 예상값 구성                 |
-| 다중 상태 진입점      | [MultiStateTest/Project.cs](../../samples/UniTest.Samples/MultiStateTest/Project.cs)                                                                                                                                                                                                                | `MainTestCase`와 계층형 생성기 진입점            |
-| 다중 상태 생성기      | [Project-Charge.cs](../../samples/UniTest.Samples/MultiStateTest/Project-Charge.cs), [Project-Battery.cs](../../samples/UniTest.Samples/MultiStateTest/Project-Battery.cs), [Project-Kickboard.cs](../../samples/UniTest.Samples/MultiStateTest/Project-Kickboard.cs) | 상태 계층별 Lab 조합                          |
-| 실제 동작 template | [GetTemplates.cs](../../samples/UniTest.Samples/MultiStateTest/GetTemplates.cs)                                                                                                                                                                                                                     | `MainTestCase`별 실제 Act 정의              |
-| 테스트 대상 객체      | [SingleStatedKickboard.cs](../../samples/UniTest.Samples/Kickboard/SingleStatedKickboard.cs), [MultiStatedKickboard.cs](../../samples/UniTest.Samples/Kickboard/MultiStatedKickboard.cs)                                                                                             | 테스트 대상의 실제 상태 전환                       |
+| 실행 진입점         | [Program.cs](../../samples/Program.cs)                                                                                                                                                                                                                                              | `Execute`, `ExecuteContinuously`, replay 실행과 JSON 저장 |
+| 단일 상태 모델       | [Scenarios/SingleState/Model.cs](../../samples/Scenarios/SingleState/Model.cs)                                                                                                                                                                                                                  | `Subject`, 예상 상태, 보조 데이터 구성             |
+| 단일 상태 프로젝트     | [Scenarios/SingleState/Project.cs](../../samples/Scenarios/SingleState/Project.cs)                                                                                                                                                                                                              | `CreateLabs`, 상태별 Lab 생성               |
+| 다중 상태 모델       | [Scenarios/MultiState/Model.cs](../../samples/Scenarios/MultiState/Model.cs)                                                                                                                                                                                                                    | 배터리, 충전, 탑승 상태의 예상값 구성                 |
+| 다중 상태 진입점      | [Scenarios/MultiState/Project.cs](../../samples/Scenarios/MultiState/Project.cs)                                                                                                                                                                                                                | `MainTestCase`와 계층형 생성기 진입점            |
+| 다중 상태 생성기      | [ProjectCharge.cs](../../samples/Scenarios/MultiState/ProjectCharge.cs), [ProjectBattery.cs](../../samples/Scenarios/MultiState/ProjectBattery.cs), [ProjectKickboard.cs](../../samples/Scenarios/MultiState/ProjectKickboard.cs) | 상태 계층별 Lab 조합                          |
+| 실제 동작 template | [GetTemplates.cs](../../samples/Scenarios/MultiState/GetTemplates.cs)                                                                                                                                                                                                                     | `MainTestCase`별 실제 Act 정의              |
+| 테스트 대상 객체      | [SingleStatedKickboard.cs](../../samples/Subjects/SingleStatedKickboard.cs), [MultiStatedKickboard.cs](../../samples/Subjects/MultiStatedKickboard.cs)                                                                                             | 테스트 대상의 실제 상태 전환                       |
 
 ### 1-5. 실행 모드를 선택한다
 
@@ -86,9 +88,7 @@ public class Model : UniTest.Model
 
 ```csharp
 public Project()
-    : base(UniTest.ExecutionMode.Inline)
-{
-}
+    : base(BlackThunder.UniTest.ExecutionMode.Inline) { }
 ```
 
 두 모드 모두 기존 비동기 `Execute` API와 취소·실패 처리를 유지한다. `Inline`은 동기 실행이나 같은 OS 스레드에서의 실행을 보장하지 않는다. 정의되지 않은 enum 값은 생성 시 `ArgumentOutOfRangeException`으로 거부하며, `UNITEST_SINGLETHREAD` 빌드 심볼은 더 이상 사용하지 않는다.
@@ -109,9 +109,9 @@ public Project()
 6. JSON 리포트나 실패한 실행 이력을 읽는다.
 
 ```csharp
-using UniTest;
+using BlackThunder.UniTest;
 
-public class Project : UniTest.Project<Model>
+public class Project : BlackThunder.UniTest.Project<Model>
 {
     public override IEnumerable<ILab<Model>> CreateLabs(Model model)
     {
@@ -122,8 +122,8 @@ public class Project : UniTest.Project<Model>
                 Actor = m =>
                 {
                     m.Kickboard = new SingleStatedKickboard();
-                    m.rider = null;
-                    m.isDisposed = false;
+                    m.Rider = null;
+                    m.IsDisposed = false;
                 },
                 Asserter = Check
             }.Build();
@@ -131,13 +131,13 @@ public class Project : UniTest.Project<Model>
             yield break;
         }
 
-        // 현재 상태에 따라 실행 가능한 Lab을 이어서 반환한다.
+        // Continue returning Labs executable according to the current state.
     }
 
     private void Check(Model model)
     {
-        Assert.AreEqual(model.isDisposed, model.Kickboard.IsDisposed);
-        Assert.AreSame(model.rider, model.Kickboard.Rider);
+        Assert.AreEqual(model.IsDisposed, model.Kickboard.IsDisposed);
+        Assert.AreSame(model.Rider, model.Kickboard.Rider);
     }
 }
 ```
@@ -147,7 +147,7 @@ public class Project : UniTest.Project<Model>
 ```csharp
 await new SingleState.Project()
     .Run(
-        Configuration.ProjectPath,
+        Path.Combine(AppContext.BaseDirectory, "SampleOutput"),
         "SingleState",
         depth: 5,
         printResult: true);
@@ -157,7 +157,7 @@ await new SingleState.Project()
 
 ## 3. 클래스와 메서드 선택 기준
 
-Uni Test 코드는 처음 보면 타입이 많아 보이지만, 사용자가 직접 잡아야 하는 축은 많지 않다.
+UniTest 코드는 처음 보면 타입이 많아 보이지만, 사용자가 직접 잡아야 하는 축은 많지 않다.
 
 | 대상 | 쓰는 상황 | 역할 |
 | --- | --- | --- |
@@ -181,11 +181,11 @@ Uni Test 코드는 처음 보면 타입이 많아 보이지만, 사용자가 직
 
 ## 4. 튜토리얼 1. 단일 상태 객체 테스트하기
 
-첫 번째 단계는 `SingleStateTest`처럼 하나의 상태 축을 가진 객체를 테스트하는 것이다. 여기서는 킥보드가 `Idle`, `Mounted`, `Disposed` 중 어떤 상태인지 판단하고, 그 상태에서 가능한 동작만 `Lab`으로 만든다.
+첫 번째 단계는 `SingleState`처럼 하나의 상태 축을 가진 객체를 테스트하는 것이다. 여기서는 킥보드가 `Idle`, `Mounted`, `Disposed` 중 어떤 상태인지 판단하고, 그 상태에서 가능한 동작만 `Lab`으로 만든다.
 
-실제 코드는 [SingleStateTest/Model.cs](../../samples/UniTest.Samples/SingleStateTest/Model.cs)와 [SingleStateTest/Project.cs](../../samples/UniTest.Samples/SingleStateTest/Project.cs)에 있다. 테스트 대상의 원래 동작은 [SingleStatedKickboard.cs](../../samples/UniTest.Samples/Kickboard/SingleStatedKickboard.cs)를 기준으로 확인할 수 있다.
+실제 코드는 [Scenarios/SingleState/Model.cs](../../samples/Scenarios/SingleState/Model.cs)와 [Scenarios/SingleState/Project.cs](../../samples/Scenarios/SingleState/Project.cs)에 있다. 테스트 대상의 원래 동작은 [SingleStatedKickboard.cs](../../samples/Subjects/SingleStatedKickboard.cs)를 기준으로 확인할 수 있다.
 
-아래 표는 `SingleStateTest.Project`가 실제로 코드로 옮기는 상태-동작 표이다. 표기 규칙은 [00-Unit-Test-Guideline](00-Unit-Test-Guideline.md)의 상태-동작 표와 같다.
+아래 표는 `SingleState.Project`가 실제로 코드로 옮기는 상태-동작 표이다. 표기 규칙은 [00-Unit-Test-Guideline](00-Unit-Test-Guideline.md)의 상태-동작 표와 같다.
 
 | State    | -   | Mount              | <                  | <    | <                  | <            | Ride               | Dismount | Dispose                    |
 | -------- | --- | ------------------ | ------------------ | ---- | ------------------ | ------------ | ------------------ | -------- | -------------------------- |
@@ -236,8 +236,8 @@ if (model.Kickboard == null)
         {
             m.Kickboard = new();
 
-            m.rider = null;
-            m.isDisposed = false;
+            m.Rider = null;
+            m.IsDisposed = false;
             m.TargetedRider = new(true, "Targeted Rider");
         },
         Asserter = Check
@@ -257,8 +257,8 @@ if (model.Kickboard == null)
 case KickboardState.Idle:
     labs.Add(new("Mount_Licensed")
     {
-        Arranger = m => m.rider = new Rider(true),
-        Actor = m => m.Kickboard.Mount(m.rider),
+        Arranger = m => m.Rider = new Rider(true),
+        Actor = m => m.Kickboard.Mount(m.Rider),
         Asserter = Check
     });
 
@@ -284,13 +284,13 @@ CompositeLab도 하위에서 상위 순서로 Assert를 수행한 뒤, 어느 �
 ```csharp
 labs.Add(new("Dismount")
 {
-    Arranger = model => model.rider = null,
+    Arranger = model => model.Rider = null,
     Actor = model => model.Kickboard.Dismount(),
     Asserter = Check
 });
 ```
 
-이 패턴은 Uni Test에서 가장 자주 쓰는 형태이다.
+이 패턴은 UniTest에서 가장 자주 쓰는 형태이다.
 
 1. 예상 상태를 먼저 갱신한다.
 2. 실제 객체에 동작을 실행한다.
@@ -305,8 +305,8 @@ labs.Add(new("Dispose")
 {
     Arranger = model =>
     {
-        model.isDisposed = true;
-        model.rider = null;
+        model.IsDisposed = true;
+        model.Rider = null;
     },
     Actor = model => model.Kickboard.Dispose(),
     Asserter = Check,
@@ -318,21 +318,21 @@ labs.Add(new("Dispose")
 
 ## 5. 튜토리얼 2. 다중 상태 테스트 조합하기
 
-두 번째 단계는 `MultiStateTest`처럼 여러 독립 상태를 가진 객체를 테스트하는 것이다. 예를 들어 킥보드에는 탑승 상태뿐 아니라 배터리 상태와 충전 상태도 있다. 이때 모든 조합을 한 함수에서 직접 쓰면 코드가 급격히 복잡해진다.
+두 번째 단계는 `MultiState`처럼 여러 독립 상태를 가진 객체를 테스트하는 것이다. 예를 들어 킥보드에는 탑승 상태뿐 아니라 배터리 상태와 충전 상태도 있다. 이때 모든 조합을 한 함수에서 직접 쓰면 코드가 급격히 복잡해진다.
 
-Uni Test에서는 이 문제를 테스트 생성기를 계층적으로 나누어 해결한다.
+UniTest에서는 이 문제를 테스트 생성기를 계층적으로 나누어 해결한다.
 
 실제 코드는 아래 파일들로 나뉘어 있다.
 
 | 역할 | 파일 |
 | --- | --- |
-| 모델과 예상 상태 | [MultiStateTest/Model.cs](../../samples/UniTest.Samples/MultiStateTest/Model.cs) |
-| 전체 테스트 진입점 | [MultiStateTest/Project.cs](../../samples/UniTest.Samples/MultiStateTest/Project.cs) |
-| 충전 상태 생성기 | [Project-Charge.cs](../../samples/UniTest.Samples/MultiStateTest/Project-Charge.cs) |
-| 배터리 상태 생성기 | [Project-Battery.cs](../../samples/UniTest.Samples/MultiStateTest/Project-Battery.cs) |
-| 기본 킥보드 상태 생성기 | [Project-Kickboard.cs](../../samples/UniTest.Samples/MultiStateTest/Project-Kickboard.cs) |
-| 실제 동작 template | [GetTemplates.cs](../../samples/UniTest.Samples/MultiStateTest/GetTemplates.cs) |
-| 테스트 대상 객체 | [MultiStatedKickboard.cs](../../samples/UniTest.Samples/Kickboard/MultiStatedKickboard.cs) |
+| 모델과 예상 상태 | [Scenarios/MultiState/Model.cs](../../samples/Scenarios/MultiState/Model.cs) |
+| 전체 테스트 진입점 | [Scenarios/MultiState/Project.cs](../../samples/Scenarios/MultiState/Project.cs) |
+| 충전 상태 생성기 | [ProjectCharge.cs](../../samples/Scenarios/MultiState/ProjectCharge.cs) |
+| 배터리 상태 생성기 | [ProjectBattery.cs](../../samples/Scenarios/MultiState/ProjectBattery.cs) |
+| 기본 킥보드 상태 생성기 | [ProjectKickboard.cs](../../samples/Scenarios/MultiState/ProjectKickboard.cs) |
+| 실제 동작 template | [GetTemplates.cs](../../samples/Scenarios/MultiState/GetTemplates.cs) |
+| 테스트 대상 객체 | [MultiStatedKickboard.cs](../../samples/Subjects/MultiStatedKickboard.cs) |
 
 다중 상태 예제의 기반 표는 `00-Unit-Test-Guideline`의 상태-동작 표 형식을 그대로 따른다. 다만 Usage 문서에서는 표를 한곳에 몰아두지 않고, 각 표가 다루는 층위와 그 표를 코드로 옮긴 테스트 생성기를 나란히 둔다.
 
@@ -349,21 +349,21 @@ Uni Test에서는 이 문제를 테스트 생성기를 계층적으로 나누어
 | `[base]` | 더 기본이 되는 다음 생성기로 넘긴다는 뜻이다. 코드에서는 보통 `Extend(CreateLabs_...)`로 연결된다. |
 | `[Ride]`, `<Dispose>` 같은 실제 동작 | `GetTemplates`가 만드는 실제 `Actor` Lab과 연결된다. |
 
-`GetTemplates`는 상태를 판단하는 함수가 아니라, 실제 동작을 실행하는 template을 만드는 함수이다. `CreateLabs_Kickboard`, `CreateLabs_Battery`, `CreateLabs_Charge`는 "지금 어떤 상태인가"와 "이 칸에서 어떤 결과를 기대하는가"를 정하고, `GetTemplates`는 마지막에 실제 `Actor`를 붙인다.
+`GetTemplates`는 상태를 판단하는 함수가 아니라, 실제 동작을 실행하는 template을 만드는 함수이다. `CreateKickboardLabs`, `CreateBatteryLabs`, `CreateChargeLabs`는 "지금 어떤 상태인가"와 "이 칸에서 어떤 결과를 기대하는가"를 정하고, `GetTemplates`는 마지막에 실제 `Actor`를 붙인다.
 
 예를 들어 `Mount` / `Licensed` 경로는 아래처럼 이어진다.
 
 1. `Operations` 표의 `Mount` 열은 `MainTestCase.Mount`가 된다.
 2. `Kickboard` 표에서 `Mount` 아래의 `Licensed` 열은 `"Licensed"`가 된다.
-3. `CreateLabs_Kickboard`의 `Licensed()`는 현재 상태 행을 보고 예상 결과를 만든다.
+3. `CreateKickboardLabs`의 `Licensed()`는 현재 상태 행을 보고 예상 결과를 만든다.
 4. `GetTemplates(tc)`는 같은 `TestCase`를 받아 `Mount_Licensed` template을 만든다.
 5. `Merge(GetTemplates(tc))`가 예상 상태 Lab과 실제 호출 Lab을 하나로 합친다.
 
 즉 표를 읽을 때 `Licensed` 같은 이름은 실제 함수 이름이라기보다, `GetTemplates`의 실제 동작 template까지 이어지는 경로 이름으로 보면 된다.
 
-### 5-1. Kickboard 표와 CreateLabs_Kickboard
+### 5-1. Kickboard 표와 CreateKickboardLabs
 
-`Kickboard` 표는 가장 상위에 있는 기본 탑승 상태를 다룬다. 이 표의 코드 층위는 [Project-Kickboard.cs](../../samples/UniTest.Samples/MultiStateTest/Project-Kickboard.cs)의 `CreateLabs_Kickboard`이다.
+`Kickboard` 표는 가장 상위에 있는 기본 탑승 상태를 다룬다. 이 표의 코드 층위는 [ProjectKickboard.cs](../../samples/Scenarios/MultiState/ProjectKickboard.cs)의 `CreateKickboardLabs`이다.
 
 | Kickboard | -   | Mount              | <    | <                  | <            | Ride               | Dismount | Dispose                    |
 | --------- | --- | ------------------ | ---- | ------------------ | ------------ | ------------------ | -------- | -------------------------- |
@@ -376,12 +376,12 @@ Uni Test에서는 이 문제를 테스트 생성기를 계층적으로 나누어
 `Licensed`는 별도의 사용자 동작이 아니라, `Mount` 열 아래에 있는 하위 조건이다. 따라서 아래 코드에서 `MainTestCase.Mount`는 표의 `Mount` 열을 고르고, `"Licensed"`는 그 아래의 `Licensed` 하위 열을 고른다.
 
 ```csharp
-if (testCase.Confineable(0, out var _tc, MainTestCase.Mount)) // 표의 Mount 열
+if (testCase.Confineable(0, out var _tc, MainTestCase.Mount)) // Mount column in the table
 {
-    if (_tc.Confineable(1, out tc, "Licensed")) // Mount 아래 Licensed 열
-        Licensed(); // Licensed 열의 Idle / Mounted / Disposed 칸을 만든다.
+    if (_tc.Confineable(1, out tc, "Licensed")) // Licensed column under Mount
+        Licensed(); // Creates the Idle / Mounted / Disposed cells of the Licensed column.
 
-    if (_tc.Confineable(1, out tc, "Same") && model.rider != null)
+    if (_tc.Confineable(1, out tc, "Same") && model.Rider != null)
         Same();
 
     if (_tc.Confineable(1, out tc, "NotLicensed"))
@@ -401,8 +401,8 @@ void Licensed()
     {
         labs.AddRange(new Lab<Model>
         {
-            ID = "idle",
-            Arranger = (m, md) => m.rider = (Rider)md.Metadata,
+            Id = "idle",
+            Arranger = (m, md) => m.Rider = (Rider)md.Metadata,
             Asserter = Check
         }.Merge(GetTemplates(tc))); // GetTemplates(tc) -> Mount_Licensed
     }
@@ -426,9 +426,9 @@ void Licensed()
 
 즉 `Licensed()`는 실제 탑승을 실행하는 함수가 아니다. 표의 `Licensed` 열에서 현재 상태별로 어떤 `Lab`을 만들지 정하고, 실제 호출은 `GetTemplates(tc)`가 만든 `Mount_Licensed`가 담당한다.
 
-### 5-2. Battery 표와 CreateLabs_Battery
+### 5-2. Battery 표와 CreateBatteryLabs
 
-`Battery` 표는 기본 킥보드 동작 위에 배터리 조건을 추가한다. 이 표의 코드 층위는 [Project-Battery.cs](../../samples/UniTest.Samples/MultiStateTest/Project-Battery.cs)의 `CreateLabs_Battery`이다.
+`Battery` 표는 기본 킥보드 동작 위에 배터리 조건을 추가한다. 이 표의 코드 층위는 [ProjectBattery.cs](../../samples/Scenarios/MultiState/ProjectBattery.cs)의 `CreateBatteryLabs`이다.
 
 | Battery    | -   | Check         | <              | Mount (override) | Ride (override)            |
 | ---------- | --- | ------------- | -------------- | ---------------- | -------------------------- |
@@ -437,29 +437,29 @@ void Licensed()
 | Available  | -   | -             | **Discharged** | `[base]`         | `[base]` → `[Use Battery]` |
 | Discharged | -   | **Available** | -              | -                | -                          |
 
-여기서 `[base]`는 기본 킥보드 상태 층위인 `CreateLabs_Kickboard`로 넘긴다는 뜻이다. 반대로 `Discharged`에서 `Mount`나 `Ride`가 `-`인 경우에는 기본 킥보드 상태까지 내려가지 않고, 실제 동작 template만 실행해 상태가 유지되는지 확인한다.
+여기서 `[base]`는 기본 킥보드 상태 층위인 `CreateKickboardLabs`로 넘긴다는 뜻이다. 반대로 `Discharged`에서 `Mount`나 `Ride`가 `-`인 경우에는 기본 킥보드 상태까지 내려가지 않고, 실제 동작 template만 실행해 상태가 유지되는지 확인한다.
 
 ```csharp
-if (testCase.Confineable(0, out var _tc, MainTestCase.Mount)) // Battery 표의 Mount (override) 열
+if (testCase.Confineable(0, out var _tc, MainTestCase.Mount)) // Mount (override) column in the Battery table
 {
-    if (!model.Kickboard.Available) // Discharged 행
+    if (!model.Kickboard.Available) // Discharged row
     {
         labs.AddRange(new Lab<Model>("discharged", asserter: Check)
-            .Merge(GetTemplates(_tc))); // 표의 '-' 칸: base로 내려가지 않고 Mount template만 실행한다.
+            .Merge(GetTemplates(_tc))); // '-' cell in the table: execute only the Mount template without going down to base.
     }
-    else // Available 행
+    else // Available row
     {
         labs.AddRange(new Lab<Model>("available", asserter: Check)
-            .Extend(CreateLabs_Kickboard(model, _tc))); // 표의 [base] 칸
+            .Extend(CreateKickboardLabs(model, _tc))); // [base] cell in the table
     }
 }
 ```
 
 `Battery` 층위는 자신이 판단할 수 있는 조건만 처리한다. 배터리가 충분한 경우에는 기본 킥보드의 `Mount`, `Ride`, `Dismount`, `Dispose` 판단이 필요하므로 다음 생성기로 넘긴다.
 
-### 5-3. Charge State 표와 CreateLabs_Charge
+### 5-3. Charge State 표와 CreateChargeLabs
 
-`Charge State` 표는 배터리 조건 위에 충전 상태를 추가한다. 이 표의 코드 층위는 [Project-Charge.cs](../../samples/UniTest.Samples/MultiStateTest/Project-Charge.cs)의 `CreateLabs_Charge`이다.
+`Charge State` 표는 배터리 조건 위에 충전 상태를 추가한다. 이 표의 코드 층위는 [ProjectCharge.cs](../../samples/Scenarios/MultiState/ProjectCharge.cs)의 `CreateChargeLabs`이다.
 
 | Charge State | -   | Charge                      | Do Charge     | Stop Charging    | Mount (override)                          | Ride (override)    | Dispose (override)           |
 | ------------ | --- | --------------------------- | ------------- | ---------------- | ----------------------------------------- | ------------------ | ---------------------------- |
@@ -468,34 +468,34 @@ if (testCase.Confineable(0, out var _tc, MainTestCase.Mount)) // Battery 표의 
 | Charging     | -   | -                           | `[Do Charge]` | **Not Charging** | `<Stop Charging>` → `[base if available]` | _InvalidOperation_ | `<Stop Charging>` → `[base]` |
 | Disposed     | -   | _ObjectDisposed_            | X             | -                | `[base]`                                  | _ObjectDisposed_   | -                            |
 
-여기서 `[base]`는 다음 상태 층위인 `CreateLabs_Battery`로 넘긴다는 뜻이다. 예를 들어 `Ride (override)` 열에서 `Charging` 행은 `_InvalidOperation_`이므로 이 층위에서 바로 예외 Lab을 만들고, `Not Charging` 행은 `[base]`이므로 배터리 층위로 내려보낸다.
+여기서 `[base]`는 다음 상태 층위인 `CreateBatteryLabs`로 넘긴다는 뜻이다. 예를 들어 `Ride (override)` 열에서 `Charging` 행은 `_InvalidOperation_`이므로 이 층위에서 바로 예외 Lab을 만들고, `Not Charging` 행은 `[base]`이므로 배터리 층위로 내려보낸다.
 
 ```csharp
-if (testCase.Confineable(0, out tc, MainTestCase.Ride)) // Charge State 표의 Ride (override) 열
+if (testCase.Confineable(0, out tc, MainTestCase.Ride)) // Ride (override) column in the Charge State table
     Ride();
 
 void Ride()
 {
-    if (model.charging) // Charging 행: _InvalidOperation_
+    if (model.Charging) // Charging row: _InvalidOperation_
     {
         labs.AddRange(new Lab<Model>("charging",
             expectedExceptionType: typeof(InvalidOperationException),
             toUncontinuable: true)
             .Merge(GetTemplates(tc)));
     }
-    else // Not Charging 행: [base]
+    else // Not Charging row: [base]
     {
         labs.AddRange(new Lab<Model>("notCharging")
-            .Extend(CreateLabs_Battery(model, tc)));
+            .Extend(CreateBatteryLabs(model, tc)));
     }
 }
 ```
 
-`Confineable`은 해당 조건으로 테스트를 만들 수 있는지 확인한다. 이 층위에서 직접 다루지 않는 흐름은 `ConfineableExcept`로 모아서 다음 단계인 `CreateLabs_Battery`로 내려보낸다.
+`Confineable`은 해당 조건으로 테스트를 만들 수 있는지 확인한다. 이 층위에서 직접 다루지 않는 흐름은 `ConfineableExcept`로 모아서 다음 단계인 `CreateBatteryLabs`로 내려보낸다.
 
 ### 5-4. Operations 표와 전체 진입점
 
-`Operations` 표는 지금까지 만든 상태 층위들이 사용자 동작에 어떻게 연결되는지 보여준다. 이 표의 코드 층위는 [MultiStateTest/Project.cs](../../samples/UniTest.Samples/MultiStateTest/Project.cs)의 `MainTestCase`와 `CreateLabs`이다.
+`Operations` 표는 지금까지 만든 상태 층위들이 사용자 동작에 어떻게 연결되는지 보여준다. 이 표의 코드 층위는 [Scenarios/MultiState/Project.cs](../../samples/Scenarios/MultiState/Project.cs)의 `MainTestCase`와 `CreateLabs`이다.
 
 | Operations   | -   | Mount | Ride | Dismount | Charge | Do Charge | Stop Charging | Dispose |
 | ------------ | --- | ----- | ---- | -------- | ------ | --------- | ------------- | ------- |
@@ -520,14 +520,14 @@ public enum MainTestCase
 }
 ```
 
-이 값은 `TestCase`에 담겨 하위 생성기와 상위 생성기 사이를 이동한다. 설계 설명은 `Kickboard`에서 `Charge State` 방향으로 내려가지만, 실제 실행 진입점은 가장 바깥에서 동작을 제어하는 `CreateLabs_Charge`로 먼저 들어간다.
+이 값은 `TestCase`에 담겨 하위 생성기와 상위 생성기 사이를 이동한다. 설계 설명은 `Kickboard`에서 `Charge State` 방향으로 내려가지만, 실제 실행 진입점은 가장 바깥에서 동작을 제어하는 `CreateChargeLabs`로 먼저 들어간다.
 
 ```csharp
 public override IEnumerable<ILab<Model>> CreateLabs(Model model)
 {
     if (model.Subject == null)
     {
-        foreach (var lab in CreateLabs_Charge(model, new(MainTestCase.Create)))
+        foreach (var lab in CreateChargeLabs(model, new(MainTestCase.Create)))
             yield return lab;
 
         yield break;
@@ -538,7 +538,7 @@ public override IEnumerable<ILab<Model>> CreateLabs(Model model)
         if (testCase == MainTestCase.Create)
             continue;
 
-        foreach (var lab in CreateLabs_Charge(model, new(testCase)))
+        foreach (var lab in CreateChargeLabs(model, new(testCase)))
             yield return lab;
     }
 }
@@ -548,15 +548,15 @@ public override IEnumerable<ILab<Model>> CreateLabs(Model model)
 
 ### 5-5. 실제 동작은 template으로 분리한다
 
-다중 상태에서는 상태 조건과 실제 동작을 분리하는 편이 좋다. [GetTemplates.cs](../../samples/UniTest.Samples/MultiStateTest/GetTemplates.cs)는 실제 `Actor`를 가진 기본 Lab을 만든다. 앞에서 본 `Mount` / `Licensed` 경로가 끝까지 내려오면, 여기에서 `Mount_Licensed` template으로 바뀐다.
+다중 상태에서는 상태 조건과 실제 동작을 분리하는 편이 좋다. [GetTemplates.cs](../../samples/Scenarios/MultiState/GetTemplates.cs)는 실제 `Actor`를 가진 기본 Lab을 만든다. 앞에서 본 `Mount` / `Licensed` 경로가 끝까지 내려오면, 여기에서 `Mount_Licensed` template으로 바뀐다.
 
 ```csharp
 if (testCase.Confineable(0, MainTestCase.Mount))
 {
-    if (testCase.Confineable(1, "Licensed")) // Kickboard 표의 Mount / Licensed 열
+    if (testCase.Confineable(1, "Licensed")) // Mount / Licensed column in the Kickboard table
         yield return new()
         {
-            ID = "Mount_Licensed",
+            Id = "Mount_Licensed",
             SetMetadata = _ => new Rider(true),
             Actor = (m, md) => m.Kickboard.Mount((Rider)md.Metadata)
         };
@@ -574,13 +574,13 @@ labs.AddRange(new Lab<Model>("charging", arranger: Check)
     .Merge(GetTemplates(tc)));
 ```
 
-이 경우 `charging` 상태에서 template의 `Actor`를 실행하고, 현재 Lab의 검증도 같은 Lab 안에서 함께 수행한다.
+이 경우 `Charging` 상태에서 template의 `Actor`를 실행하고, 현재 Lab의 검증도 같은 Lab 안에서 함께 수행한다.
 
 반대로 `Extend`는 이미 만들어진 다른 Lab 위에 현재 상태 계층을 덧붙일 때 사용한다.
 
 ```csharp
 labs.AddRange(new Lab<Model>("available", asserter: Check)
-    .Extend(CreateLabs_Kickboard(model, tc)));
+    .Extend(CreateKickboardLabs(model, tc)));
 ```
 
 `Extend` 결과는 `CompositeLab`이다. 실행 순서는 아래처럼 이해하면 된다.
@@ -595,6 +595,16 @@ labs.AddRange(new Lab<Model>("available", asserter: Check)
 
 ## 6. 실행과 결과 읽기
 
+아래 코드는 샘플 시나리오를 포함하는 프로젝트에서 다음 using 선언을 전제로 한다. 샘플 CLI는 Execute와 ExportJson을 조합해 창을 열지 않고 리포트를 저장한다. 아래 Run과 RunContinuously는 별도의 라이브러리 편의 API를 보여 준다.
+
+```csharp
+using System;
+using System.IO;
+using BlackThunder.UniTest;
+using SingleState = BlackThunder.UniTest.Samples.Scenarios.SingleState;
+using MultiState = BlackThunder.UniTest.Samples.Scenarios.MultiState;
+```
+
 ### 6-1. 전체 경로 실행
 
 가장 일반적인 실행은 `Run(...)`이다. 지정한 깊이까지 가능한 모든 경로를 전개하고, `printResult`가 켜져 있으면 JSON 리포트를 저장하고 연다.
@@ -602,7 +612,7 @@ labs.AddRange(new Lab<Model>("available", asserter: Check)
 ```csharp
 await new SingleState.Project()
     .Run(
-        Configuration.ProjectPath,
+        Path.Combine(AppContext.BaseDirectory, "SampleOutput"),
         "SingleState",
         depth: 5,
         processLimit: -1,
@@ -623,7 +633,7 @@ const string History = "Ignite/Mount_Null/Mount_Targeted";
 
 await new SingleState.Project()
     .Run(
-        Configuration.ProjectPath,
+        Path.Combine(AppContext.BaseDirectory, "SampleOutput"),
         "SingleStateReplay",
         History,
         printResult: true);
@@ -631,7 +641,7 @@ await new SingleState.Project()
 
 이 방식은 전체 조합을 다시 돌리지 않고, 문제가 발생한 경로만 빠르게 재현할 때 사용한다.
 
-`Execute(ids)`를 직접 호출할 때 현재 상태에서 찾을 수 없는 Lab ID가 있으면 `ArgumentException`이 호출자에게 전달된다. Lab 조회·경로 구성 중 발생하는 일반 예외도 호출자에게 전달된다. `Run(..., executionIDs)`는 이 예외를 로그에 남기고 `false`를 반환한다. Lab 자체의 실행 실패는 기존처럼 결과 Node에 기록된다.
+`Execute(ids)`를 직접 호출할 때 현재 상태에서 찾을 수 없는 Lab ID가 있으면 `ArgumentException`이 호출자에게 전달된다. Lab 조회·경로 구성 중 발생하는 일반 예외도 호출자에게 전달된다. `Run(..., executionIds)`는 이 예외를 로그에 남기고 `false`를 반환한다. Lab 자체의 실행 실패는 기존처럼 결과 Node에 기록된다.
 
 `Execute(depth)`와 `ExecuteContinuously(...)`도 같은 규칙을 따른다. `CreateLabs`와 Lab 실행에서 발생한 실패는 Node에 기록되어 결과 트리로 반환되고, 그 밖의 취소가 아닌 예외는 일부만 채워진 트리를 반환하는 대신 호출자에게 전달된다. `Run` 계열은 이 예외를 로그에 남기고 `false`를 반환한다.
 
@@ -642,7 +652,7 @@ await new SingleState.Project()
 ```csharp
 await new MultiState.Project()
     .RunContinuously(
-        Configuration.ProjectPath,
+        Path.Combine(AppContext.BaseDirectory, "SampleOutput"),
         "MultiState",
         depth: 50,
         processLimit: -1,
@@ -686,7 +696,7 @@ Lab ID에는 공백, 한글, `%`, 따옴표 등 기호를 사용할 수 있다. 
 
 이 변경은 `0.3.0`의 호환성을 깨는 변경이다. 로컬 패키지 `0.2.0`은 XML API를 사용했다. `node.Report`는 `node.GetReport()`로, `GetFailedReports().OuterXml`은 `GetFailedReports().ToJson()`으로, `ExportXml(...)`은 `ExportJson(...)`으로 바꾼다. 파일 확장자도 `.xml`에서 `.json`으로 바꾼다. XML 호환 API나 이전 파일 변환 기능은 제공하지 않는다.
 
-정리하면 Uni Test 사용 흐름은 아래와 같다.
+정리하면 UniTest 사용 흐름은 아래와 같다.
 
 1. 상태-동작 표를 먼저 만든다.
 2. `Model`에 실제 객체와 예상 상태를 함께 둔다.
@@ -695,4 +705,4 @@ Lab ID에는 공백, 한글, `%`, 따옴표 등 기호를 사용할 수 있다. 
 5. 다중 상태는 `TestCase`, `Merge`, `Extend`로 생성기를 나눈다.
 6. `Run`, `RunContinuously`, `Execute(ids)` 중 목적에 맞는 실행 방식을 선택한다.
 
-앞의 문서가 Uni Test의 구조와 구현 방식을 설명한다면, 이 문서는 그 구조를 실제 테스트 코드로 옮기는 첫 번째 사용 흐름을 담당한다.
+앞의 문서가 UniTest의 구조와 구현 방식을 설명한다면, 이 문서는 그 구조를 실제 테스트 코드로 옮기는 첫 번째 사용 흐름을 담당한다.

@@ -1,42 +1,24 @@
 # UniTest
 
-[Korean README](README.ko.md)
+[한국어](README.ko.md)
 
-UniTest is a .NET testing framework that automatically generates and verifies executable test paths from model and state-action combinations.
+UniTest is a .NET testing framework that generates and verifies execution paths from model states and available actions.
 
-Where normal unit tests focus on manually listing individual test cases, UniTest generates available `Lab`s from the current `Model` and expands subsequent states from the execution history.
-
-## Agent-Assisted CLI Automation
-
-UniTest provides test authoring and external execution automation workflows so agent-assisted test writing and repeated CLI verification can continue on the same model structure.
-
-AI agents first check the `docs/Workflow.en` entry in [Documentation](#documentation) for the actual working procedure when they are responsible for UniTest-based test authoring or repeated CLI verification.
+Define the actions and expected results for each state instead of listing every path manually. UniTest explores subsequent states using the execution history.
 
 ## Features
 
-- State-based test generation: creates test flows for the current state in `Project<TModel>.CreateLabs(...)`.
-- AAA execution units: composes Arrange, Act, and Assert flows with `Lab<TModel>` and `CompactLab<TModel>`.
-- Path expansion: `Node<TModel>` preserves the execution history and independently creates the next test state.
-- Multi-state composition: combines multiple state axes hierarchically with `TestCase`, `Merge(...)`, and `Extend(...)`.
-- Replay and continuous execution: selects full paths, long single paths, or failed path replay with `Run(...)`, `RunContinuously(...)`, and `Execute(ids)`.
-- JSON reports: saves and reviews execution results and failed paths as JSON.
+- State-based path generation: create the Labs available in the current Model and explore subsequent states.
+- AAA verification: separate preparation, actual behavior, and verification with Arrange, Act, and Assert.
+- Independent state composition: combine tests across state axes with TestCase, Merge, and Extend.
+- Failure reproduction: replay saved Lab ID paths or investigate failures using detached debug nodes.
+- Continuous execution and JSON reports: inspect long execution paths and save independent diagnostic snapshots after execution.
 
-### Report API
+## Requirements and Installation
 
-Since `0.3.0`, reports are exported as indented UTF-8 JSON; `0.2.0` used XML. This is a breaking API change from `0.2.0`.
+The library targets `netstandard2.1` and has no external runtime package dependencies. Building, testing, and running samples in this repository requires the .NET 10 SDK. All projects use C# 9.
 
-```csharp
-var root = await project.Execute(3);
-TestReport report = root.GetReport();
-Tools.ExportJson(report, "result", "reports");
-string failedJson = root.GetFailedReports().ToJson();
-```
-
-Replace `node.Report` with `node.GetReport()`, `ExportXml` with `ExportJson`, and `.OuterXml` with `.ToJson()`. Reports contain a flat `nodes` array linked by `nodeId` and `parentId`, with Lab IDs stored as values. Spaces, Unicode, and punctuation are allowed; `/` remains reserved for replay paths. See [JSON report usage and migration](docs/Wiki.en/04-Usage.md#6-5-read-the-json-report).
-
-## Installation
-
-Consuming projects use the validated `BlackThunder.UniTest` stable package. Keep `BlackThunder.UniTest.0.3.0.nupkg` in the consumer repository's `packages/` folder and register the local feed in a root `NuGet.config`. Packages are distributed through repository-local files rather than published to a public NuGet feed.
+Keep the validated `BlackThunder.UniTest.0.4.0.nupkg` in the consuming repository's `packages` directory. Add the following root `NuGet.config`, then add the package. Packages are distributed through repository-local files and are not published to a public NuGet feed.
 
 ```xml
 <?xml version="1.0" encoding="utf-8"?>
@@ -49,166 +31,104 @@ Consuming projects use the validated `BlackThunder.UniTest` stable package. Keep
 </configuration>
 ```
 
-Pin the exact version in the test project.
-
-```xml
-<ItemGroup>
-  <PackageReference Include="BlackThunder.UniTest" Version="[0.3.0]" />
-</ItemGroup>
-```
-
-The package targets `netstandard2.1`; its assembly name and namespace remain `UniTest`. Record the source commit, SHA-256, and verification results alongside the package in the consumer repository, and never overwrite a package at the same version.
-
-Tests and samples used to develop UniTest itself keep a `ProjectReference` to this repository's source. The sample is a .NET 9 console application.
-
 ```powershell
-dotnet run --project samples/UniTest.Samples/UniTest.Samples.csproj
+dotnet add package BlackThunder.UniTest --version "[0.4.0]"
 ```
 
-After running it, enter one of `single`, `single-replay`, `multi`, `single-continuous`, `multi-continuous`, `help`, or `exit` at the `sample>` prompt. Reports are saved under `UniTest/Samples/NativeCSharp` in the sample app output folder.
+The package ID, namespace, and DLL name are `BlackThunder.UniTest`, `BlackThunder.UniTest`, and `BlackThunder.UniTest.dll`, respectively. Existing consumers should follow the [0.4.0 migration guide](docs/Wiki.en/05-Migration.md). Hosts that load DLLs directly use the DLL under `lib/netstandard2.1`.
 
 ## Quick Start
 
-The example below carries the counter's current value and expected value together, then automatically expands the available `Increment` and `Decrement` paths to depth 3.
+Run the following code in a console project that references the package. It creates a real Counter and a Model with its expected value, then verifies the Increment path to depth 3.
 
 ```csharp
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Threading.Tasks;
-using UniTest;
+using BlackThunder.UniTest;
 
-public sealed class Counter
+namespace Example.CounterTests
 {
-    public int Value { get; private set; }
-
-    public void Increment()
+    public class Counter
     {
-        Value++;
+        public int Value { get; private set; }
+        public void Increment() => Value++;
     }
 
-    public void Decrement()
+    public class CounterModel : Model
     {
-        Value--;
-    }
-}
+        public Counter Counter => (Counter)Subject;
+        public int ExpectedValue;
 
-public sealed class CounterModel : Model
-{
-    public Counter Counter
-    {
-        get => (Counter)Subject;
-        set => Subject = value;
+        public CounterModel() => Subject = new Counter();
     }
 
-    public int ExpectedValue;
-}
-
-public sealed class CounterProject : Project<CounterModel>
-{
-    public override IEnumerable<ILab<CounterModel>> CreateLabs(CounterModel model)
+    public class CounterProject : CompactProject<CounterModel>
     {
-        if (model.Counter == null)
+        public override IEnumerable<CompactLab<CounterModel>> CreateCompactLabs(CounterModel model)
         {
-            yield return new CompactLab<CounterModel>("Ignite")
-            {
-                Actor = m =>
+            yield return new CompactLab<CounterModel>("Increment",
+                arranger: current => current.ExpectedValue++,
+                actor: current => current.Counter.Increment(),
+                asserter: current =>
                 {
-                    m.Counter = new Counter();
-                    m.ExpectedValue = 0;
-                },
-                Asserter = Check
-            }.Build();
-
-            yield break;
+                    if (current.Counter.Value != current.ExpectedValue)
+                        throw new InvalidOperationException("Counter state mismatched.");
+                });
         }
-
-        yield return new CompactLab<CounterModel>("Increment")
-        {
-            Arranger = m => m.ExpectedValue++,
-            Actor = m => m.Counter.Increment(),
-            Asserter = Check
-        }.Build();
-
-        yield return new CompactLab<CounterModel>("Decrement")
-        {
-            Arranger = m => m.ExpectedValue--,
-            Actor = m => m.Counter.Decrement(),
-            Asserter = Check
-        }.Build();
     }
 
-    private static void Check(CounterModel model)
+    public static class Program
     {
-        if (model.Counter.Value != model.ExpectedValue)
-            throw new InvalidOperationException("Counter state mismatched.");
-    }
-}
-
-public static class CounterRunner
-{
-    public static Task<bool> RunAsync()
-    {
-        return new CounterProject()
-            .Run(
-                Path.Combine(AppContext.BaseDirectory, "UniTestReports"),
-                "Counter",
-                depth: 3,
-                printResult: true);
+        public static async Task Main()
+        {
+            var root = await new CounterProject().Execute(3);
+            Console.WriteLine(root.GetReport().ToJson());
+        }
     }
 }
 ```
 
-This example shows the following flow.
+For runnable examples with multiple actions and combined states, see the [sample guide](samples/README.md).
 
-- `Model` carries both the real target, `Counter`, and the expected state, `ExpectedValue`.
-- `CreateLabs(...)` creates `Ignite` from the starting state, then creates `Increment` and `Decrement` from later states.
-- `Run(...)` executes the available paths and outputs a JSON report.
+```powershell
+dotnet run --project samples/BlackThunder.UniTest.Samples.csproj
+dotnet run --project samples/BlackThunder.UniTest.Samples.csproj -- single
+```
+
+Without arguments, the app opens the `sample>` prompt. With a command argument, it runs once and exits. Reports are saved in `SampleOutput` beside the sample executable.
 
 ## Main APIs
 
-- `Model`: stores the test target `Subject`, execution history, sustainability status, and state string to write into reports.
-- `Project<TModel>`: generates the available `Lab` list from the current `Model` and executes the test graph.
-- `ExecutionMode`: selects the default `ThreadPool` mode or `Inline`, which avoids an additional `Task.Run`, when constructing a project. See the [usage documentation](docs/Wiki.en/04-Usage.md#1-5-select-an-execution-mode) for execution details.
-- `Lab<TModel>`: an AAA test unit that includes metadata, expected exceptions, and sustainability settings.
-- `CompactLab<TModel>`: a helper for quickly writing a simple AAA flow with delegates.
-- `ILab<TModel>`: the execution-unit interface shared by `Lab` and `CompositeLab`.
-- `TestCase`: passes which action and child condition should be generated in multi-state tests.
-- `Merge(...)`: combines a state-condition Lab and an actual-action template into one Lab.
-- `Extend(...)`: adds another state layer's Arrange/Assert around an existing Lab.
-- `Run(...)`: executes a full path or a specified execution history and outputs a JSON report.
-- `RunContinuously(...)`: deterministically selects one available path and runs a long continuous execution.
-- `Execute(ids)`: re-executes only the execution history separated by `/`.
+- `Model`: holds the actual subject, expected state, and execution history.
+- `Project<TModel>` and `CompactProject<TModel>`: generate state-specific Labs and execute paths.
+- `Lab<TModel>`, `CompactLab<TModel>`, and `CompositeLab<TModel>`: define and compose preparation, actions, and assertions.
+- `TestCase`, `Merge`, and `Extend`: combine conditions and actions across state axes.
+- `Execute` and `ExecuteContinuously`: execute full paths, ID paths, or continuous paths.
+- `GetReport`, `GetFailedReports`, and `ExportJson`: inspect execution results and save JSON.
 
 ## Documentation
 
-Detailed documentation is available in `docs/Wiki.en`.
-
-- [00-Unit-Test-Guideline.md](docs/Wiki.en/00-Unit-Test-Guideline.md): state-action table writing guidelines
-- [01-Overview.md](docs/Wiki.en/01-Overview.md): feature purpose and overall flow
-- [02-Implementations.md](docs/Wiki.en/02-Implementations.md): implementation structure and execution units
-- [03-Uni-Test-Extensions.md](docs/Wiki.en/03-Uni-Test-Extensions.md): extension APIs and composition patterns
-- [04-Usage.md](docs/Wiki.en/04-Usage.md): usage examples and call guidelines
-
-AI agents follow the workflow documents in `docs/Workflow.en` when they write UniTest-based tests or organize domain-owned POCO test execution paths.
-
-- [01-Test-Authoring-Workflow.md](docs/Workflow.en/01-Test-Authoring-Workflow.md): test authoring, planning, and result recording flow
-- [02-External-NUnit-Executor-Workflow.md](docs/Workflow.en/02-External-NUnit-Executor-Workflow.md): domain-owned NUnit test project setup flow
-
-Korean documentation is available in `docs/Wiki.ko`.
+- [Testing methodology](docs/Wiki.en/00-Unit-Test-Guideline.md): state-action tables and test scope
+- [Overview](docs/Wiki.en/01-Overview.md): purpose, core structure, and representative flow
+- [Implementation](docs/Wiki.en/02-Implementations.md): component responsibilities, execution, and shutdown
+- [Extensions](docs/Wiki.en/03-Uni-Test-Extensions.md): failure stopping, replay, and continuous execution
+- [Usage](docs/Wiki.en/04-Usage.md): API selection and single-state/multi-state tutorials
+- [Test authoring workflow](docs/Workflow.en/01-Test-Authoring-Workflow.md): agent-assisted authoring and result recording
+- [External NUnit execution](docs/Workflow.en/02-External-NUnit-Executor-Workflow.md): CLI verification in consuming projects
+- [Contributing](CONTRIBUTING.md): shared conventions, development environment, and package verification
 
 ## Tests
 
-Test code is in the `tests` folder and uses NUnit.
-
 ```powershell
-dotnet restore UniTest.sln
-dotnet build UniTest.sln --configuration Release --no-restore -m:1
-dotnet test UniTest.sln --configuration Release --no-build --no-restore -m:1 --logger trx --results-directory TestResults
+dotnet restore BlackThunder.UniTest.sln
+dotnet build BlackThunder.UniTest.sln --configuration Release --no-restore -m:1
+dotnet test BlackThunder.UniTest.sln --configuration Release --no-build --no-restore -m:1
+pwsh -File .github/scripts/verify-samples.ps1
 ```
 
-[CI](.github/workflows/ci.yml) runs these commands on Windows and Ubuntu with .NET SDK 9.0.x for pushes, pull requests, and manual runs. Each platform uploads its TRX test results for seven days. CI builds the sample but does not launch its interactive UI or publish packages.
+[CI](.github/workflows/ci.yml) runs the same build, full tests, and sample CLI checks on Windows and Ubuntu. TRX results are retained for seven days; packages are not published.
 
 ## License
 
-UniTest is distributed under the MIT license. See [LICENSE.md](LICENSE.md) for details.
+Distributed under the MIT license. See [LICENSE.md](LICENSE.md).

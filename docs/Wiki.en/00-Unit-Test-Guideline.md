@@ -1,4 +1,4 @@
-# Overview
+# UniTest Testing Methodology
 
 An effective unit testing methodology for ensuring system reliability
 
@@ -27,11 +27,11 @@ Unit tests detect errors at the module level in advance, improve system stabilit
 
 However, tests that are not systematic may fail to ensure system reliability, and overly meticulous unit tests can require excessive time and cost, reducing development efficiency.
 
-Uni Test is designed to solve these problems by clarifying the test scope and procedure through state-operation tables and by enabling systematic, efficient unit testing. This document introduces the unit testing concepts and methodology that form the basis of that design.
+UniTest is designed to solve these problems by clarifying the test scope and procedure through state-operation tables and by enabling systematic, efficient unit testing. This document introduces the unit testing concepts and methodology that form the basis of that design.
 
 | Category | Content |
 | --- | --- |
-| Overview | Introduces the unit testing concept assumed by Uni Test |
+| Overview | Introduces the unit testing concept assumed by UniTest |
 | Purpose | Secures system reliability through systematic and efficient tests |
 | Implementation | Test design based on state - operation tables |
 
@@ -347,7 +347,6 @@ The cases for verifying the Dismount function are as follows.
 
 Verify special cases that were not tested.
 For example, to verify the case where the same person boards again, perform Mount -> Dismount -> Mount and test whether the function works as intended.
-
 
 Meanwhile, if the state-operation tables for a system with multiple independent states are combined into one table, tests can be designed relatively simply in the same way as a system with a single state.
 

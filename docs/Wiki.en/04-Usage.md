@@ -1,4 +1,6 @@
-# Table of Contents
+# UniTest Usage
+
+## Contents
 
 1. What to Check Before Starting
 2. Shortest Start Flow
@@ -7,7 +9,7 @@
 5. Tutorial 2. Combining Multi-State Tests
 6. Running and Reading Results
 
-This document does not re-explain the implementation structure of Uni Test. Instead, it covers the usage flow for moving state-operation tables and Uni Test components into actual test code.
+This document does not re-explain the implementation structure of UniTest. Instead, it covers the usage flow for moving state-operation tables and UniTest components into actual test code.
 
 Therefore, the explanation order follows the table and model that a test author must prepare first, the shortest execution flow, and then single-state and multi-state examples, rather than the detailed implementation of internal classes.
 
@@ -15,17 +17,17 @@ Therefore, the explanation order follows the table and model that a test author 
 
 ### 1-1. Reference a Stable Package
 
-Keep the validated `BlackThunder.UniTest.0.3.0.nupkg` in the consumer repository's `packages/` folder and register the local feed in its root `NuGet.config`. Reference the exact version from the test project as follows. See the [README installation guide](../../README.md#installation) for the configuration example.
+Keep the validated `BlackThunder.UniTest.0.4.0.nupkg` in the consumer repository's `packages/` folder and register the local feed in its root `NuGet.config`. Reference the exact version from the test project as follows. See the [README installation guide](../../README.md) for the configuration example.
 
 ```xml
-<PackageReference Include="BlackThunder.UniTest" Version="[0.3.0]" />
+<PackageReference Include="BlackThunder.UniTest" Version="[0.4.0]" />
 ```
 
-Core types such as `Project<TModel>`, `Model`, and `Lab<TModel>` remain in the `UniTest` namespace and require no compilation symbols. If a type cannot be found, first check the local feed configuration, package restore results, and `netstandard2.1` compatibility. Tests and samples used to develop UniTest itself retain their source project references.
+Core types such as `Project<TModel>`, `Model`, and `Lab<TModel>` use the `BlackThunder.UniTest` namespace and require no compilation symbols. If a type cannot be found, first check the local feed configuration, package restore results, and `netstandard2.1` compatibility. Tests and samples used to develop UniTest itself retain their source project references.
 
 ### 1-2. Create the State-Operation Table First
 
-Uni Test is not a tool that lists tests directly one line at a time. It creates possible `Lab`s from the current state and automatically extends subsequent states according to the execution history. Therefore, the following two items must be organized before code.
+UniTest is not a tool that lists tests directly one line at a time. It creates possible `Lab`s from the current state and automatically extends subsequent states according to the execution history. Therefore, the following two items must be organized before code.
 
 1. States the object can have
 2. Operations that can be executed in each state and their expected results
@@ -38,10 +40,10 @@ An operation is a meaningful action that can be called or observed from outside 
 
 ### 1-3. Keep Actual State and Expected State Together in Model
 
-In Uni Test, `Model` is not only a place to store the test target object. It stores the actual object `Subject`, mock fields that represent expected state, and assets required for test progress together.
+In UniTest, `Model` is not only a place to store the test target object. It stores the actual object `Subject`, mock fields that represent expected state, and assets required for test progress together.
 
 ```csharp
-public class Model : UniTest.Model
+public class Model : BlackThunder.UniTest.Model
 {
     public SingleStatedKickboard Kickboard
     {
@@ -49,29 +51,29 @@ public class Model : UniTest.Model
         set => Subject = value;
     }
 
-    public Rider rider;
-    public bool isDisposed;
+    public Rider Rider;
+    public bool IsDisposed;
 
     public Rider TargetedRider;
 }
 ```
 
-Here, `Kickboard` is the actual test target, and `rider` and `isDisposed` are the expected state of the test. `Asserter` checks whether these two worlds match.
+Here, `Kickboard` is the actual test target, and `Rider` and `IsDisposed` are the expected state of the test. `Asserter` checks whether these two worlds match.
 
 ### 1-4. Actual Example Code Locations
 
-The examples in this document are based on the actual test code under `samples/UniTest.Samples`.
+The examples in this document are based on the actual test code under `samples`.
 
 | Example | File | What This Document Shows |
 | -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------- |
-| Execution entry point | [Program.cs](../../samples/UniTest.Samples/Program.cs) | `Run`, `RunContinuously`, replay execution methods |
-| Single-state model | [SingleStateTest/Model.cs](../../samples/UniTest.Samples/SingleStateTest/Model.cs) | `Subject`, expected state, helper data composition |
-| Single-state project | [SingleStateTest/Project.cs](../../samples/UniTest.Samples/SingleStateTest/Project.cs) | `CreateLabs`, state-specific Lab generation |
-| Multi-state model | [MultiStateTest/Model.cs](../../samples/UniTest.Samples/MultiStateTest/Model.cs) | Expected value composition for battery, charging, and mounted states |
-| Multi-state entry point | [MultiStateTest/Project.cs](../../samples/UniTest.Samples/MultiStateTest/Project.cs) | `MainTestCase` and hierarchical generator entry point |
-| Multi-state generators | [Project-Charge.cs](../../samples/UniTest.Samples/MultiStateTest/Project-Charge.cs), [Project-Battery.cs](../../samples/UniTest.Samples/MultiStateTest/Project-Battery.cs), [Project-Kickboard.cs](../../samples/UniTest.Samples/MultiStateTest/Project-Kickboard.cs) | State-layer-specific Lab composition |
-| Actual operation template | [GetTemplates.cs](../../samples/UniTest.Samples/MultiStateTest/GetTemplates.cs) | Actual Act definition by `MainTestCase` |
-| Test target objects | [SingleStatedKickboard.cs](../../samples/UniTest.Samples/Kickboard/SingleStatedKickboard.cs), [MultiStatedKickboard.cs](../../samples/UniTest.Samples/Kickboard/MultiStatedKickboard.cs) | Actual state transitions of the test target |
+| Execution entry point | [Program.cs](../../samples/Program.cs) | `Execute`, `ExecuteContinuously`, replay execution and JSON export |
+| Single-state model | [Scenarios/SingleState/Model.cs](../../samples/Scenarios/SingleState/Model.cs) | `Subject`, expected state, helper data composition |
+| Single-state project | [Scenarios/SingleState/Project.cs](../../samples/Scenarios/SingleState/Project.cs) | `CreateLabs`, state-specific Lab generation |
+| Multi-state model | [Scenarios/MultiState/Model.cs](../../samples/Scenarios/MultiState/Model.cs) | Expected value composition for battery, charging, and mounted states |
+| Multi-state entry point | [Scenarios/MultiState/Project.cs](../../samples/Scenarios/MultiState/Project.cs) | `MainTestCase` and hierarchical generator entry point |
+| Multi-state generators | [ProjectCharge.cs](../../samples/Scenarios/MultiState/ProjectCharge.cs), [ProjectBattery.cs](../../samples/Scenarios/MultiState/ProjectBattery.cs), [ProjectKickboard.cs](../../samples/Scenarios/MultiState/ProjectKickboard.cs) | State-layer-specific Lab composition |
+| Actual operation template | [GetTemplates.cs](../../samples/Scenarios/MultiState/GetTemplates.cs) | Actual Act definition by `MainTestCase` |
+| Test target objects | [SingleStatedKickboard.cs](../../samples/Subjects/SingleStatedKickboard.cs), [MultiStatedKickboard.cs](../../samples/Subjects/MultiStatedKickboard.cs) | Actual state transitions of the test target |
 
 ### 1-5. Select an Execution Mode
 
@@ -86,9 +88,7 @@ Select the mode in the derived project's constructor.
 
 ```csharp
 public Project()
-    : base(UniTest.ExecutionMode.Inline)
-{
-}
+    : base(BlackThunder.UniTest.ExecutionMode.Inline) { }
 ```
 
 Both modes preserve the existing asynchronous `Execute` API and cancellation and failure handling. `Inline` does not guarantee synchronous execution or execution on the same OS thread. Undefined enum values are rejected at construction with `ArgumentOutOfRangeException`, and the `UNITEST_SINGLETHREAD` build symbol is no longer used.
@@ -109,9 +109,9 @@ The simplest usage flow is the following six steps.
 6. Read the JSON report or failed execution history.
 
 ```csharp
-using UniTest;
+using BlackThunder.UniTest;
 
-public class Project : UniTest.Project<Model>
+public class Project : BlackThunder.UniTest.Project<Model>
 {
     public override IEnumerable<ILab<Model>> CreateLabs(Model model)
     {
@@ -122,8 +122,8 @@ public class Project : UniTest.Project<Model>
                 Actor = m =>
                 {
                     m.Kickboard = new SingleStatedKickboard();
-                    m.rider = null;
-                    m.isDisposed = false;
+                    m.Rider = null;
+                    m.IsDisposed = false;
                 },
                 Asserter = Check
             }.Build();
@@ -136,8 +136,8 @@ public class Project : UniTest.Project<Model>
 
     private void Check(Model model)
     {
-        Assert.AreEqual(model.isDisposed, model.Kickboard.IsDisposed);
-        Assert.AreSame(model.rider, model.Kickboard.Rider);
+        Assert.AreEqual(model.IsDisposed, model.Kickboard.IsDisposed);
+        Assert.AreSame(model.Rider, model.Kickboard.Rider);
     }
 }
 ```
@@ -147,7 +147,7 @@ Execution can be started from a .NET application as follows.
 ```csharp
 await new SingleState.Project()
     .Run(
-        Configuration.ProjectPath,
+        Path.Combine(AppContext.BaseDirectory, "SampleOutput"),
         "SingleState",
         depth: 5,
         printResult: true);
@@ -157,7 +157,7 @@ With only this flow, tests can start from `Ignite` and automatically expand ever
 
 ## 3. Criteria for Choosing Classes and Methods
 
-At first glance, Uni Test code may look like it has many types, but there are not many axes that the user must directly hold.
+At first glance, UniTest code may look like it has many types, but there are not many axes that the user must directly hold.
 
 | Target | When to Use | Role |
 | --- | --- | --- |
@@ -181,11 +181,11 @@ In practice, it is convenient to think as follows.
 
 ## 4. Tutorial 1. Testing a Single-State Object
 
-The first step is to test an object with one state axis, as in `SingleStateTest`. Here, the test determines whether the kickboard is in `Idle`, `Mounted`, or `Disposed`, and creates only the operations possible in that state as `Lab`s.
+The first step is to test an object with one state axis, as in `SingleState`. Here, the test determines whether the kickboard is in `Idle`, `Mounted`, or `Disposed`, and creates only the operations possible in that state as `Lab`s.
 
-The actual code is in [SingleStateTest/Model.cs](../../samples/UniTest.Samples/SingleStateTest/Model.cs) and [SingleStateTest/Project.cs](../../samples/UniTest.Samples/SingleStateTest/Project.cs). The original behavior of the test target can be checked in [SingleStatedKickboard.cs](../../samples/UniTest.Samples/Kickboard/SingleStatedKickboard.cs).
+The actual code is in [Scenarios/SingleState/Model.cs](../../samples/Scenarios/SingleState/Model.cs) and [Scenarios/SingleState/Project.cs](../../samples/Scenarios/SingleState/Project.cs). The original behavior of the test target can be checked in [SingleStatedKickboard.cs](../../samples/Subjects/SingleStatedKickboard.cs).
 
-The table below is the state-operation table that `SingleStateTest.Project` actually moves into code. The notation rules are the same as the state-operation table in [00-Unit-Test-Guideline](00-Unit-Test-Guideline.md).
+The table below is the state-operation table that `SingleState.Project` actually moves into code. The notation rules are the same as the state-operation table in [00-Unit-Test-Guideline](00-Unit-Test-Guideline.md).
 
 | State    | -   | Mount              | <                  | <    | <                  | <            | Ride               | Dismount | Dispose                    |
 | -------- | --- | ------------------ | ------------------ | ---- | ------------------ | ------------ | ------------------ | -------- | -------------------------- |
@@ -236,8 +236,8 @@ if (model.Kickboard == null)
         {
             m.Kickboard = new();
 
-            m.rider = null;
-            m.isDisposed = false;
+            m.Rider = null;
+            m.IsDisposed = false;
             m.TargetedRider = new(true, "Targeted Rider");
         },
         Asserter = Check
@@ -257,8 +257,8 @@ For example, `Mount` has different expected results depending on the current sta
 case KickboardState.Idle:
     labs.Add(new("Mount_Licensed")
     {
-        Arranger = m => m.rider = new Rider(true),
-        Actor = m => m.Kickboard.Mount(m.rider),
+        Arranger = m => m.Rider = new Rider(true),
+        Actor = m => m.Kickboard.Mount(m.Rider),
         Asserter = Check
     });
 
@@ -284,13 +284,13 @@ For operations that change state, such as `Dismount`, first change the expected 
 ```csharp
 labs.Add(new("Dismount")
 {
-    Arranger = model => model.rider = null,
+    Arranger = model => model.Rider = null,
     Actor = model => model.Kickboard.Dismount(),
     Asserter = Check
 });
 ```
 
-This pattern is the most frequently used form in Uni Test.
+This pattern is the most frequently used form in UniTest.
 
 1. Update the expected state first.
 2. Execute the operation on the actual object.
@@ -305,8 +305,8 @@ labs.Add(new("Dispose")
 {
     Arranger = model =>
     {
-        model.isDisposed = true;
-        model.rider = null;
+        model.IsDisposed = true;
+        model.Rider = null;
     },
     Actor = model => model.Kickboard.Dispose(),
     Asserter = Check,
@@ -318,21 +318,21 @@ This allows follow-up verification to continue only as much as needed after disp
 
 ## 5. Tutorial 2. Combining Multi-State Tests
 
-The second step is to test an object with several independent states, as in `MultiStateTest`. For example, a kickboard has not only a mounted state, but also a battery state and a charging state. Writing every combination directly in one function makes the code rapidly more complex.
+The second step is to test an object with several independent states, as in `MultiState`. For example, a kickboard has not only a mounted state, but also a battery state and a charging state. Writing every combination directly in one function makes the code rapidly more complex.
 
-Uni Test solves this problem by dividing the test generators hierarchically.
+UniTest solves this problem by dividing the test generators hierarchically.
 
 The actual code is divided into the following files.
 
 | Role | File |
 | --- | --- |
-| Model and expected state | [MultiStateTest/Model.cs](../../samples/UniTest.Samples/MultiStateTest/Model.cs) |
-| Overall test entry point | [MultiStateTest/Project.cs](../../samples/UniTest.Samples/MultiStateTest/Project.cs) |
-| Charging state generator | [Project-Charge.cs](../../samples/UniTest.Samples/MultiStateTest/Project-Charge.cs) |
-| Battery state generator | [Project-Battery.cs](../../samples/UniTest.Samples/MultiStateTest/Project-Battery.cs) |
-| Base kickboard state generator | [Project-Kickboard.cs](../../samples/UniTest.Samples/MultiStateTest/Project-Kickboard.cs) |
-| Actual operation template | [GetTemplates.cs](../../samples/UniTest.Samples/MultiStateTest/GetTemplates.cs) |
-| Test target object | [MultiStatedKickboard.cs](../../samples/UniTest.Samples/Kickboard/MultiStatedKickboard.cs) |
+| Model and expected state | [Scenarios/MultiState/Model.cs](../../samples/Scenarios/MultiState/Model.cs) |
+| Overall test entry point | [Scenarios/MultiState/Project.cs](../../samples/Scenarios/MultiState/Project.cs) |
+| Charging state generator | [ProjectCharge.cs](../../samples/Scenarios/MultiState/ProjectCharge.cs) |
+| Battery state generator | [ProjectBattery.cs](../../samples/Scenarios/MultiState/ProjectBattery.cs) |
+| Base kickboard state generator | [ProjectKickboard.cs](../../samples/Scenarios/MultiState/ProjectKickboard.cs) |
+| Actual operation template | [GetTemplates.cs](../../samples/Scenarios/MultiState/GetTemplates.cs) |
+| Test target object | [MultiStatedKickboard.cs](../../samples/Subjects/MultiStatedKickboard.cs) |
 
 The base tables for the multi-state example follow the state-operation table format in `00-Unit-Test-Guideline` as-is. However, the Usage document does not gather the tables in one place. Instead, it places each table next to the test generator that moves that table into code.
 
@@ -349,21 +349,21 @@ When reading a table as code, first map it as follows.
 | `[base]` | Means passing to the next more basic generator. In code, this is usually connected with `Extend(CreateLabs_...)`. |
 | Actual operations such as `[Ride]` and `<Dispose>` | Connected to the actual `Actor` Lab created by `GetTemplates`. |
 
-`GetTemplates` is not a function that determines state. It is a function that creates templates that execute actual operations. `CreateLabs_Kickboard`, `CreateLabs_Battery`, and `CreateLabs_Charge` decide "what state is this now" and "what result is expected in this cell," and `GetTemplates` attaches the actual `Actor` at the end.
+`GetTemplates` is not a function that determines state. It is a function that creates templates that execute actual operations. `CreateKickboardLabs`, `CreateBatteryLabs`, and `CreateChargeLabs` decide "what state is this now" and "what result is expected in this cell," and `GetTemplates` attaches the actual `Actor` at the end.
 
 For example, the `Mount` / `Licensed` path continues as follows.
 
 1. The `Mount` column in the `Operations` table becomes `MainTestCase.Mount`.
 2. The `Licensed` column under `Mount` in the `Kickboard` table becomes `"Licensed"`.
-3. `Licensed()` in `CreateLabs_Kickboard` looks at the current state row and creates the expected result.
+3. `Licensed()` in `CreateKickboardLabs` looks at the current state row and creates the expected result.
 4. `GetTemplates(tc)` receives the same `TestCase` and creates the `Mount_Licensed` template.
 5. `Merge(GetTemplates(tc))` combines the expected-state Lab and the actual-call Lab into one.
 
 In other words, when reading the table, a name such as `Licensed` should be understood as a path name that leads to the actual operation template in `GetTemplates`, rather than as an actual function name.
 
-### 5-1. Kickboard Table and CreateLabs_Kickboard
+### 5-1. Kickboard Table and CreateKickboardLabs
 
-The `Kickboard` table handles the base mounted state at the top. The code layer for this table is `CreateLabs_Kickboard` in [Project-Kickboard.cs](../../samples/UniTest.Samples/MultiStateTest/Project-Kickboard.cs).
+The `Kickboard` table handles the base mounted state at the top. The code layer for this table is `CreateKickboardLabs` in [ProjectKickboard.cs](../../samples/Scenarios/MultiState/ProjectKickboard.cs).
 
 | Kickboard | -   | Mount              | <    | <                  | <            | Ride               | Dismount | Dispose                    |
 | --------- | --- | ------------------ | ---- | ------------------ | ------------ | ------------------ | -------- | -------------------------- |
@@ -381,7 +381,7 @@ if (testCase.Confineable(0, out var _tc, MainTestCase.Mount)) // Mount column in
     if (_tc.Confineable(1, out tc, "Licensed")) // Licensed column under Mount
         Licensed(); // Creates the Idle / Mounted / Disposed cells of the Licensed column.
 
-    if (_tc.Confineable(1, out tc, "Same") && model.rider != null)
+    if (_tc.Confineable(1, out tc, "Same") && model.Rider != null)
         Same();
 
     if (_tc.Confineable(1, out tc, "NotLicensed"))
@@ -401,8 +401,8 @@ void Licensed()
     {
         labs.AddRange(new Lab<Model>
         {
-            ID = "idle",
-            Arranger = (m, md) => m.rider = (Rider)md.Metadata,
+            Id = "idle",
+            Arranger = (m, md) => m.Rider = (Rider)md.Metadata,
             Asserter = Check
         }.Merge(GetTemplates(tc))); // GetTemplates(tc) -> Mount_Licensed
     }
@@ -426,9 +426,9 @@ void Licensed()
 
 That is, `Licensed()` is not a function that performs the actual boarding. It decides which `Lab` to create by current state in the `Licensed` column of the table, and the actual call is handled by `Mount_Licensed` created by `GetTemplates(tc)`.
 
-### 5-2. Battery Table and CreateLabs_Battery
+### 5-2. Battery Table and CreateBatteryLabs
 
-The `Battery` table adds battery conditions on top of the base kickboard operations. The code layer for this table is `CreateLabs_Battery` in [Project-Battery.cs](../../samples/UniTest.Samples/MultiStateTest/Project-Battery.cs).
+The `Battery` table adds battery conditions on top of the base kickboard operations. The code layer for this table is `CreateBatteryLabs` in [ProjectBattery.cs](../../samples/Scenarios/MultiState/ProjectBattery.cs).
 
 | Battery    | -   | Check         | <              | Mount (override) | Ride (override)            |
 | ---------- | --- | ------------- | -------------- | ---------------- | -------------------------- |
@@ -437,7 +437,7 @@ The `Battery` table adds battery conditions on top of the base kickboard operati
 | Available  | -   | -             | **Discharged** | `[base]`         | `[base]` -> `[Use Battery]` |
 | Discharged | -   | **Available** | -              | -                | -                          |
 
-Here, `[base]` means passing to `CreateLabs_Kickboard`, the base kickboard state layer. Conversely, when `Mount` or `Ride` is `-` in `Discharged`, it does not go down to the base kickboard state. It executes only the actual operation template and checks whether the state is maintained.
+Here, `[base]` means passing to `CreateKickboardLabs`, the base kickboard state layer. Conversely, when `Mount` or `Ride` is `-` in `Discharged`, it does not go down to the base kickboard state. It executes only the actual operation template and checks whether the state is maintained.
 
 ```csharp
 if (testCase.Confineable(0, out var _tc, MainTestCase.Mount)) // Mount (override) column in the Battery table
@@ -450,16 +450,16 @@ if (testCase.Confineable(0, out var _tc, MainTestCase.Mount)) // Mount (override
     else // Available row
     {
         labs.AddRange(new Lab<Model>("available", asserter: Check)
-            .Extend(CreateLabs_Kickboard(model, _tc))); // [base] cell in the table
+            .Extend(CreateKickboardLabs(model, _tc))); // [base] cell in the table
     }
 }
 ```
 
 The `Battery` layer handles only the conditions it can judge. If the battery is sufficient, `Mount`, `Ride`, `Dismount`, and `Dispose` decisions from the base kickboard are needed, so it passes the test to the next generator.
 
-### 5-3. Charge State Table and CreateLabs_Charge
+### 5-3. Charge State Table and CreateChargeLabs
 
-The `Charge State` table adds charging state on top of battery conditions. The code layer for this table is `CreateLabs_Charge` in [Project-Charge.cs](../../samples/UniTest.Samples/MultiStateTest/Project-Charge.cs).
+The `Charge State` table adds charging state on top of battery conditions. The code layer for this table is `CreateChargeLabs` in [ProjectCharge.cs](../../samples/Scenarios/MultiState/ProjectCharge.cs).
 
 | Charge State | -   | Charge                      | Do Charge     | Stop Charging    | Mount (override)                          | Ride (override)    | Dispose (override)           |
 | ------------ | --- | --------------------------- | ------------- | ---------------- | ----------------------------------------- | ------------------ | ---------------------------- |
@@ -468,7 +468,7 @@ The `Charge State` table adds charging state on top of battery conditions. The c
 | Charging     | -   | -                           | `[Do Charge]` | **Not Charging** | `<Stop Charging>` -> `[base if available]` | _InvalidOperation_ | `<Stop Charging>` -> `[base]` |
 | Disposed     | -   | _ObjectDisposed_            | X             | -                | `[base]`                                  | _ObjectDisposed_   | -                            |
 
-Here, `[base]` means passing to the next state layer, `CreateLabs_Battery`. For example, in the `Ride (override)` column, the `Charging` row is `_InvalidOperation_`, so this layer directly creates an exception Lab. The `Not Charging` row is `[base]`, so it sends the test down to the battery layer.
+Here, `[base]` means passing to the next state layer, `CreateBatteryLabs`. For example, in the `Ride (override)` column, the `Charging` row is `_InvalidOperation_`, so this layer directly creates an exception Lab. The `Not Charging` row is `[base]`, so it sends the test down to the battery layer.
 
 ```csharp
 if (testCase.Confineable(0, out tc, MainTestCase.Ride)) // Ride (override) column in the Charge State table
@@ -476,7 +476,7 @@ if (testCase.Confineable(0, out tc, MainTestCase.Ride)) // Ride (override) colum
 
 void Ride()
 {
-    if (model.charging) // Charging row: _InvalidOperation_
+    if (model.Charging) // Charging row: _InvalidOperation_
     {
         labs.AddRange(new Lab<Model>("charging",
             expectedExceptionType: typeof(InvalidOperationException),
@@ -486,16 +486,16 @@ void Ride()
     else // Not Charging row: [base]
     {
         labs.AddRange(new Lab<Model>("notCharging")
-            .Extend(CreateLabs_Battery(model, tc)));
+            .Extend(CreateBatteryLabs(model, tc)));
     }
 }
 ```
 
-`Confineable` checks whether a test can be created with the corresponding condition. Flows not directly handled by this layer are gathered with `ConfineableExcept` and sent down to the next step, `CreateLabs_Battery`.
+`Confineable` checks whether a test can be created with the corresponding condition. Flows not directly handled by this layer are gathered with `ConfineableExcept` and sent down to the next step, `CreateBatteryLabs`.
 
 ### 5-4. Operations Table and Overall Entry Point
 
-The `Operations` table shows how the state layers created so far connect to user operations. The code layer for this table is `MainTestCase` and `CreateLabs` in [MultiStateTest/Project.cs](../../samples/UniTest.Samples/MultiStateTest/Project.cs).
+The `Operations` table shows how the state layers created so far connect to user operations. The code layer for this table is `MainTestCase` and `CreateLabs` in [Scenarios/MultiState/Project.cs](../../samples/Scenarios/MultiState/Project.cs).
 
 | Operations   | -   | Mount | Ride | Dismount | Charge | Do Charge | Stop Charging | Dispose |
 | ------------ | --- | ----- | ---- | -------- | ------ | --------- | ------------- | ------- |
@@ -520,14 +520,14 @@ public enum MainTestCase
 }
 ```
 
-This value is stored in `TestCase` and moves between lower and upper generators. The design explanation moves from `Kickboard` toward `Charge State`, but the actual execution entry point first enters `CreateLabs_Charge`, which controls operations from the outermost layer.
+This value is stored in `TestCase` and moves between lower and upper generators. The design explanation moves from `Kickboard` toward `Charge State`, but the actual execution entry point first enters `CreateChargeLabs`, which controls operations from the outermost layer.
 
 ```csharp
 public override IEnumerable<ILab<Model>> CreateLabs(Model model)
 {
     if (model.Subject == null)
     {
-        foreach (var lab in CreateLabs_Charge(model, new(MainTestCase.Create)))
+        foreach (var lab in CreateChargeLabs(model, new(MainTestCase.Create)))
             yield return lab;
 
         yield break;
@@ -538,7 +538,7 @@ public override IEnumerable<ILab<Model>> CreateLabs(Model model)
         if (testCase == MainTestCase.Create)
             continue;
 
-        foreach (var lab in CreateLabs_Charge(model, new(testCase)))
+        foreach (var lab in CreateChargeLabs(model, new(testCase)))
             yield return lab;
     }
 }
@@ -548,7 +548,7 @@ The core of this structure is that `CreateLabs` does not need to know the whole 
 
 ### 5-5. Separate Actual Operations into Templates
 
-In multi-state tests, it is better to separate state conditions and actual operations. [GetTemplates.cs](../../samples/UniTest.Samples/MultiStateTest/GetTemplates.cs) creates base Labs with actual `Actor`s. When the `Mount` / `Licensed` path seen earlier reaches the end, it becomes the `Mount_Licensed` template here.
+In multi-state tests, it is better to separate state conditions and actual operations. [GetTemplates.cs](../../samples/Scenarios/MultiState/GetTemplates.cs) creates base Labs with actual `Actor`s. When the `Mount` / `Licensed` path seen earlier reaches the end, it becomes the `Mount_Licensed` template here.
 
 ```csharp
 if (testCase.Confineable(0, MainTestCase.Mount))
@@ -556,7 +556,7 @@ if (testCase.Confineable(0, MainTestCase.Mount))
     if (testCase.Confineable(1, "Licensed")) // Mount / Licensed column in the Kickboard table
         yield return new()
         {
-            ID = "Mount_Licensed",
+            Id = "Mount_Licensed",
             SetMetadata = _ => new Rider(true),
             Actor = (m, md) => m.Kickboard.Mount((Rider)md.Metadata)
         };
@@ -574,13 +574,13 @@ labs.AddRange(new Lab<Model>("charging", arranger: Check)
     .Merge(GetTemplates(tc)));
 ```
 
-In this case, the template's `Actor` is executed in the `charging` state, and the verification of the current Lab is also performed together inside the same Lab.
+In this case, the template's `Actor` is executed in the `Charging` state, and the verification of the current Lab is also performed together inside the same Lab.
 
 Conversely, `Extend` is used when adding the current state layer on top of another Lab that has already been created.
 
 ```csharp
 labs.AddRange(new Lab<Model>("available", asserter: Check)
-    .Extend(CreateLabs_Kickboard(model, tc)));
+    .Extend(CreateKickboardLabs(model, tc)));
 ```
 
 The result of `Extend` is `CompositeLab`. The execution order can be understood as follows.
@@ -595,6 +595,16 @@ In other words, the actual operation is executed in only one place, while surrou
 
 ## 6. Running and Reading Results
 
+The following snippets assume these imports in a project that includes the sample scenarios. The sample CLI combines Execute with ExportJson to save reports without opening windows; Run and RunContinuously below demonstrate the separate library convenience helpers.
+
+```csharp
+using System;
+using System.IO;
+using BlackThunder.UniTest;
+using SingleState = BlackThunder.UniTest.Samples.Scenarios.SingleState;
+using MultiState = BlackThunder.UniTest.Samples.Scenarios.MultiState;
+```
+
 ### 6-1. Run All Paths
 
 The most common execution method is `Run(...)`. It expands every possible path up to the specified depth, and if `printResult` is enabled, it stores and opens the JSON report.
@@ -602,7 +612,7 @@ The most common execution method is `Run(...)`. It expands every possible path u
 ```csharp
 await new SingleState.Project()
     .Run(
-        Configuration.ProjectPath,
+        Path.Combine(AppContext.BaseDirectory, "SampleOutput"),
         "SingleState",
         depth: 5,
         processLimit: -1,
@@ -623,7 +633,7 @@ const string History = "Ignite/Mount_Null/Mount_Targeted";
 
 await new SingleState.Project()
     .Run(
-        Configuration.ProjectPath,
+        Path.Combine(AppContext.BaseDirectory, "SampleOutput"),
         "SingleStateReplay",
         History,
         printResult: true);
@@ -631,7 +641,7 @@ await new SingleState.Project()
 
 This method is used when reproducing only the path where the problem occurred quickly, without re-running the full combination.
 
-When calling `Execute(ids)` directly, a Lab ID unavailable in the current state raises an `ArgumentException` to the caller. Other non-cancellation exceptions during Lab lookup or path construction also propagate to the caller. `Run(..., executionIDs)` logs these exceptions and returns `false`. Failures within a Lab's execution remain recorded in the result Node.
+When calling `Execute(ids)` directly, a Lab ID unavailable in the current state raises an `ArgumentException` to the caller. Other non-cancellation exceptions during Lab lookup or path construction also propagate to the caller. `Run(..., executionIds)` logs these exceptions and returns `false`. Failures within a Lab's execution remain recorded in the result Node.
 
 `Execute(depth)` and `ExecuteContinuously(...)` follow the same rule. Failures from `CreateLabs` and Lab execution are recorded on Nodes and returned in the result tree; any other non-cancellation exception propagates to the caller instead of returning a partial tree. The `Run` helpers log it and return `false`.
 
@@ -642,7 +652,7 @@ If every combination is executed, the number of tests can grow sharply. In this 
 ```csharp
 await new MultiState.Project()
     .RunContinuously(
-        Configuration.ProjectPath,
+        Path.Combine(AppContext.BaseDirectory, "SampleOutput"),
         "MultiState",
         depth: 50,
         processLimit: -1,
@@ -686,7 +696,7 @@ Lab IDs can contain spaces, Korean text, `%`, quotes, and other punctuation. `/`
 
 This is a breaking change in `0.3.0`; the local package `0.2.0` used XML. Migrate `node.Report` to `node.GetReport()`, `GetFailedReports().OuterXml` to `GetFailedReports().ToJson()`, and `ExportXml(...)` to `ExportJson(...)`. Consumers should also change filename expectations from `.xml` to `.json`. There is no XML compatibility API or XML import conversion.
 
-In summary, the Uni Test usage flow is as follows.
+In summary, the UniTest usage flow is as follows.
 
 1. Create the state-operation table first.
 2. Keep the actual object and expected state together in `Model`.
@@ -695,4 +705,4 @@ In summary, the Uni Test usage flow is as follows.
 5. For multiple states, divide generators with `TestCase`, `Merge`, and `Extend`.
 6. Choose the execution method that fits the purpose among `Run`, `RunContinuously`, and `Execute(ids)`.
 
-While the previous documents explain the structure and implementation method of Uni Test, this document is responsible for the first usage flow that moves that structure into actual test code.
+While the previous documents explain the structure and implementation method of UniTest, this document is responsible for the first usage flow that moves that structure into actual test code.

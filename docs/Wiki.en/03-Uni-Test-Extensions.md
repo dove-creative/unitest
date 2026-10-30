@@ -1,34 +1,31 @@
-# Table of Contents
+# UniTest Execution Extensions
 
-1. Failure Stop/Re-Execute
-2. Node Re-Execution and Debugging
-3. Continuous Tests
+This document describes stopping after failure, reproducing a path, and extending a continuous test run. See [Usage](04-Usage.md), section 6, for executable API examples.
 
-## 1. Failure Stop/Re-Execute
+## Stop After Failure
 
-Because Uni Test executes every possible test case, the total execution time can become longer as the system grows. If a failure occurs during testing, the developer may want to immediately fix the code and then re-run only the failed tests to check the result of the fix. To support this, Uni Test provides the following two functions: Failure Stop and Re-Execute. The two functions can be used together, and the failure list obtained from Failure Stop can be passed directly as Re-Execute input for a fast verification cycle.
+`Project.Execute` can stop scheduling new work after a failure. It still waits for workers that already started, observes their faults, and then returns the result tree. Stopping does not forcibly interrupt a synchronous callback.
 
-1. **Failure Stop**: if any test fails, immediately stop executing the remaining tests and return the list of failed tests.
-2. **Re-Execute**: re-run only the specified set of tests.
+Use `GetFailedReports()` after execution finishes to keep failed nodes and their ancestor paths. Cancelled nodes have a distinct status and do not become ordinary assertion failures.
 
-The two functions are implemented as follows.
+## Reproduce a Path
 
-1. **Failure Stop**: when Test Executor detects an exception, Assert failure, or similar problem, it sets the Project flag to `true`. Project checks that flag in each execution loop and immediately stops the full execution when it detects a change.
-2. **Re-Execute**: build a filtering list based on the input sequence of test IDs. After that, create a new Model instance, delegate test generation to TestDesigner, and re-run tests by leaving only the tests that match the filter list in the execution queue.
+Read a node's execution history and pass its slash-separated Lab IDs to `Execute(ids)`. UniTest creates a fresh model and follows the same path. Lab IDs and the slash delimiter remain stable across the 0.4.0 namespace migration.
 
-## 2. Node Re-Execution and Debugging
+An unavailable ID raises `ArgumentException`. A failure inside a Lab remains recorded on its Node. The `Run(..., executionIds)` helper logs execution errors and returns `false` instead of propagating them.
 
-When a test fails, the developer can check the main cause through Uni Test's JSON report. However, in some cases, the report alone may not be enough to inspect detailed execution flow or state information. In that case, the developer can select the desired node from the Node list returned by Uni Test and re-run it in the IDE, using breakpoints, variable watches, stack traces, and similar tools to analyze the problem point closely.
+## Debug a Node
 
-The node re-execution procedure is as follows.
+1. Select the node from a completed result tree.
+2. Call `node.DetachAndRestore()` to create a separate node and reconstruct the preceding history.
+3. Set a breakpoint and call `restored.Execute()` to rerun the selected Lab.
 
-1. Call `node.DetachAndRestore()` to create a separated debug Node that does not change the original Node graph.
-2. Call `restored.Execute()` on the returned Node to re-run the test after reproducing the same execution history.
+The detached node does not change the original result graph. Reproduction still depends on the subject and test inputs being reproducible.
 
-Through this process, the failure situation can be reproduced and the cause can be verified deeply at the code level.
+## Continue Along a Sustainable Path
 
-## 3. Continuous Tests
+Full exploration can grow exponentially with depth: a fixed branching factor `b` and depth `d` can produce on the order of `b^d` paths. This is not a general quadratic bound.
 
-Because Uni Test executes every possible test case, the total execution time increases at an $O(n^2)$ level as the number of test steps grows. This causes execution cost to rise sharply when many test steps exist.
+`ExecuteContinuously` checks the candidates at each step and continues along one sustainable path. It chooses that path deterministically from the execution history and seed. With a fixed candidate count `b`, the number of candidate executions is approximately proportional to `b × d`, although subject construction, replay, and callback costs also affect total runtime.
 
-To compensate for this, Uni Test provides an option that does not execute every possible path, but instead arbitrarily selects and executes one continuable path among successful tests. Using this option can reduce the total time to an $O(n)$ level, making it possible to respond effectively to situations where object stability must be verified through many tests.
+Continuous execution helps inspect long state histories. It does not cover every combination; combine it with bounded exploration and targeted path reproduction.
