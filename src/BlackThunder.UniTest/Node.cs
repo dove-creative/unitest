@@ -7,8 +7,7 @@ namespace BlackThunder.UniTest
 {
     public class Node<TModel> where TModel : Model, new()
     {
-        // Front --------------------
-        // State
+        // Front
         public string Id => Lab?.Id ?? "root";
 
         public enum NodeStatus
@@ -33,7 +32,6 @@ namespace BlackThunder.UniTest
 
         public Exception Exception { get; private set; }
 
-        // Control
         public bool Continuable =>
             Model.Continuable && (Status == NodeStatus.Root || Status == NodeStatus.Success);
 

@@ -6,12 +6,10 @@ namespace BlackThunder.UniTest
 {
     public class Model
     {
-        // Front --------------------
-        // Subject
+        // Front
         public object Subject { get; set; }
         public Dictionary<object, SubjectMetadata> MetadataGroup { get; } = new();
 
-        // Metadata
         public bool Sustainable
         {
             get => _sustainable;

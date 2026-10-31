@@ -4,12 +4,10 @@ namespace BlackThunder.UniTest.Samples.Subjects
 {
     public class MultiStatedKickboard : SingleStatedKickboard
     {
-        // Front --------------------
-        // State
+        // Front
         public int Battery { get; private set; }
         public bool Charging { get; private set; } = false;
 
-        // Control
         public bool Available => Battery > 10;
 
         // Internal
