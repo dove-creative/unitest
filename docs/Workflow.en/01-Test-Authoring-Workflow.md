@@ -26,7 +26,7 @@ Mode is the criterion that determines the scope of failure response. The basic f
 
 ## 2. Prepare the Test Documentation Folder
 
-Create a `UniTests` folder in the corresponding module folder of the wiki. If the module already has a `Tests` folder, continue managing test documents under that folder.
+Create a `UniTest` folder in the corresponding module folder of the wiki. If the module already has a `Tests` folder, create a `UniTest` folder under it to manage test documents.
 
 Test documents are basically split into the following files.
 
@@ -57,7 +57,7 @@ Write the test plan according to the following criteria.
 
 ## 5. Write Test Code
 
-Write or modify test files according to the test plan. Test code is placed under the `UniTests` folder below the corresponding module or unit folder. If the module already has a `Tests` folder, create and use a `UniTests` folder under that folder.
+Write or modify test files according to the test plan. Test code is placed under the `UniTest` folder below the corresponding module or unit folder. If the module already has a `Tests` folder, create and use a `UniTest` folder under that folder.
 
 Do not add domain-specific test projects inside the UniTest repository. The corresponding domain folder owns its own test project.
 
