@@ -37,7 +37,7 @@ dotnet build BlackThunder.UniTest.sln --configuration Release --no-restore -m:1
 - Update affected tests for runtime changes, and update examples and migration guidance for public API changes.
 - Do not add runtime dependencies or vendor restored packages and generated output.
 - Maintain Korean documentation under `docs/Wiki.ko`, with matching English documents under `docs/Wiki.en`.
-- Follow the [test authoring workflow](docs/Wiki.en/05.%20Test%20Authoring%20Workflow.md). Keep test problems and follow-up actions in the shared [issue list](docs/Wiki.en/Tests/Issues.md), with links to each module's detailed results.
+- Follow the [test authoring workflow](docs/Wiki.en/05.%20Test%20Authoring%20Workflow.md). Keep test problems and follow-up actions in each module's `03. Results.md`.
 - Keep README examples small; put component responsibilities in implementation documents and tutorials in usage documents. Follow the shared translation guidance when synchronizing languages.
 
 ## Verification

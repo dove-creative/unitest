@@ -9,7 +9,7 @@
 - 코드 컨벤션의 적용 우선순위는 프로젝트 지침·설정 → 언어별 컨벤션 → 공통 컨벤션이다.
 - 문서 작업 시, 별도 지침이 없다면 `blackthunder-conventions/conventions/01. dove Documentation Convention.md`를 따른다.
 - 작업 유형에 해당하는 구체적인 지침이 `blackthunder-conventions/instructions`에 존재한다면 해당 지침을 따른다.
-- 테스트 작성·보강·실행 작업은 [테스트 작성 워크플로](docs/Wiki.ko/05.%20Test%20Authoring%20Workflow.md)를 따른다. 공통 테스트 문서 폴더에 `Issues.md`를 생성·유지하고, 이 저장소에서는 [테스트 확인 사항](docs/Wiki.ko/Tests/Issues.md)에 문제와 후속 확인 지점을 모아 갱신한다.
+- 테스트 작성·보강·실행 작업은 [테스트 작성 워크플로](docs/Wiki.ko/05.%20Test%20Authoring%20Workflow.md)를 따른다.
 
 ## 언어
 

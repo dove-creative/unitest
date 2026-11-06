@@ -102,6 +102,17 @@ namespace BlackThunder.UniTest.Tests.Unit
             Assert.That(node.Continuable, Is.EqualTo(continuable));
         }
 
+        // NU18: Only Node itself can add children, so the public member stays read-only.
+        [Test]
+        public void Afters_IsReadOnly()
+        {
+            // Act
+            var type = typeof(Node<Model>).GetProperty(nameof(Node<Model>.Afters)).PropertyType;
+
+            // Assert
+            Assert.That(type, Is.EqualTo(typeof(IReadOnlyList<Node<Model>>)));
+        }
+
         // State Transition
         [Test]
         public void Create_NullLab()

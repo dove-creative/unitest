@@ -2,16 +2,16 @@ using System;
 
 namespace BlackThunder.UniTest
 {
-    public class SubjectMetadata
+    public class SubjectMetadata : IReadOnlySubjectMetadata
     {
         // Front
-        public object Metadata = null;
-        public Type ExpectedExceptionType = null;
+        public object Metadata { get; set; }
+        public Type ExpectedExceptionType { get; set; }
 
-        public bool ToUnsustainable = false;
+        public bool ToUnsustainable { get; set; }
         /// <summary>Stops subsequent Labs after the current Lab's assertions complete.</summary>
-        public bool ToUncontinuable = false;
-        public int RemainingExecutionCount = -1;
+        public bool ToUncontinuable { get; set; }
+        public int RemainingExecutionCount { get; set; } = -1;
 
 
         // Content
@@ -40,7 +40,7 @@ namespace BlackThunder.UniTest
             RemainingExecutionCount = RemainingExecutionCount
         };
 
-        public void Merge(SubjectMetadata template)
+        public void Merge(IReadOnlySubjectMetadata template)
         {
             ExpectedExceptionType ??= template.ExpectedExceptionType;
             ToUnsustainable = ToUnsustainable || template.ToUnsustainable;

@@ -150,7 +150,7 @@ namespace BlackThunder.UniTest.Tests.Unit
                 CheckNode(preparedNode, Node<Model>.NodeStatus.Ready, 1, _node, null, null, labs[i++]);
         }
         [TestCase(true), TestCase(false)]
-        public void Execute_Idle_ExecptionThrown_CreateLab(bool withRootNode)
+        public void Execute_Idle_ExceptionThrown_CreateLab(bool withRootNode)
         {
             // Arrange
             SetUp(_ => throw new ProbeException(), withRootNode);
@@ -159,7 +159,7 @@ namespace BlackThunder.UniTest.Tests.Unit
             Assert.ThrowsAsync<ExecutionException>(() => Execute());
         }
         [Test]
-        public void Execute_Idle_ExecptionThrown_Append()
+        public void Execute_Idle_ExceptionThrown_Append()
         {
             // Arrange
             var labs = new[] { new Lab<Model>(), new Lab<Model>() };
@@ -214,7 +214,7 @@ namespace BlackThunder.UniTest.Tests.Unit
                 _lab);
         }
         [TestCase(true), TestCase(false)]
-        public void OnCancel_Idle_ExecptionThrown_CreateLabs(bool withRootNode)
+        public void OnCancel_Idle_ExceptionThrown_CreateLabs(bool withRootNode)
         {
             // Arrange
             SetUp(_ => throw new ProbeException(), withRootNode);
@@ -235,7 +235,7 @@ namespace BlackThunder.UniTest.Tests.Unit
                 _lab);
         }
         [Test]
-        public void OnCancel_Idle_ExecptionThrown_CreateLabs_Append()
+        public void OnCancel_Idle_ExceptionThrown_CreateLabs_Append()
         {
             // Arrange
             var labs = new[] { new Lab<Model>(), new Lab<Model>() };
@@ -295,7 +295,7 @@ namespace BlackThunder.UniTest.Tests.Unit
                 _lab);
         }
         [TestCase(true), TestCase(false)]
-        public async Task Execute_Cancelled_ExecptionThrown_CreateLab(bool withRootNode)
+        public async Task Execute_Cancelled_ExceptionThrown_CreateLab(bool withRootNode)
         {
             // Arrange
             SetUp(_ => throw new ProbeException(), withRootNode);
@@ -316,7 +316,7 @@ namespace BlackThunder.UniTest.Tests.Unit
                 _lab);
         }
         [Test]
-        public async Task Execute_Cancelled_ExecptionThrown_Append()
+        public async Task Execute_Cancelled_ExceptionThrown_Append()
         {
             // Arrange
             var labs = new[] { new Lab<Model>(), new Lab<Model>() };
@@ -485,7 +485,7 @@ namespace BlackThunder.UniTest.Tests.Unit
             Assert.ThrowsAsync<InvalidOperationException>(() => Execute());
         }
         [TestCase(true), TestCase(false)]
-        public async Task Execute_Executed_ExecptionThrown_CreateLab(bool withRootNode)
+        public async Task Execute_Executed_ExceptionThrown_CreateLab(bool withRootNode)
         {
             // Arrange
             SetUp(_ => throw new ProbeException(), withRootNode);
@@ -501,7 +501,7 @@ namespace BlackThunder.UniTest.Tests.Unit
             Assert.ThrowsAsync<InvalidOperationException>(() => Execute());
         }
         [Test]
-        public async Task Execute_Executed_ExecptionThrown_Append()
+        public async Task Execute_Executed_ExceptionThrown_Append()
         {
             // Arrange
             var labs = new[] { new Lab<Model>(), new Lab<Model>() };
@@ -543,7 +543,7 @@ namespace BlackThunder.UniTest.Tests.Unit
             Assert.DoesNotThrow(() => _cts.Cancel());
         }
         [TestCase(true), TestCase(false)]
-        public async Task OnCancel_Executed_ExecptionThrown_CreateLabs(bool withRootNode)
+        public async Task OnCancel_Executed_ExceptionThrown_CreateLabs(bool withRootNode)
         {
             // Arrange
             SetUp(_ => throw new ProbeException(), withRootNode);
@@ -559,7 +559,7 @@ namespace BlackThunder.UniTest.Tests.Unit
             Assert.DoesNotThrow(() => _cts.Cancel());
         }
         [Test]
-        public async Task OnCancel_Executed_ExecptionThrown_Append()
+        public async Task OnCancel_Executed_ExceptionThrown_Append()
         {
             // Arrange
             var labs = new[] { new Lab<Model>(), new Lab<Model>() };

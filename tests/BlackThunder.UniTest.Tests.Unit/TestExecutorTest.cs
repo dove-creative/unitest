@@ -121,7 +121,7 @@ namespace BlackThunder.UniTest.Tests.Unit
             CheckNode(_node, Node<Model>.NodeStatus.Success, 0, null, null, null, _lab);
         }
         [Test]
-        public async Task Execute_Idle_ExecptionThrown()
+        public async Task Execute_Idle_ExceptionThrown()
         {
             // Arrange
             SetUp(new Lab<Model>(actor: (_, _) => throw new ProbeException()));
@@ -171,7 +171,7 @@ namespace BlackThunder.UniTest.Tests.Unit
             CheckNode(_node, Node<Model>.NodeStatus.Ready, 0, null, null, null, _lab);
         }
         [Test]
-        public void OnCancel_Idle_ExecptionThrown()
+        public void OnCancel_Idle_ExceptionThrown()
         {
             // Arrange
             SetUp(new Lab<Model>(actor: (_, _) => throw new ProbeException()));
@@ -226,7 +226,7 @@ namespace BlackThunder.UniTest.Tests.Unit
             CheckNode(_node, Node<Model>.NodeStatus.Cancelled, 0, null, null, typeof(OperationCanceledException), _lab);
         }
         [Test]
-        public async Task Execute_Cancelled_ExecptionThrown()
+        public async Task Execute_Cancelled_ExceptionThrown()
         {
             // Arrange
             SetUp(new Lab<Model>(actor: (_, _) => throw new ProbeException()));
@@ -361,7 +361,7 @@ namespace BlackThunder.UniTest.Tests.Unit
             Assert.ThrowsAsync<InvalidOperationException>(() => Execute());
         }
         [Test]
-        public async Task Execute_Executed_ExecptionThrown()
+        public async Task Execute_Executed_ExceptionThrown()
         {
             // Arrange
             SetUp(new Lab<Model>(actor: (_, _) => throw new ProbeException()));
@@ -409,7 +409,7 @@ namespace BlackThunder.UniTest.Tests.Unit
             Assert.DoesNotThrow(() => _cts.Cancel());
         }
         [Test]
-        public async Task OnCancel_Executed_ExecptionThrown()
+        public async Task OnCancel_Executed_ExceptionThrown()
         {
             // Arrange
             SetUp(new Lab<Model>(actor: (_, _) => throw new ProbeException()));

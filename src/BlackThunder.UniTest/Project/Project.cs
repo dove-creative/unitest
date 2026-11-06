@@ -23,10 +23,11 @@ namespace BlackThunder.UniTest
         public int ProcessCount => (int)Interlocked.Read(ref _processCount);
 
         public bool Executed => Interlocked.Read(ref _executed) != 0;
-        public const string DividingLine = "==============================";
 
 
         // Internal
+        internal const string DividingLine = "==============================";
+
         private long _processCount = 0;
         private long _executed = 0;
         private int _targetDepth = int.MaxValue;

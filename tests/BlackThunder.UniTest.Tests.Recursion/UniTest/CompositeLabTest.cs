@@ -339,52 +339,51 @@ namespace BlackThunder.UniTest.Tests.Recursion.UniTest
 
         private static Lab<ProbeModel> CreateLayer(Settings settings, int layer)
         {
-            var lab = new Lab<ProbeModel>(
+            return new Lab<ProbeModel>(
                 $"Layer{layer}",
                 expectedExceptionType: settings.ExpectedAt.Contains(layer)
                     ? settings.ExpectedType
                     : settings.ExpectedByLayer[layer],
                 toUnsustainable: settings.UnsustainableAt == layer,
                 toUncontinuable: settings.TerminalAt == layer && settings.TerminalPhase == "Template",
-                remainingExecutionCount: settings.Counts[layer]);
-
-            lab.SetMetadata = model =>
+                remainingExecutionCount: settings.Counts[layer])
             {
-                Record(model, $"Metadata{layer}");
-                return layer;
+                SetMetadata = model =>
+                {
+                    Record(model, $"Metadata{layer}");
+                    return layer;
+                },
+                Arranger = (model, metadata) =>
+                {
+                    Record(model, $"Arrange{layer}");
+                    Assert.That(metadata.Metadata, Is.EqualTo(layer));
+
+                    if (settings.TerminalAt == layer && settings.TerminalPhase == "Arrange")
+                        metadata.ToUncontinuable = true;
+                },
+                Actor = (model, _) =>
+                {
+                    Record(model, $"Act{layer}");
+
+                    if (layer > 0 && settings.ExtensionActorsThrow)
+                        throw new InvalidOperationException("An extension actor must not run");
+
+                    if (layer == 0 && settings.ActorFailure != null)
+                        throw settings.ActorFailure;
+                },
+                Asserter = (model, metadata) =>
+                {
+                    Record(model, $"Assert{layer}");
+                    Assert.That(
+                        model.Continuable,
+                        Is.True,
+                        "Apply terminal restrictions after the current assertions.");
+                    Assert.That(metadata.Metadata, Is.EqualTo(layer));
+
+                    if (settings.TerminalAt == layer && settings.TerminalPhase == "Assert")
+                        metadata.ToUncontinuable = true;
+                }
             };
-
-            lab.Arranger = (model, metadata) =>
-            {
-                Record(model, $"Arrange{layer}");
-                Assert.That(metadata.Metadata, Is.EqualTo(layer));
-
-                if (settings.TerminalAt == layer && settings.TerminalPhase == "Arrange")
-                    metadata.ToUncontinuable = true;
-            };
-
-            lab.Actor = (model, _) =>
-            {
-                Record(model, $"Act{layer}");
-
-                if (layer > 0 && settings.ExtensionActorsThrow)
-                    throw new InvalidOperationException("An extension actor must not run");
-
-                if (layer == 0 && settings.ActorFailure != null)
-                    throw settings.ActorFailure;
-            };
-
-            lab.Asserter = (model, metadata) =>
-            {
-                Record(model, $"Assert{layer}");
-                Assert.That(model.Continuable, Is.True, "Apply terminal restrictions after the current assertions.");
-                Assert.That(metadata.Metadata, Is.EqualTo(layer));
-
-                if (settings.TerminalAt == layer && settings.TerminalPhase == "Assert")
-                    metadata.ToUncontinuable = true;
-            };
-
-            return lab;
 
             void Record(ProbeModel model, string hook)
             {

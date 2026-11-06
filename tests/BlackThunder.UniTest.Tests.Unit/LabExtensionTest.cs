@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Linq;
 using BlackThunder.UniTest;
 using NUnit.Framework;
@@ -287,5 +288,76 @@ namespace BlackThunder.UniTest.Tests.Unit
 
             Assert.That(_lab1Assert, Is.EqualTo(3));
         }
+
+
+        // UL17: Merge runs the selected template callbacks first and leaves both source Labs unchanged.
+        [TestCase(true, true, true, true)]
+        [TestCase(false, true, true, true)]
+        [TestCase(true, false, true, true)]
+        [TestCase(true, true, false, true)]
+        [TestCase(true, true, true, false)]
+        public void Merge_CombinesSelectedTemplateCallbacks(
+            bool useSetMetadata,
+            bool useArranger,
+            bool useActor,
+            bool useAsserter)
+        {
+            // Arrange
+            var calls = new List<string>();
+            var lab = CreateRecordingLab("lab", calls);
+            var template = CreateRecordingLab("template", calls);
+
+            // Act
+            var merged = lab.Merge(template, useSetMetadata, useArranger, useActor, useAsserter);
+            merged.Execute(new Model(), out var mergedError);
+            var mergedCalls = calls.ToArray();
+
+            calls.Clear();
+            lab.Execute(new Model(), out var labError);
+            var labCalls = calls.ToArray();
+
+            // Assert
+            Assert.That(mergedError, Is.Null);
+            Assert.That(labError, Is.Null);
+            Assert.That(merged.Id, Is.EqualTo("lab_template"));
+            Assert.That(mergedCalls, Is.EqualTo(ExpectedCalls()));
+            Assert.That(labCalls, Is.EqualTo(new[] { "lab.SetMetadata", "lab.Arranger", "lab.Actor", "lab.Asserter" }));
+
+            IEnumerable<string> ExpectedCalls()
+            {
+                if (useSetMetadata)
+                    yield return "template.SetMetadata";
+
+                yield return "lab.SetMetadata";
+
+                if (useArranger)
+                    yield return "template.Arranger";
+
+                yield return "lab.Arranger";
+
+                if (useActor)
+                    yield return "template.Actor";
+
+                yield return "lab.Actor";
+
+                if (useAsserter)
+                    yield return "template.Asserter";
+
+                yield return "lab.Asserter";
+            }
+        }
+
+        private static Lab<Model> CreateRecordingLab(string id, List<string> calls) => new(
+            id,
+            (_, _) => calls.Add($"{id}.Arranger"),
+            (_, _) => calls.Add($"{id}.Actor"),
+            (_, _) => calls.Add($"{id}.Asserter"))
+        {
+            SetMetadata = _ =>
+            {
+                calls.Add($"{id}.SetMetadata");
+                return null;
+            }
+        };
     }
 }

@@ -21,14 +21,14 @@ namespace BlackThunder.UniTest
     {
         public Type ExpectedExceptionType { get; }
 
-        public MissingExpectedException(Type expectedExecptionType)
-            : this(string.Empty, expectedExecptionType, null) { }
+        public MissingExpectedException(Type expectedExceptionType)
+            : this(string.Empty, expectedExceptionType, null) { }
 
-        public MissingExpectedException(string message, Type expectedExecptionType)
-            : this(message, expectedExecptionType, null) { }
+        public MissingExpectedException(string message, Type expectedExceptionType)
+            : this(message, expectedExceptionType, null) { }
 
-        public MissingExpectedException(string message, Type expectedExecptionType, Exception innerException)
-            : base(message, innerException) => ExpectedExceptionType = expectedExecptionType;
+        public MissingExpectedException(string message, Type expectedExceptionType, Exception innerException)
+            : base(message, innerException) => ExpectedExceptionType = expectedExceptionType;
     }
 
     /// <summary>
@@ -69,14 +69,5 @@ namespace BlackThunder.UniTest
 
         public InvalidTestException(object currentCase, object currentModelState, Exception innerException)
             : base($"Cannot execute test case '{currentCase}' in state '{currentModelState}'.", innerException) { }
-    }
-
-    /// <summary>
-    /// Exception class for exception check
-    /// </summary>
-    public class ProbeException : Exception
-    {
-        public ProbeException(string message) : base(message) { }
-        public ProbeException() : this("Probe Exception") { }
     }
 }

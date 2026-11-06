@@ -25,7 +25,7 @@ namespace BlackThunder.UniTest
         public int Depth { get; private set; }
 
         public Node<TModel> Before { get; }
-        public List<Node<TModel>> Afters { get; } = new();
+        public IReadOnlyList<Node<TModel>> Afters => _afters;
 
         public TModel Model { get; }
         public ILab<TModel> Lab { get; }
@@ -35,6 +35,7 @@ namespace BlackThunder.UniTest
         public bool Continuable => Model.Continuable && (Status == NodeStatus.Root || Status == NodeStatus.Success);
 
         // Internal
+        private readonly List<Node<TModel>> _afters = new();
         private volatile bool _executed = false;
         private string _modelDescription;
         private string _history = string.Empty;
@@ -92,7 +93,7 @@ namespace BlackThunder.UniTest
             Status = NodeStatus.Ready;
 
             Before = before;
-            before.Afters.Add(this);
+            before._afters.Add(this);
         }
         private static void ValidateLabId(ILab<TModel> lab)
         {

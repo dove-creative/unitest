@@ -161,24 +161,20 @@ namespace BlackThunder.UniTest.Tests.Recursion
 
             private static Lab<Model> CreateLab(ExecuteModelCase testCase, out Model targetModel, out object metadata)
             {
-                var lab = testCase.SetMetadataByConstructor
-                    ? new Lab<Model>(
-                        expectedExceptionType: typeof(ProbeException),
-                        toUnsustainable: true,
-                        toUncontinuable: true,
-                        remainingExecutionCount: 10)
-                    : new Lab<Model>();
-
                 targetModel = new Model();
-                metadata = null;
+                metadata = testCase.SetMetadata != Condition.None ? new object() : null;
+
+                var expectedModel = targetModel;
+                var expectedMetadata = metadata;
+
+                Func<Model, object> setMetadata = null;
+                Action<Model, SubjectMetadata> arranger = null;
+                Action<Model, SubjectMetadata> actor = null;
+                Action<Model, SubjectMetadata> asserter = null;
 
                 if (testCase.SetMetadata != Condition.None)
                 {
-                    metadata = new object();
-                    var expectedModel = targetModel;
-                    var expectedMetadata = metadata;
-
-                    lab.SetMetadata = m =>
+                    setMetadata = m =>
                     {
                         Assert.That(m, Is.SameAs(expectedModel));
 
@@ -191,10 +187,7 @@ namespace BlackThunder.UniTest.Tests.Recursion
 
                 if (testCase.Arranger != Condition.None)
                 {
-                    var expectedModel = targetModel;
-                    var expectedMetadata = metadata;
-
-                    lab.Arranger = (m, md) =>
+                    arranger = (m, md) =>
                     {
                         Assert.That(m, Is.SameAs(expectedModel));
                         Assert.That(md.Metadata, Is.SameAs(expectedMetadata));
@@ -206,10 +199,7 @@ namespace BlackThunder.UniTest.Tests.Recursion
 
                 if (testCase.Actor != Condition.None)
                 {
-                    var expectedModel = targetModel;
-                    var expectedMetadata = metadata;
-
-                    lab.Actor = (m, md) =>
+                    actor = (m, md) =>
                     {
                         Assert.That(m, Is.SameAs(expectedModel));
                         Assert.That(md.Metadata, Is.SameAs(expectedMetadata));
@@ -221,10 +211,7 @@ namespace BlackThunder.UniTest.Tests.Recursion
 
                 if (testCase.Asserter != Condition.None)
                 {
-                    var expectedModel = targetModel;
-                    var expectedMetadata = metadata;
-
-                    lab.Asserter = (m, md) =>
+                    asserter = (m, md) =>
                     {
                         Assert.That(m, Is.SameAs(expectedModel));
                         Assert.That(md.Metadata, Is.SameAs(expectedMetadata));
@@ -234,7 +221,22 @@ namespace BlackThunder.UniTest.Tests.Recursion
                     };
                 }
 
-                return lab;
+                return testCase.SetMetadataByConstructor
+                    ? new Lab<Model>(
+                        arranger: arranger,
+                        actor: actor,
+                        asserter: asserter,
+                        expectedExceptionType: typeof(ProbeException),
+                        toUnsustainable: true,
+                        toUncontinuable: true,
+                        remainingExecutionCount: 10)
+                    {
+                        SetMetadata = setMetadata
+                    }
+                    : new Lab<Model>(arranger: arranger, actor: actor, asserter: asserter)
+                    {
+                        SetMetadata = setMetadata
+                    };
             }
 
             private static void ExecuteNullModel()
@@ -449,56 +451,56 @@ namespace BlackThunder.UniTest.Tests.Recursion
             // LB-R01..LB-R04: reuse two Labs while each replay owns its model and metadata.
             private static Lab<SequenceModel> CreateSequenceLab(string id, int delta, bool wrongExpectation)
             {
-                var lab = new Lab<SequenceModel>(id);
+                Lab<SequenceModel> lab = null;
 
-                lab.SetMetadata = model =>
+                lab = new Lab<SequenceModel>(id)
                 {
-                    Assert.That(model.MetadataGroup, Is.Empty);
-                    Assert.That(model.ExecutionCount, Is.EqualTo(model.Operations.Count + 1));
-                    Assert.That(model.Phases, Is.EqualTo(ExpectedPhases(model.Operations)));
-                    model.Phases.Add(id + ":SetMetadata");
-                    model.Payload = new object();
-                    return model.Payload;
-                };
+                    SetMetadata = model =>
+                    {
+                        Assert.That(model.MetadataGroup, Is.Empty);
+                        Assert.That(model.ExecutionCount, Is.EqualTo(model.Operations.Count + 1));
+                        Assert.That(model.Phases, Is.EqualTo(ExpectedPhases(model.Operations)));
+                        model.Phases.Add(id + ":SetMetadata");
+                        model.Payload = new object();
+                        return model.Payload;
+                    },
+                    Arranger = (model, metadata) =>
+                    {
+                        Assert.That(model.Phases.Last(), Is.EqualTo(id + ":SetMetadata"));
+                        Assert.That(metadata, Is.Not.SameAs(model.PreviousMetadata));
+                        Assert.That(metadata, Is.Not.SameAs(lab.MetadataTemplate));
+                        Assert.That(metadata.Metadata, Is.SameAs(model.Payload));
+                        Assert.That(metadata.ExpectedExceptionType, Is.Null);
+                        Assert.That(metadata.ToUnsustainable, Is.False);
+                        Assert.That(metadata.ToUncontinuable, Is.False);
+                        Assert.That(metadata.RemainingExecutionCount, Is.EqualTo(-1));
+                        Assert.That(model.MetadataGroup.Count, Is.EqualTo(1));
+                        Assert.That(model.MetadataGroup[lab], Is.SameAs(metadata));
+                        model.Phases.Add(id + ":Arrange");
 
-                lab.Arranger = (model, metadata) =>
-                {
-                    Assert.That(model.Phases.Last(), Is.EqualTo(id + ":SetMetadata"));
-                    Assert.That(metadata, Is.Not.SameAs(model.PreviousMetadata));
-                    Assert.That(metadata, Is.Not.SameAs(lab.MetadataTemplate));
-                    Assert.That(metadata.Metadata, Is.SameAs(model.Payload));
-                    Assert.That(metadata.ExpectedExceptionType, Is.Null);
-                    Assert.That(metadata.ToUnsustainable, Is.False);
-                    Assert.That(metadata.ToUncontinuable, Is.False);
-                    Assert.That(metadata.RemainingExecutionCount, Is.EqualTo(-1));
-                    Assert.That(model.MetadataGroup.Count, Is.EqualTo(1));
-                    Assert.That(model.MetadataGroup[lab], Is.SameAs(metadata));
-                    model.Phases.Add(id + ":Arrange");
+                        if (model.ExecutionCount % 2 == 1)
+                            metadata.ExpectedExceptionType = typeof(ProbeException);
+                    },
+                    Actor = (model, metadata) =>
+                    {
+                        Assert.That(model.Phases.Last(), Is.EqualTo(id + ":Arrange"));
+                        Assert.That(metadata.Metadata, Is.SameAs(model.Payload));
+                        model.Phases.Add(id + ":Act");
+                        model.Value += delta;
 
-                    if (model.ExecutionCount % 2 == 1)
-                        metadata.ExpectedExceptionType = typeof(ProbeException);
-                };
-
-                lab.Actor = (model, metadata) =>
-                {
-                    Assert.That(model.Phases.Last(), Is.EqualTo(id + ":Arrange"));
-                    Assert.That(metadata.Metadata, Is.SameAs(model.Payload));
-                    model.Phases.Add(id + ":Act");
-                    model.Value += delta;
-
-                    if (model.ExecutionCount % 2 == 1)
-                        throw new ProbeException("Expected sequence exception");
-                };
-
-                lab.Asserter = (model, metadata) =>
-                {
-                    Assert.That(model.Phases.Last(), Is.EqualTo(id + ":Act"));
-                    Assert.That(metadata.Metadata, Is.SameAs(model.Payload));
-                    Assert.That(lab.MetadataTemplate.ExpectedExceptionType, Is.Null);
-                    model.Phases.Add(id + ":Assert");
-                    model.Operations.Add(id);
-                    model.PreviousMetadata = metadata;
-                    AssertSequenceModel(model, model.Operations.ToArray(), wrongExpectation ? 1 : 0);
+                        if (model.ExecutionCount % 2 == 1)
+                            throw new ProbeException("Expected sequence exception");
+                    },
+                    Asserter = (model, metadata) =>
+                    {
+                        Assert.That(model.Phases.Last(), Is.EqualTo(id + ":Act"));
+                        Assert.That(metadata.Metadata, Is.SameAs(model.Payload));
+                        Assert.That(lab.MetadataTemplate.ExpectedExceptionType, Is.Null);
+                        model.Phases.Add(id + ":Assert");
+                        model.Operations.Add(id);
+                        model.PreviousMetadata = metadata;
+                        AssertSequenceModel(model, model.Operations.ToArray(), wrongExpectation ? 1 : 0);
+                    }
                 };
 
                 return lab;

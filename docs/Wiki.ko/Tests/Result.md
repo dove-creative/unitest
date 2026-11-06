@@ -5,7 +5,7 @@
 일반 테스트는 대상 API를 독립적으로 검증하고, 자체 테스트는 UniTest의 Project와 Lab으로 실행 경로를 만들어 프레임워크를 검증한다.
 두 프로젝트 모두 NUnit이 테스트 발견, 실행 완료와 최종 성공·실패 판정을 담당한다.
 
-미해결 결함과 추가 보강 검토 지점, 이미 해결한 테스트 문제는 [테스트 확인 사항](Issues.md)에 모아 둔다.
+테스트에서 확인한 문제와 처리 결과는 각 대상의 `03. Results.md`에 둔다.
 
 ## 목차
 
@@ -15,6 +15,9 @@
 
 - 실행
 - 확인된 결과
+    - 공개 API 정리 후
+    - Lab 생성 전용 전환 후
+    - 스택 추적과 매개변수 이름 수정 후
     - 게시 전 검증
     - 예상 예외 판정 수정 후
     - 모듈별 실행과 직접 결과 보관
@@ -46,18 +49,18 @@ NUnit 매개변수 전개 후의 실행 사례 수이며, 상태표의 계약 �
 | 대상 | 테스트 파일 | 실행 사례 수 | 상태표 | 계획 | 결과 |
 | --- | --- | --- | --- | --- | --- |
 | Model | ModelTest | 36 | [표](Unit/Model/01.%20Tables.md) | [계획](Unit/Model/02.%20Plans.md) | [결과](Unit/Model/03.%20Results.md) |
-| Lab | LabTest, LabExtensionTest, ToUncontinuableTest | 160 | [표](Unit/Lab/01.%20Tables.md) | [계획](Unit/Lab/02.%20Plans.md) | [결과](Unit/Lab/03.%20Results.md) |
+| Lab | LabTest, LabExtensionTest, ToUncontinuableTest | 173 | [표](Unit/Lab/01.%20Tables.md) | [계획](Unit/Lab/02.%20Plans.md) | [결과](Unit/Lab/03.%20Results.md) |
 | CompositeLab | CompositeLabTest | 174 | [표](Unit/CompositeLab/01.%20Tables.md) | [계획](Unit/CompositeLab/02.%20Plans.md) | [결과](Unit/CompositeLab/03.%20Results.md) |
 | TestCase | TestCaseTest | 27 | [표](Unit/TestCase/01.%20Tables.md) | [계획](Unit/TestCase/02.%20Plans.md) | [결과](Unit/TestCase/03.%20Results.md) |
-| Node | NodeTest, NodeExtensionTest | 47 | [표](Unit/Node/01.%20Tables.md) | [계획](Unit/Node/02.%20Plans.md) | [결과](Unit/Node/03.%20Results.md) |
+| Node | NodeTest, NodeExtensionTest | 48 | [표](Unit/Node/01.%20Tables.md) | [계획](Unit/Node/02.%20Plans.md) | [결과](Unit/Node/03.%20Results.md) |
 | Project | ProjectTest, ProjectSchedulingTest, ProjectShutdownTest, ExecutionModeTest | 63 | [표](Unit/Project/01.%20Tables.md) | [계획](Unit/Project/02.%20Plans.md) | [결과](Unit/Project/03.%20Results.md) |
 | TestDesigner | TestDesignerTest | 43 | [표](Unit/TestDesigner/01.%20Tables.md) | [계획](Unit/TestDesigner/02.%20Plans.md) | [결과](Unit/TestDesigner/03.%20Results.md) |
 | TestExecutor | TestExecutorTest | 24 | [표](Unit/TestExecutor/01.%20Tables.md) | [계획](Unit/TestExecutor/02.%20Plans.md) | [결과](Unit/TestExecutor/03.%20Results.md) |
 | Reporting | JsonReportTest | 16 | [표](Unit/Reporting/01.%20Tables.md) | [계획](Unit/Reporting/02.%20Plans.md) | [결과](Unit/Reporting/03.%20Results.md) |
 
-일반 테스트는 15개 테스트 파일의 590개 실행 사례로 구성된다.
+일반 테스트는 15개 테스트 파일의 604개 실행 사례로 구성된다.
 객체 간 연동 사례는 해당 테스트 파일을 소유한 문서에 한 번만 집계한다.
-예를 들어 `ToUncontinuableTest`의 CompositeLab·Project 연동 사례도 Lab의 160개에 포함한다.
+예를 들어 `ToUncontinuableTest`의 CompositeLab·Project 연동 사례도 Lab의 173개에 포함한다.
 
 ### UniTest 기반 자체 테스트
 
@@ -110,6 +113,110 @@ dotnet test BlackThunder.UniTest.sln --configuration Release --no-build --no-res
 
 ## 확인된 결과
 
+### 공개 API 정리 후
+
+2026-11-07 04:57 한국 시간에 다음을 수정한 뒤 Release 빌드와 두 프로젝트 전체 테스트를 실제로 재실행했다.
+Release 빌드는 경고 0개·오류 0개로 완료했다.
+
+- Lab.MetadataTemplate을 읽기 전용 인터페이스 IReadOnlySubjectMetadata로 공개하고, SubjectMetadata의 필드를 속성으로 바꿨다.
+- Node.Afters를 읽기 전용 목록으로 공개했다.
+- 사용처가 없는 런타임 ProbeException을 제거했다. 두 테스트 프로젝트는 각자 정의한 같은 이름의 형식을 사용한다.
+- Project.DividingLine을 internal로 바꿨다. 라이브러리 안의 ProjectRunner도 사용하므로 private으로는 바꿀 수 없다.
+- 테스트 메서드 이름의 Execption 오타 15개를 고쳤다.
+
+| 프로젝트 | 전체 | 통과 | 실패 | 건너뜀 |
+| --- | --- | --- | --- | --- |
+| Tests.Unit | 604 | 604 | 0 | 0 |
+| Tests.Recursion | 51 | 51 | 0 | 0 |
+| 합계 | 655 | 655 | 0 | 0 |
+
+변경 범위의 4개 모듈은 따로 필터링하여 실행하고 결과를 각 모듈 폴더에 저장했다.
+
+| 구분 | 모듈 | 전체 | 통과 | 실패 | 모듈별 결과 |
+| --- | --- | --- | --- | --- | --- |
+| Unit | Lab | 173 | 173 | 0 | [기록](Unit/Lab/03.%20Results.md) |
+| Unit | Node | 48 | 48 | 0 | [기록](Unit/Node/03.%20Results.md) |
+| Unit | TestDesigner | 43 | 43 | 0 | [기록](Unit/TestDesigner/03.%20Results.md) |
+| Unit | TestExecutor | 24 | 24 | 0 | [기록](Unit/TestExecutor/03.%20Results.md) |
+
+샘플은 help와 다섯 시나리오를 직접 실행하여 모두 종료 코드 0이었다.
+보고서의 항목 수는 이전 실행과 같고(11,551·422·1,010·137·4개), 모든 비루트 항목이 Success였다.
+샘플 검증 스크립트 전체는 이번에 다시 실행하지 않았으며 CI에서 확인한다.
+
+```powershell
+$testRunStamp = '20261107-045706'
+dotnet build BlackThunder.UniTest.sln --configuration Release --no-restore -m:1
+dotnet test tests/BlackThunder.UniTest.Tests.Unit/BlackThunder.UniTest.Tests.Unit.csproj --configuration Release --no-build --no-restore --logger "trx;LogFileName=$testRunStamp-unit-all.trx"
+dotnet test tests/BlackThunder.UniTest.Tests.Recursion/BlackThunder.UniTest.Tests.Recursion.csproj --configuration Release --no-build --no-restore --logger "trx;LogFileName=$testRunStamp-unitest-all.trx"
+```
+
+- [일반 테스트 전체 TRX](Unit/20261107-045706-unit-all.trx)
+- [자체 테스트 전체 TRX](UniTest/20261107-045706-unitest-all.trx)
+- [빌드 로그](20261107-045706-build.log)
+- [일반 테스트 전체 로그](20261107-045706-unit-all.log)
+- [자체 테스트 전체 로그](20261107-045706-unitest-all.log)
+
+### Lab 생성 전용 전환 후
+
+2026-11-07 04:48 한국 시간에 Lab의 Id·SetMetadata·Arranger·Actor·Asserter를 생성 전용 속성으로 바꾼 뒤 Release 빌드와 두 프로젝트 전체 테스트를 실제로 재실행했다.
+Release 빌드는 경고 0개·오류 0개로 완료했다.
+
+| 프로젝트 | 전체 | 통과 | 실패 | 건너뜀 |
+| --- | --- | --- | --- | --- |
+| Tests.Unit | 602 | 602 | 0 | 0 |
+| Tests.Recursion | 51 | 51 | 0 | 0 |
+| 합계 | 653 | 653 | 0 | 0 |
+
+일반 Lab은 [172개 사례](Unit/Lab/03.%20Results.md), 일반 CompositeLab은 [174개 사례](Unit/CompositeLab/03.%20Results.md)를 따로 필터링하여 실행했다.
+생성 후 Lab 멤버에 대입하던 일반·자체 테스트의 준비 코드는 생성자와 객체 초기화로 옮겼으며 기대값은 변경하지 않았다.
+
+샘플은 help와 다섯 시나리오를 직접 실행하여 모두 종료 코드 0이었다.
+보고서의 항목 수는 Merge를 다시 작성하기 전과 같고(11,551·422·1,010·137·4개), 모든 비루트 항목이 Success였다.
+샘플 검증 스크립트 전체는 이번에 다시 실행하지 않았으며 CI에서 확인한다.
+
+```powershell
+$testRunStamp = '20261107-044851'
+dotnet build BlackThunder.UniTest.sln --configuration Release --no-restore -m:1
+dotnet test tests/BlackThunder.UniTest.Tests.Unit/BlackThunder.UniTest.Tests.Unit.csproj --configuration Release --no-build --no-restore --logger "trx;LogFileName=$testRunStamp-unit-all.trx"
+dotnet test tests/BlackThunder.UniTest.Tests.Recursion/BlackThunder.UniTest.Tests.Recursion.csproj --configuration Release --no-build --no-restore --logger "trx;LogFileName=$testRunStamp-unitest-all.trx"
+```
+
+- [일반 테스트 전체 TRX](Unit/20261107-044851-unit-all.trx)
+- [자체 테스트 전체 TRX](UniTest/20261107-044851-unitest-all.trx)
+- [빌드 로그](20261107-044851-build.log)
+- [일반 테스트 전체 로그](20261107-044851-unit-all.log)
+- [자체 테스트 전체 로그](20261107-044851-unitest-all.log)
+
+### 스택 추적과 매개변수 이름 수정 후
+
+2026-11-07 04:37 한국 시간에 다음 두 가지를 수정한 뒤 Release 빌드와 두 프로젝트 전체 테스트를 실제로 재실행했다.
+Release 빌드는 경고 0개·오류 0개로 완료했다.
+
+- Lab이 예상하지 않은 Actor 예외를 다시 던질 때 원래 스택 추적을 보존한다. 일반 Lab 테스트 UL15의 2개 사례를 추가했다.
+- MissingExpectedException 생성자의 매개변수 이름 오타를 expectedExceptionType으로 고쳤다.
+
+| 프로젝트 | 전체 | 통과 | 실패 | 건너뜀 |
+| --- | --- | --- | --- | --- |
+| Tests.Unit | 592 | 592 | 0 | 0 |
+| Tests.Recursion | 51 | 51 | 0 | 0 |
+| 합계 | 643 | 643 | 0 | 0 |
+
+변경 범위의 일반 Lab은 따로 필터링하여 [162개 사례](Unit/Lab/03.%20Results.md)를 실행했다.
+샘플 검증 스크립트는 이번에 다시 실행하지 않았으며 CI에서 확인한다.
+
+```powershell
+$testRunStamp = '20261107-043736'
+dotnet build BlackThunder.UniTest.sln --configuration Release --no-restore -m:1
+dotnet test tests/BlackThunder.UniTest.Tests.Unit/BlackThunder.UniTest.Tests.Unit.csproj --configuration Release --no-build --no-restore --logger "trx;LogFileName=$testRunStamp-unit-all.trx"
+dotnet test tests/BlackThunder.UniTest.Tests.Recursion/BlackThunder.UniTest.Tests.Recursion.csproj --configuration Release --no-build --no-restore --logger "trx;LogFileName=$testRunStamp-unitest-all.trx"
+```
+
+- [일반 테스트 전체 TRX](Unit/20261107-043736-unit-all.trx)
+- [자체 테스트 전체 TRX](UniTest/20261107-043736-unitest-all.trx)
+- [빌드 로그](20261107-043736-build.log)
+- [일반 테스트 전체 로그](20261107-043736-unit-all.log)
+- [자체 테스트 전체 로그](20261107-043736-unitest-all.log)
+
 ### 게시 전 검증
 
 2026-11-07 04:11 한국 시간에 링크와 번역을 정리한 뒤 Release 빌드, 두 테스트 프로젝트 전체와 샘플 CLI 검증을 다시 수행했다.
@@ -142,7 +249,7 @@ pwsh -NoProfile -File .github/scripts/verify-samples.ps1
 
 ### 예상 예외 판정 수정 후
 
-2026-11-07 04:01 한국 시간에 CompositeLab의 [ISSUE-01·ISSUE-02](Issues.md)를 수정한 뒤 Release 빌드와 두 프로젝트 전체 테스트를 실제로 재실행했다.
+2026-11-07 04:01 한국 시간에 CompositeLab의 [예상 예외 판정 결함 2건](UniTest/CompositeLab/03.%20Results.md)을 수정한 뒤 Release 빌드와 두 프로젝트 전체 테스트를 실제로 재실행했다.
 Release 빌드는 경고 0개·오류 0개로 완료했다.
 
 | 프로젝트 | 전체 | 통과 | 실패 | 건너뜀 |

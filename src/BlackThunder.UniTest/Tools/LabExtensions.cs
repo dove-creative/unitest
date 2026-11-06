@@ -41,16 +41,21 @@ namespace BlackThunder.UniTest
                 ? string.Join(Lab<TModel>.Extender, lab.Id, template.Id)
                 : lab.Id;
 
-            var _lab = lab.Copy(id);
+            var metadata = lab.MetadataTemplate.Copy();
+            metadata.Merge(template.MetadataTemplate);
 
-            _lab.SetMetadata = (useSetMetadata ? template.SetMetadata : null) + _lab.SetMetadata;
-            _lab.Arranger = (useArranger ? template.Arranger : null) + _lab.Arranger;
-            _lab.Actor = (useActor ? template.Actor : null) + _lab.Actor;
-            _lab.Asserter = (useAsserter ? template.Asserter : null) + _lab.Asserter;
-
-            _lab.MetadataTemplate.Merge(template.MetadataTemplate);
-
-            return _lab;
+            return new Lab<TModel>(
+                id,
+                (useArranger ? template.Arranger : null) + lab.Arranger,
+                (useActor ? template.Actor : null) + lab.Actor,
+                (useAsserter ? template.Asserter : null) + lab.Asserter,
+                metadata.ExpectedExceptionType,
+                metadata.ToUnsustainable,
+                metadata.ToUncontinuable,
+                metadata.RemainingExecutionCount)
+            {
+                SetMetadata = (useSetMetadata ? template.SetMetadata : null) + lab.SetMetadata
+            };
         }
         public static IEnumerable<Lab<TModel>> Merge<TModel>(
             this Lab<TModel> lab,

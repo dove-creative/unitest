@@ -86,44 +86,23 @@ namespace BlackThunder.UniTest.Tests.Unit
                 Lab2Conditions = new[] { true, true, true }
             }).SetName("All Succeeded");
         }
-        public void SetLabs(Order order, Lab<Model> lab_1, Lab<Model> lab_2)
-        {
-            lab_1.Arranger = (_, _) =>
+        private static Lab<Model> CreateLab(string id, bool[] conditions) => new(
+            id,
+            (_, _) =>
             {
-                if (!order.Lab1Conditions[0])
-                    throw new ProbeException($"{lab_1.Id}.Arranger Failure");
-            };
-
-            lab_1.Actor = (_, _) =>
+                if (!conditions[0])
+                    throw new ProbeException($"{id}.Arranger Failure");
+            },
+            (_, _) =>
             {
-                if (!order.Lab1Conditions[1])
-                    throw new ProbeException($"{lab_1.Id}.Actor Failure");
-            };
-
-            lab_1.Asserter = (_, _) =>
+                if (!conditions[1])
+                    throw new ProbeException($"{id}.Actor Failure");
+            },
+            (_, _) =>
             {
-                if (!order.Lab1Conditions[2])
-                    throw new ProbeException($"{lab_1.Id}.Asserter Failure");
-            };
-
-            lab_2.Arranger = (_, _) =>
-            {
-                if (!order.Lab2Conditions[0])
-                    throw new ProbeException($"{lab_2.Id}.Arranger Failure");
-            };
-
-            lab_2.Actor = (_, _) =>
-            {
-                if (!order.Lab2Conditions[1])
-                    throw new ProbeException($"{lab_2.Id}.Actor Failure");
-            };
-
-            lab_2.Asserter = (_, _) =>
-            {
-                if (!order.Lab2Conditions[2])
-                    throw new ProbeException($"{lab_2.Id}.Asserter Failure");
-            };
-        }
+                if (!conditions[2])
+                    throw new ProbeException($"{id}.Asserter Failure");
+            });
 
 
         public static IEnumerable<TestCaseData> GetProperties()
@@ -158,7 +137,9 @@ namespace BlackThunder.UniTest.Tests.Unit
         public void Execute_Model(Order order)
         {
             // Arrange
-            SetLabs(order, _lab1, _lab2);
+            _lab1 = CreateLab(_lab1.Id, order.Lab1Conditions);
+            _lab2 = CreateLab(_lab2.Id, order.Lab2Conditions);
+            _compositeLab = new CompositeLab<Model>(_lab1, _lab2);
             Exception ex;
 
             // Act
@@ -239,7 +220,7 @@ namespace BlackThunder.UniTest.Tests.Unit
         public void Execute_ExtensionExpectedException()
         {
             // Arrange
-            _lab1.Actor = (_, _) => { };
+            _lab1 = new Lab<Model>("lab_1", actor: (_, _) => { });
             _lab2 = new Lab<Model>("lab_2", expectedExceptionType: typeof(ProbeException));
             _compositeLab = new CompositeLab<Model>(_lab1, _lab2);
 
@@ -266,19 +247,21 @@ namespace BlackThunder.UniTest.Tests.Unit
             int lab_2_rec)
         {
             // Arrange
-            _lab1.Arranger = (_, md) =>
+            _lab1 = new Lab<Model>("lab_1", arranger: (_, md) =>
             {
                 md.ToUnsustainable = lab_1_ts;
                 md.ToUncontinuable = lab_1_tu;
                 md.RemainingExecutionCount = lab_1_rec;
-            };
+            });
 
-            _lab2.Arranger = (_, md) =>
+            _lab2 = new Lab<Model>("lab_2", arranger: (_, md) =>
             {
                 md.ToUnsustainable = lab_2_ts;
                 md.ToUncontinuable = lab_2_tu;
                 md.RemainingExecutionCount = lab_2_rec;
-            };
+            });
+
+            _compositeLab = new CompositeLab<Model>(_lab1, _lab2);
 
             // Act
             _compositeLab.Execute(_model, out var ex);
@@ -317,7 +300,6 @@ namespace BlackThunder.UniTest.Tests.Unit
         public void Extend(Order order, int testOrder)
         {
             // Arrange
-            _compositeLab = _compositeLab.Extend(_lab3);
             Exception ex;
 
             Lab<Model> lab_a;
@@ -326,25 +308,25 @@ namespace BlackThunder.UniTest.Tests.Unit
             switch (testOrder)
             {
                 case 0:
-                    lab_a = _lab1;
-                    lab_b = _lab2;
+                    lab_a = _lab1 = CreateLab(_lab1.Id, order.Lab1Conditions);
+                    lab_b = _lab2 = CreateLab(_lab2.Id, order.Lab2Conditions);
                     break;
 
                 case 1:
-                    lab_a = _lab2;
-                    lab_b = _lab3;
+                    lab_a = _lab2 = CreateLab(_lab2.Id, order.Lab1Conditions);
+                    lab_b = _lab3 = CreateLab(_lab3.Id, order.Lab2Conditions);
                     break;
 
                 case 2:
-                    lab_a = _lab1;
-                    lab_b = _lab3;
+                    lab_a = _lab1 = CreateLab(_lab1.Id, order.Lab1Conditions);
+                    lab_b = _lab3 = CreateLab(_lab3.Id, order.Lab2Conditions);
                     break;
 
                 default:
                     throw new Exception();
             }
 
-            SetLabs(order, lab_a, lab_b);
+            _compositeLab = new CompositeLab<Model>(_lab1, _lab2).Extend(_lab3);
 
             // Act
             _compositeLab.Execute(_model, out var _ex);

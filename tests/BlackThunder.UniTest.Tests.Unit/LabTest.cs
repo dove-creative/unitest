@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using BlackThunder.UniTest;
 using NUnit.Framework;
 
@@ -68,13 +69,10 @@ namespace BlackThunder.UniTest.Tests.Unit
             Condition actor,
             Condition asserter)
         {
-            _lab = setMetadataByConstructor
-                ? new Lab<Model>(
-                    expectedExceptionType: typeof(ProbeException),
-                    toUnsustainable: true,
-                    toUncontinuable: true,
-                    remainingExecutionCount: 10)
-                : new Lab<Model>();
+            Func<Model, object> setMetadataCallback = null;
+            Action<Model, SubjectMetadata> arrangerCallback = null;
+            Action<Model, SubjectMetadata> actorCallback = null;
+            Action<Model, SubjectMetadata> asserterCallback = null;
 
             _model = new Model();
 
@@ -82,7 +80,7 @@ namespace BlackThunder.UniTest.Tests.Unit
             {
                 _metadata = new object();
 
-                _lab.SetMetadata = m =>
+                setMetadataCallback = m =>
                 {
                     Assert.That(m, Is.SameAs(_model));
 
@@ -94,7 +92,7 @@ namespace BlackThunder.UniTest.Tests.Unit
             }
 
             if (arranger != Condition.None)
-                _lab.Arranger = (m, md) =>
+                arrangerCallback = (m, md) =>
                 {
                     Assert.That(m, Is.SameAs(_model));
                     Assert.That(md.Metadata, Is.SameAs(_metadata));
@@ -104,7 +102,7 @@ namespace BlackThunder.UniTest.Tests.Unit
                 };
 
             if (actor != Condition.None)
-                _lab.Actor = (m, md) =>
+                actorCallback = (m, md) =>
                 {
                     Assert.That(m, Is.SameAs(_model));
                     Assert.That(md.Metadata, Is.SameAs(_metadata));
@@ -114,13 +112,30 @@ namespace BlackThunder.UniTest.Tests.Unit
                 };
 
             if (asserter != Condition.None)
-                _lab.Asserter = (m, md) =>
+                asserterCallback = (m, md) =>
                 {
                     Assert.That(m, Is.SameAs(_model));
                     Assert.That(md.Metadata, Is.SameAs(_metadata));
 
                     if (asserter == Condition.Failure)
                         throw new ProbeException("Asserter Failure");
+                };
+
+            _lab = setMetadataByConstructor
+                ? new Lab<Model>(
+                    arranger: arrangerCallback,
+                    actor: actorCallback,
+                    asserter: asserterCallback,
+                    expectedExceptionType: typeof(ProbeException),
+                    toUnsustainable: true,
+                    toUncontinuable: true,
+                    remainingExecutionCount: 10)
+                {
+                    SetMetadata = setMetadataCallback
+                }
+                : new Lab<Model>(arranger: arrangerCallback, actor: actorCallback, asserter: asserterCallback)
+                {
+                    SetMetadata = setMetadataCallback
                 };
         }
 
@@ -137,6 +152,58 @@ namespace BlackThunder.UniTest.Tests.Unit
             // Assert
             Assert.That(ex, Is.AssignableTo<ExecutionException>());
             Assert.That(ex.Message, Is.EqualTo("Model setting failed"));
+        }
+
+        // UL15: An unexpected Actor exception keeps the frames of the code that threw it.
+        [TestCase(null)]
+        [TestCase(typeof(ArgumentException))]
+        public void Execute_ActFailureKeepsOriginalStackTrace(Type expectedExceptionType)
+        {
+            // Arrange
+            _model = new Model();
+            _lab = new Lab<Model>(actor: (_, _) => ThrowFromSubject(), expectedExceptionType: expectedExceptionType);
+
+            // Act
+            _lab.Execute(_model, out var ex);
+
+            // Assert
+            Assert.That(ex.Message, Is.EqualTo("Act failed"));
+            Assert.That(ex.InnerException, Is.TypeOf<ProbeException>());
+            Assert.That(ex.InnerException.StackTrace, Does.Contain(nameof(ThrowFromSubject)));
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        private static void ThrowFromSubject() => throw new ProbeException();
+
+        // UL16: The ID and callbacks are fixed once construction finishes.
+        [TestCase(nameof(Lab<Model>.Id))]
+        [TestCase(nameof(Lab<Model>.SetMetadata))]
+        [TestCase(nameof(Lab<Model>.Arranger))]
+        [TestCase(nameof(Lab<Model>.Actor))]
+        [TestCase(nameof(Lab<Model>.Asserter))]
+        public void Members_AreInitOnly(string name)
+        {
+            // Act
+            var setter = typeof(Lab<Model>).GetProperty(name)?.SetMethod;
+
+            // Assert
+            Assert.That(setter, Is.Not.Null);
+            Assert.That(
+                setter.ReturnParameter.GetRequiredCustomModifiers().Select(modifier => modifier.Name),
+                Does.Contain("IsExternalInit"));
+        }
+
+        // UL18: The metadata template exposes no member that can change it after construction.
+        [Test]
+        public void MetadataTemplate_IsReadOnly()
+        {
+            // Act
+            var type = typeof(Lab<Model>).GetProperty(nameof(Lab<Model>.MetadataTemplate))?.PropertyType;
+
+            // Assert
+            Assert.That(type, Is.Not.Null);
+            Assert.That(type.IsInterface, Is.True);
+            Assert.That(type.GetProperties().Where(property => property.CanWrite), Is.Empty);
         }
 
         [TestCaseSource(nameof(GetTestCases))]

@@ -5,7 +5,7 @@ Raw module artifacts are stored in 15 module folders, and each result document l
 Ordinary tests verify the target API independently, while self-tests use UniTest's Project and Lab to construct execution paths and verify the framework.
 In both projects, NUnit handles test discovery, execution completion, and the final pass/fail verdict.
 
-Unresolved defects, points for further coverage review, and resolved test issues are collected in [Test Issues](Issues.md).
+Issues found by testing and their outcomes are kept in each target's `03. Results.md`.
 
 ## Contents
 
@@ -15,6 +15,9 @@ Unresolved defects, points for further coverage review, and resolved test issues
 
 - Execution
 - Verified Results
+    - After Cleaning Up the Public API
+    - After Making Lab Members Init-Only
+    - After Fixing Stack Traces and a Parameter Name
     - Pre-Push Verification
     - After Fixing Expected Exception Evaluation
     - Module Runs and Direct Artifact Storage
@@ -46,18 +49,18 @@ The tables and plans describe implemented tests, and each result document distin
 | Target | Test files | Executed cases | Tables | Plans | Results |
 | --- | --- | --- | --- | --- | --- |
 | Model | ModelTest | 36 | [Tables](Unit/Model/01.%20Tables.md) | [Plans](Unit/Model/02.%20Plans.md) | [Results](Unit/Model/03.%20Results.md) |
-| Lab | LabTest, LabExtensionTest, ToUncontinuableTest | 160 | [Tables](Unit/Lab/01.%20Tables.md) | [Plans](Unit/Lab/02.%20Plans.md) | [Results](Unit/Lab/03.%20Results.md) |
+| Lab | LabTest, LabExtensionTest, ToUncontinuableTest | 173 | [Tables](Unit/Lab/01.%20Tables.md) | [Plans](Unit/Lab/02.%20Plans.md) | [Results](Unit/Lab/03.%20Results.md) |
 | CompositeLab | CompositeLabTest | 174 | [Tables](Unit/CompositeLab/01.%20Tables.md) | [Plans](Unit/CompositeLab/02.%20Plans.md) | [Results](Unit/CompositeLab/03.%20Results.md) |
 | TestCase | TestCaseTest | 27 | [Tables](Unit/TestCase/01.%20Tables.md) | [Plans](Unit/TestCase/02.%20Plans.md) | [Results](Unit/TestCase/03.%20Results.md) |
-| Node | NodeTest, NodeExtensionTest | 47 | [Tables](Unit/Node/01.%20Tables.md) | [Plans](Unit/Node/02.%20Plans.md) | [Results](Unit/Node/03.%20Results.md) |
+| Node | NodeTest, NodeExtensionTest | 48 | [Tables](Unit/Node/01.%20Tables.md) | [Plans](Unit/Node/02.%20Plans.md) | [Results](Unit/Node/03.%20Results.md) |
 | Project | ProjectTest, ProjectSchedulingTest, ProjectShutdownTest, ExecutionModeTest | 63 | [Tables](Unit/Project/01.%20Tables.md) | [Plans](Unit/Project/02.%20Plans.md) | [Results](Unit/Project/03.%20Results.md) |
 | TestDesigner | TestDesignerTest | 43 | [Tables](Unit/TestDesigner/01.%20Tables.md) | [Plans](Unit/TestDesigner/02.%20Plans.md) | [Results](Unit/TestDesigner/03.%20Results.md) |
 | TestExecutor | TestExecutorTest | 24 | [Tables](Unit/TestExecutor/01.%20Tables.md) | [Plans](Unit/TestExecutor/02.%20Plans.md) | [Results](Unit/TestExecutor/03.%20Results.md) |
 | Reporting | JsonReportTest | 16 | [Tables](Unit/Reporting/01.%20Tables.md) | [Plans](Unit/Reporting/02.%20Plans.md) | [Results](Unit/Reporting/03.%20Results.md) |
 
-The ordinary tests comprise 590 executed cases in 15 test files.
+The ordinary tests comprise 604 executed cases in 15 test files.
 Cross-object cases are counted only once, in the documentation that owns the test file.
-For example, CompositeLab and Project integration cases in `ToUncontinuableTest` are included in Lab's 160 cases.
+For example, CompositeLab and Project integration cases in `ToUncontinuableTest` are included in Lab's 173 cases.
 
 ### UniTest-Based Self-Tests
 
@@ -110,6 +113,110 @@ Detailed boundary cases for worker races, shutdown waiting, and serialization ar
 
 ## Verified Results
 
+### After Cleaning Up the Public API
+
+At 04:57 Korea time on 2026-11-07, the Release build and both full test projects were rerun after the following changes.
+The Release build completed with 0 warnings and 0 errors.
+
+- Lab.MetadataTemplate is exposed as the read-only interface IReadOnlySubjectMetadata, and SubjectMetadata's fields became properties.
+- Node.Afters is exposed as a read-only list.
+- The unused runtime ProbeException was removed. Both test projects use their own type of the same name.
+- Project.DividingLine became internal. It cannot be private because ProjectRunner in the same library uses it.
+- The Execption typo in 15 test method names was corrected.
+
+| Project | Total | Passed | Failed | Skipped |
+| --- | --- | --- | --- | --- |
+| Tests.Unit | 604 | 604 | 0 | 0 |
+| Tests.Recursion | 51 | 51 | 0 | 0 |
+| Total | 655 | 655 | 0 | 0 |
+
+The 4 changed modules were also filtered separately, with results stored in each module folder.
+
+| Category | Module | Total | Passed | Failed | Module results |
+| --- | --- | --- | --- | --- | --- |
+| Unit | Lab | 173 | 173 | 0 | [Record](Unit/Lab/03.%20Results.md) |
+| Unit | Node | 48 | 48 | 0 | [Record](Unit/Node/03.%20Results.md) |
+| Unit | TestDesigner | 43 | 43 | 0 | [Record](Unit/TestDesigner/03.%20Results.md) |
+| Unit | TestExecutor | 24 | 24 | 0 | [Record](Unit/TestExecutor/03.%20Results.md) |
+
+The samples' help and five scenarios were run directly and all exited with code 0.
+Report sizes matched the previous run (11,551, 422, 1,010, 137, and 4 entries), and every non-root entry was Success.
+The full sample verification script was not rerun this time and remains for CI to confirm.
+
+```powershell
+$testRunStamp = '20261107-045706'
+dotnet build BlackThunder.UniTest.sln --configuration Release --no-restore -m:1
+dotnet test tests/BlackThunder.UniTest.Tests.Unit/BlackThunder.UniTest.Tests.Unit.csproj --configuration Release --no-build --no-restore --logger "trx;LogFileName=$testRunStamp-unit-all.trx"
+dotnet test tests/BlackThunder.UniTest.Tests.Recursion/BlackThunder.UniTest.Tests.Recursion.csproj --configuration Release --no-build --no-restore --logger "trx;LogFileName=$testRunStamp-unitest-all.trx"
+```
+
+- [Full ordinary-test TRX](../../Wiki.ko/Tests/Unit/20261107-045706-unit-all.trx)
+- [Full self-test TRX](../../Wiki.ko/Tests/UniTest/20261107-045706-unitest-all.trx)
+- [Build log](../../Wiki.ko/Tests/20261107-045706-build.log)
+- [Full ordinary-test log](../../Wiki.ko/Tests/20261107-045706-unit-all.log)
+- [Full self-test log](../../Wiki.ko/Tests/20261107-045706-unitest-all.log)
+
+### After Making Lab Members Init-Only
+
+At 04:48 Korea time on 2026-11-07, the Release build and both full test projects were rerun after changing Lab's Id, SetMetadata, Arranger, Actor, and Asserter to init-only properties.
+The Release build completed with 0 warnings and 0 errors.
+
+| Project | Total | Passed | Failed | Skipped |
+| --- | --- | --- | --- | --- |
+| Tests.Unit | 602 | 602 | 0 | 0 |
+| Tests.Recursion | 51 | 51 | 0 | 0 |
+| Total | 653 | 653 | 0 | 0 |
+
+Ordinary Lab ran [172 cases](Unit/Lab/03.%20Results.md) and ordinary CompositeLab ran [174 cases](Unit/CompositeLab/03.%20Results.md) in separate filtered runs.
+Test setup code in both projects that assigned Lab members after construction moved to constructors and object initializers, without changing expectations.
+
+The samples' help and five scenarios were run directly and all exited with code 0.
+Report sizes matched those from before Merge was rewritten (11,551, 422, 1,010, 137, and 4 entries), and every non-root entry was Success.
+The full sample verification script was not rerun this time and remains for CI to confirm.
+
+```powershell
+$testRunStamp = '20261107-044851'
+dotnet build BlackThunder.UniTest.sln --configuration Release --no-restore -m:1
+dotnet test tests/BlackThunder.UniTest.Tests.Unit/BlackThunder.UniTest.Tests.Unit.csproj --configuration Release --no-build --no-restore --logger "trx;LogFileName=$testRunStamp-unit-all.trx"
+dotnet test tests/BlackThunder.UniTest.Tests.Recursion/BlackThunder.UniTest.Tests.Recursion.csproj --configuration Release --no-build --no-restore --logger "trx;LogFileName=$testRunStamp-unitest-all.trx"
+```
+
+- [Full ordinary-test TRX](../../Wiki.ko/Tests/Unit/20261107-044851-unit-all.trx)
+- [Full self-test TRX](../../Wiki.ko/Tests/UniTest/20261107-044851-unitest-all.trx)
+- [Build log](../../Wiki.ko/Tests/20261107-044851-build.log)
+- [Full ordinary-test log](../../Wiki.ko/Tests/20261107-044851-unit-all.log)
+- [Full self-test log](../../Wiki.ko/Tests/20261107-044851-unitest-all.log)
+
+### After Fixing Stack Traces and a Parameter Name
+
+At 04:37 Korea time on 2026-11-07, the Release build and both full test projects were rerun after the following two fixes.
+The Release build completed with 0 warnings and 0 errors.
+
+- Lab keeps the original stack trace when it rethrows an unexpected Actor exception. The 2 cases of ordinary Lab test UL15 were added.
+- The misspelled MissingExpectedException constructor parameter was corrected to expectedExceptionType.
+
+| Project | Total | Passed | Failed | Skipped |
+| --- | --- | --- | --- | --- |
+| Tests.Unit | 592 | 592 | 0 | 0 |
+| Tests.Recursion | 51 | 51 | 0 | 0 |
+| Total | 643 | 643 | 0 | 0 |
+
+The changed ordinary Lab module was also filtered separately and ran [162 cases](Unit/Lab/03.%20Results.md).
+The sample verification script was not rerun this time and remains for CI to confirm.
+
+```powershell
+$testRunStamp = '20261107-043736'
+dotnet build BlackThunder.UniTest.sln --configuration Release --no-restore -m:1
+dotnet test tests/BlackThunder.UniTest.Tests.Unit/BlackThunder.UniTest.Tests.Unit.csproj --configuration Release --no-build --no-restore --logger "trx;LogFileName=$testRunStamp-unit-all.trx"
+dotnet test tests/BlackThunder.UniTest.Tests.Recursion/BlackThunder.UniTest.Tests.Recursion.csproj --configuration Release --no-build --no-restore --logger "trx;LogFileName=$testRunStamp-unitest-all.trx"
+```
+
+- [Full ordinary-test TRX](../../Wiki.ko/Tests/Unit/20261107-043736-unit-all.trx)
+- [Full self-test TRX](../../Wiki.ko/Tests/UniTest/20261107-043736-unitest-all.trx)
+- [Build log](../../Wiki.ko/Tests/20261107-043736-build.log)
+- [Full ordinary-test log](../../Wiki.ko/Tests/20261107-043736-unit-all.log)
+- [Full self-test log](../../Wiki.ko/Tests/20261107-043736-unitest-all.log)
+
 ### Pre-Push Verification
 
 At 04:11 Korea time on 2026-11-07, the Release build, both full test projects, and sample CLI verification were rerun after the link and translation cleanup.
@@ -142,7 +249,7 @@ pwsh -NoProfile -File .github/scripts/verify-samples.ps1
 
 ### After Fixing Expected Exception Evaluation
 
-At 04:01 Korea time on 2026-11-07, after fixing CompositeLab's [ISSUE-01·ISSUE-02](Issues.md), the Release build and all tests in both projects were actually rerun.
+At 04:01 Korea time on 2026-11-07, after fixing CompositeLab's [two expected-exception defects](UniTest/CompositeLab/03.%20Results.md), the Release build and all tests in both projects were actually rerun.
 The Release build completed with 0 warnings and 0 errors.
 
 | Project | Total | Passed | Failed | Skipped |

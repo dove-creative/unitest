@@ -1,22 +1,23 @@
 using System;
+using System.Runtime.ExceptionServices;
 
 namespace BlackThunder.UniTest
 {
     public class Lab<TModel> : ILab<TModel> where TModel : Model
     {
         // Front
-        public string Id { get; set; }
+        public string Id { get; init; }
 
         public const string Extender = "_";
         public const string Separator = "__";
         public const string DefaultId = "Lab";
 
-        public Func<TModel, object> SetMetadata;
-        public Action<TModel, SubjectMetadata> Arranger;
-        public Action<TModel, SubjectMetadata> Actor;
-        public Action<TModel, SubjectMetadata> Asserter;
+        public Func<TModel, object> SetMetadata { get; init; }
+        public Action<TModel, SubjectMetadata> Arranger { get; init; }
+        public Action<TModel, SubjectMetadata> Actor { get; init; }
+        public Action<TModel, SubjectMetadata> Asserter { get; init; }
 
-        public readonly SubjectMetadata MetadataTemplate;
+        public IReadOnlySubjectMetadata MetadataTemplate { get; }
 
 
         // Content
@@ -33,7 +34,7 @@ namespace BlackThunder.UniTest
             Id = id;
             (Arranger, Actor, Asserter) = (arranger, actor, asserter);
 
-            MetadataTemplate = new()
+            MetadataTemplate = new SubjectMetadata
             {
                 ExpectedExceptionType = expectedExceptionType,
                 ToUnsustainable = toUnsustainable,
@@ -69,7 +70,7 @@ namespace BlackThunder.UniTest
             var exception = CaptureAct(model);
 
             if (exception != null && (!metadata.ExpectedExceptionType?.IsAssignableFrom(exception.GetType()) ?? true))
-                throw exception;
+                ExceptionDispatchInfo.Capture(exception).Throw();
 
             if (exception == null && metadata.ExpectedExceptionType != null)
                 throw new MissingExpectedException(
