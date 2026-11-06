@@ -67,7 +67,8 @@ namespace BlackThunder.UniTest
         {
             if (!_continuable)
             {
-                throw new InvalidOperationException($"The model can no longer be tested.\n" +
+                throw new InvalidOperationException(
+                    $"The model can no longer be tested.\n" +
                     $"Lab ID: {labId}\n" +
                     $"Model: {ToString()}\n" +
                     $"History: {GetExecutionHistory()}");
@@ -88,9 +89,11 @@ namespace BlackThunder.UniTest
         /// <remarks>
         /// Given the same inputs, the method will always return the same output.
         /// </remarks>
-        public int GetDeterministicRandom(int maxExclusive, int seed = 0) => GetDeterministicRandom(0, maxExclusive, seed);
+        public int GetDeterministicRandom(int maxExclusive, int seed = 0) =>
+            GetDeterministicRandom(0, maxExclusive, seed);
         /// <summary>
-        /// Returns a deterministic random integer in the range [<paramref name="minInclusive"/>, <paramref name="maxExclusive"/>),
+        /// Returns a deterministic random integer in the range
+        /// [<paramref name="minInclusive"/>, <paramref name="maxExclusive"/>),
         /// calculated based on executed lab IDs.
         /// </summary>
         /// <remarks>
@@ -98,8 +101,7 @@ namespace BlackThunder.UniTest
         /// </remarks>
         public int GetDeterministicRandom(int minInclusive, int maxExclusive, int seed = 0)
         {
-            return GetExecutionHistory()
-              .GetDeterministicRandom(minInclusive, maxExclusive, seed);
+            return GetExecutionHistory().GetDeterministicRandom(minInclusive, maxExclusive, seed);
         }
 
         public override string ToString()

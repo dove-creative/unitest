@@ -20,12 +20,19 @@ namespace BlackThunder.UniTest
         // Content
         public CompactLab() { }
 
-        public CompactLab(string id, Action<TModel> arranger = null, Action<TModel> actor = null, Action<TModel> asserter = null,
-             bool toUnsustainable = false, bool toUncontinuable = false, int remainingExecutionCount = -1)
+        public CompactLab(
+            string id,
+            Action<TModel> arranger = null,
+            Action<TModel> actor = null,
+            Action<TModel> asserter = null,
+            bool toUnsustainable = false,
+            bool toUncontinuable = false,
+            int remainingExecutionCount = -1)
         {
             Id = id;
             (Arranger, Actor, Asserter) = (arranger, actor, asserter);
-            (ToUnsustainable, ToUncontinuable, RemainingExecutionCount) = (toUnsustainable, toUncontinuable, remainingExecutionCount);
+            (ToUnsustainable, ToUncontinuable, RemainingExecutionCount)
+                = (toUnsustainable, toUncontinuable, remainingExecutionCount);
         }
 
         public Lab<TModel> Build() => new(

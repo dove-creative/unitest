@@ -55,29 +55,33 @@ namespace BlackThunder.UniTest.Tests.Unit
                                 yield return new[] { c1, c2, c3, c4 };
             }
 
-
             foreach (var setting in GetSettings())
             {
                 yield return new TestCaseData(false, setting[0], setting[1], setting[2], setting[3]);
                 yield return new TestCaseData(true, setting[0], setting[1], setting[2], setting[3]);
             }
         }
-        private void CreateLab(bool setMetadataByConstructor, Condition setMetadata, Condition arranger, Condition actor, Condition asserter)
+        private void CreateLab(
+            bool setMetadataByConstructor,
+            Condition setMetadata,
+            Condition arranger,
+            Condition actor,
+            Condition asserter)
         {
             _lab = setMetadataByConstructor
                 ? new Lab<Model>(
-                expectedExceptionType: typeof(ProbeException),
-                toUnsustainable: true,
-                toUncontinuable: true,
-                remainingExecutionCount: 10)
+                    expectedExceptionType: typeof(ProbeException),
+                    toUnsustainable: true,
+                    toUncontinuable: true,
+                    remainingExecutionCount: 10)
                 : new Lab<Model>();
 
             _model = new Model();
 
-
             if (setMetadata != Condition.None)
             {
                 _metadata = new object();
+
                 _lab.SetMetadata = m =>
                 {
                     Assert.That(m, Is.SameAs(_model));
@@ -136,7 +140,12 @@ namespace BlackThunder.UniTest.Tests.Unit
         }
 
         [TestCaseSource(nameof(GetTestCases))]
-        public void Execute_Model(bool setMetadataByConstructor, Condition setMetadata, Condition arranger, Condition actor, Condition asserter)
+        public void Execute_Model(
+            bool setMetadataByConstructor,
+            Condition setMetadata,
+            Condition arranger,
+            Condition actor,
+            Condition asserter)
         {
             // Arrange
             CreateLab(setMetadataByConstructor, setMetadata, arranger, actor, asserter);
@@ -159,6 +168,7 @@ namespace BlackThunder.UniTest.Tests.Unit
                 Assert.That(_model.Continuable, Is.False);
                 return;
             }
+
             if (arranger == Condition.Failure)
             {
                 Assert.That(ex, Is.AssignableTo<ExecutionException>());
@@ -171,6 +181,7 @@ namespace BlackThunder.UniTest.Tests.Unit
                 Assert.That(_model.Continuable, Is.False);
                 return;
             }
+
             if (actor == Condition.Failure && !setMetadataByConstructor)
             {
                 Assert.That(ex, Is.AssignableTo<ExecutionException>());
@@ -183,6 +194,7 @@ namespace BlackThunder.UniTest.Tests.Unit
                 Assert.That(_model.Continuable, Is.False);
                 return;
             }
+
             if (actor != Condition.Failure && setMetadataByConstructor)
             {
                 Assert.That(ex, Is.AssignableTo<ExecutionException>());
@@ -191,6 +203,7 @@ namespace BlackThunder.UniTest.Tests.Unit
                 Assert.That(_model.Continuable, Is.False);
                 return;
             }
+
             if (asserter == Condition.Failure)
             {
                 Assert.That(ex, Is.AssignableTo<ExecutionException>());
@@ -215,12 +228,13 @@ namespace BlackThunder.UniTest.Tests.Unit
         public void SetMetadata_ByConstructor()
         {
             // Arrange
-            SubjectMetadata template = new()
+            var template = new SubjectMetadata()
             {
                 ExpectedExceptionType = typeof(ProbeException),
                 ToUncontinuable = true,
                 RemainingExecutionCount = 10
             };
+
             SubjectMetadata metadata = null;
 
             _lab = new Lab<Model>(
@@ -230,7 +244,6 @@ namespace BlackThunder.UniTest.Tests.Unit
             {
                 Arranger = (_, md) => metadata = md
             };
-
 
             // Act
             _lab.Execute(new Model(), out var ex);
@@ -247,13 +260,14 @@ namespace BlackThunder.UniTest.Tests.Unit
         public void SetMetadata_ByDelegate()
         {
             // Arrange
-            SubjectMetadata template = new()
+            var template = new SubjectMetadata()
             {
                 Metadata = new object(),
                 ExpectedExceptionType = typeof(ProbeException),
                 ToUncontinuable = true,
                 RemainingExecutionCount = 10
             };
+
             SubjectMetadata metadata = null;
 
             _lab = new Lab<Model>()
@@ -267,7 +281,6 @@ namespace BlackThunder.UniTest.Tests.Unit
                 },
                 Actor = (_, md) => metadata = md
             };
-
 
             // Act
             _lab.Execute(new Model(), out var ex);
@@ -299,6 +312,7 @@ namespace BlackThunder.UniTest.Tests.Unit
             {
                 RemainingExecutionCount = currentRemainingExecutionCount
             };
+
             var template = new SubjectMetadata
             {
                 RemainingExecutionCount = templateRemainingExecutionCount
@@ -313,7 +327,12 @@ namespace BlackThunder.UniTest.Tests.Unit
 
 
         [TestCaseSource(nameof(GetTestCases))]
-        public void Copy(bool setMetadataByConstructor, Condition setMetadata, Condition arranger, Condition actor, Condition asserter)
+        public void Copy(
+            bool setMetadataByConstructor,
+            Condition setMetadata,
+            Condition arranger,
+            Condition actor,
+            Condition asserter)
         {
             // Arrange
             var copiedID = "Copied";
@@ -332,10 +351,14 @@ namespace BlackThunder.UniTest.Tests.Unit
             var metadataTemplate_original = _lab.MetadataTemplate;
             var metadataTemplate_copied = copied.MetadataTemplate;
 
-            Assert.That(metadataTemplate_copied.ExpectedExceptionType, Is.EqualTo(metadataTemplate_original.ExpectedExceptionType));
+            Assert.That(
+                metadataTemplate_copied.ExpectedExceptionType,
+                Is.EqualTo(metadataTemplate_original.ExpectedExceptionType));
             Assert.That(metadataTemplate_copied.ToUnsustainable, Is.EqualTo(metadataTemplate_original.ToUnsustainable));
             Assert.That(metadataTemplate_copied.ToUncontinuable, Is.EqualTo(metadataTemplate_original.ToUncontinuable));
-            Assert.That(metadataTemplate_copied.RemainingExecutionCount, Is.EqualTo(metadataTemplate_original.RemainingExecutionCount));
+            Assert.That(
+                metadataTemplate_copied.RemainingExecutionCount,
+                Is.EqualTo(metadataTemplate_original.RemainingExecutionCount));
         }
     }
 }

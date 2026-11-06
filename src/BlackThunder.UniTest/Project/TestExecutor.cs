@@ -26,8 +26,7 @@ namespace BlackThunder.UniTest
             {
                 if (_executed)
                 {
-                    throw new InvalidOperationException(
-                        "Test Executor cannot be executed multiple times.");
+                    throw new InvalidOperationException("Test Executor cannot be executed multiple times.");
                 }
 
                 _executed = true;
@@ -77,8 +76,7 @@ namespace BlackThunder.UniTest
                 }
                 catch (Exception ex)
                 {
-                    ex = new ExecutionException(
-                        $"Test Executor failed at node '{_node}'.", ex);
+                    ex = new ExecutionException($"Test Executor failed at node '{_node}'.", ex);
 
                     _node.SetExternalException(ex, Node<TModel>.NodeStatus.Failure);
                     throw ex;

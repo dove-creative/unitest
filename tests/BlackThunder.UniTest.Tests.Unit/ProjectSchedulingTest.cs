@@ -25,6 +25,7 @@ namespace BlackThunder.UniTest.Tests.Unit
             {
                 if (Environment.CurrentManagedThreadId != _ownerThreadId)
                     BackgroundPost.Set();
+
                 _callbacks.Add(() => callback(state));
             }
 
@@ -32,6 +33,7 @@ namespace BlackThunder.UniTest.Tests.Unit
             {
                 var previous = Current;
                 SetSynchronizationContext(this);
+
                 try { return action(); }
                 finally { SetSynchronizationContext(previous); }
             }
@@ -40,6 +42,7 @@ namespace BlackThunder.UniTest.Tests.Unit
             {
                 if (!_callbacks.TryTake(out var callback, TimeSpan.FromSeconds(10)))
                     throw new TimeoutException("No coordinator or worker continuation arrived.");
+
                 Invoke(callback);
             }
 
@@ -49,18 +52,22 @@ namespace BlackThunder.UniTest.Tests.Unit
                 {
                     if (!_callbacks.TryTake(out var callback))
                         return true;
+
                     Invoke(callback);
                 }
+
                 return _callbacks.Count == 0;
             }
 
             public void PumpUntil(Func<bool> completed)
             {
                 var timeout = Stopwatch.StartNew();
+
                 while (!completed())
                 {
                     if (timeout.Elapsed > TimeSpan.FromSeconds(10))
                         throw new TimeoutException("The test did not complete.");
+
                     if (_callbacks.TryTake(out var callback, 10))
                         Invoke(callback);
                 }
@@ -76,6 +83,7 @@ namespace BlackThunder.UniTest.Tests.Unit
             {
                 var previous = Current;
                 SetSynchronizationContext(this);
+
                 try { callback(); }
                 finally { SetSynchronizationContext(previous); }
             }
@@ -92,17 +100,20 @@ namespace BlackThunder.UniTest.Tests.Unit
             using var context = new ControlledContext();
             using var entered = new ManualResetEventSlim();
             using var release = new ManualResetEventSlim();
+
             var project = new ProjectMock(_ => new[]
             {
-            new Lab<Model>("wait", actor: (_, _) =>
-            {
-                entered.Set();
-                if (!release.Wait(TimeSpan.FromSeconds(10)))
-                    throw new TimeoutException("The actor was not released.");
-            })
-        });
+                new Lab<Model>("wait", actor: (_, _) =>
+                {
+                    entered.Set();
+
+                    if (!release.Wait(TimeSpan.FromSeconds(10)))
+                        throw new TimeoutException("The actor was not released.");
+                })
+            });
+
             var execution = context.Start(() => project.Execute(1));
-            Task[] workers = Array.Empty<Task>();
+            var workers = Array.Empty<Task>();
 
             try
             {
@@ -111,7 +122,10 @@ namespace BlackThunder.UniTest.Tests.Unit
 
                 // A blocked actor produces no new work. Only a finite number of
                 // startup/completion notifications should remain on the context.
-                Assert.That(context.Drain(32), Is.True, "The coordinator keeps scheduling itself without any state change.");
+                Assert.That(
+                    context.Drain(32),
+                    Is.True,
+                    "The coordinator keeps scheduling itself without any state change.");
                 Assert.That(execution.IsCompleted, Is.False);
             }
             finally
@@ -128,12 +142,15 @@ namespace BlackThunder.UniTest.Tests.Unit
         {
             using var context = new ControlledContext();
             using var release = new ManualResetEventSlim();
+
             var project = new ProjectMock(_ =>
             {
                 if (!release.Wait(TimeSpan.FromSeconds(10)))
                     throw new TimeoutException("The designer was not released.");
+
                 return Array.Empty<ILab<Model>>();
             });
+
             var execution = context.Start(() => project.Execute(1));
             var worker = GetWorkerTasks(project).Single();
 
@@ -145,7 +162,9 @@ namespace BlackThunder.UniTest.Tests.Unit
 
                 context.RunNext();
 
-                Assert.That(execution.IsCompleted && !worker.IsCompleted, Is.False,
+                Assert.That(
+                    execution.IsCompleted && !worker.IsCompleted,
+                    Is.False,
                     "A completion queue entry must not let the coordinator discard an unfinished Task.");
             }
             finally
@@ -170,8 +189,10 @@ namespace BlackThunder.UniTest.Tests.Unit
             IEnumerable<ILab<Model>> CreateLabs()
             {
                 yield return new Lab<Model>("first", actor: (_, _) => executed.Set());
+
                 if (!executed.Wait(TimeSpan.FromSeconds(10)))
-                    throw new TimeoutException("Prepared work did not wake the coordinator while the designer was still running.");
+                    throw new TimeoutException(
+                        "Prepared work did not wake the coordinator while the designer was still running.");
             }
         }
 
@@ -208,17 +229,20 @@ namespace BlackThunder.UniTest.Tests.Unit
             using var entered = new ManualResetEventSlim();
             using var release = new ManualResetEventSlim();
             using var cancellation = new CancellationTokenSource();
+
             var project = new ProjectMock(_ => new[]
             {
-            new Lab<Model>("wait", actor: (_, _) =>
-            {
-                entered.Set();
-                if (!release.Wait(TimeSpan.FromSeconds(10)))
-                    throw new TimeoutException("The actor was not released.");
-            })
-        });
+                new Lab<Model>("wait", actor: (_, _) =>
+                {
+                    entered.Set();
+
+                    if (!release.Wait(TimeSpan.FromSeconds(10)))
+                        throw new TimeoutException("The actor was not released.");
+                })
+            });
+
             var execution = context.Start(() => project.Execute(1, cancellation.Token));
-            Task[] workers = Array.Empty<Task>();
+            var workers = Array.Empty<Task>();
 
             try
             {

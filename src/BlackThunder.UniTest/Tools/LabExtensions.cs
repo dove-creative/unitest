@@ -4,7 +4,9 @@ namespace BlackThunder.UniTest
 {
     public static partial class Tools
     {
-        public static ILab<TModel> Extend<TModel>(this Lab<TModel> extension, ILab<TModel> original) where TModel : Model
+        public static ILab<TModel> Extend<TModel>(
+            this Lab<TModel> extension,
+            ILab<TModel> original) where TModel : Model
         {
             if (original is Lab<TModel> _lab)
             {
@@ -17,15 +19,22 @@ namespace BlackThunder.UniTest
             else
                 throw new System.NotSupportedException($"Cannot extend lab of unknown type '{original.GetType()}'");
         }
-        public static IEnumerable<ILab<TModel>> Extend<TModel>(this Lab<TModel> extension, IEnumerable<ILab<TModel>> originals) where TModel : Model
+        public static IEnumerable<ILab<TModel>> Extend<TModel>(
+            this Lab<TModel> extension,
+            IEnumerable<ILab<TModel>> originals) where TModel : Model
         {
             foreach (var original in originals)
                 yield return Extend(extension, original);
         }
 
 
-        public static Lab<TModel> Merge<TModel>(this Lab<TModel> lab, Lab<TModel> template,
-            bool useSetMetadata = true, bool useArranger = true, bool useActor = true, bool useAsserter = true)
+        public static Lab<TModel> Merge<TModel>(
+            this Lab<TModel> lab,
+            Lab<TModel> template,
+            bool useSetMetadata = true,
+            bool useArranger = true,
+            bool useActor = true,
+            bool useAsserter = true)
             where TModel : Model
         {
             var id = template.Id != Lab<TModel>.DefaultId
@@ -43,10 +52,17 @@ namespace BlackThunder.UniTest
 
             return _lab;
         }
-        public static IEnumerable<Lab<TModel>> Merge<TModel>(this Lab<TModel> lab, params Lab<TModel>[] templates) where TModel : Model =>
+        public static IEnumerable<Lab<TModel>> Merge<TModel>(
+            this Lab<TModel> lab,
+            params Lab<TModel>[] templates) where TModel : Model =>
             Merge(lab, (IEnumerable<Lab<TModel>>)templates);
-        public static IEnumerable<Lab<TModel>> Merge<TModel>(this Lab<TModel> lab, IEnumerable<Lab<TModel>> templates,
-            bool useSetMetadata = true, bool useArranger = true, bool useActor = true, bool useAsserter = true)
+        public static IEnumerable<Lab<TModel>> Merge<TModel>(
+            this Lab<TModel> lab,
+            IEnumerable<Lab<TModel>> templates,
+            bool useSetMetadata = true,
+            bool useArranger = true,
+            bool useActor = true,
+            bool useAsserter = true)
             where TModel : Model
         {
             foreach (var template in templates)

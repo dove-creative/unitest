@@ -10,7 +10,7 @@ The root [AGENTS.md](AGENTS.md) follows the shared [AGENTS template](blackthunde
 git submodule update --init --recursive
 ```
 
-Use the [C# convention](blackthunder-conventions/conventions/02.%20dove%20CSharp%20convention.md), [C# platform guidance](blackthunder-conventions/instructions/플랫폼%20기준%20-%20CSharp.md), and the instructions relevant to the task. Documentation follows the [documentation convention](blackthunder-conventions/conventions/01.%20dove%20documentation%20convention.md) and [Markdown format](blackthunder-conventions/instructions/문서%20양식.md). Review shared changes before advancing the submodule commit; keep UniTest-specific material in this repository.
+Use the [C# convention](blackthunder-conventions/conventions/02.%20dove%20CSharp%20Convention.md), [C# platform guidance](blackthunder-conventions/instructions/플랫폼%20기준%20-%20CSharp.md), and the instructions relevant to the task. Documentation follows the [documentation convention](blackthunder-conventions/conventions/01.%20dove%20Documentation%20Convention.md) and [Markdown format](blackthunder-conventions/instructions/문서%20양식.md). Review shared changes before advancing the submodule commit; keep UniTest-specific material in this repository.
 
 ## Development Environment
 
@@ -36,14 +36,15 @@ dotnet build BlackThunder.UniTest.sln --configuration Release --no-restore -m:1
 - Preserve execution order, cancellation/shutdown contracts, Lab ID values, and JSON fields when applying style changes.
 - Update affected tests for runtime changes, and update examples and migration guidance for public API changes.
 - Do not add runtime dependencies or vendor restored packages and generated output.
-- Maintain Korean documentation under `docs/Wiki.ko` and `docs/Workflow.ko`, with matching English documents under `docs/Wiki.en` and `docs/Workflow.en`.
+- Maintain Korean documentation under `docs/Wiki.ko`, with matching English documents under `docs/Wiki.en`.
+- Follow the [test authoring workflow](docs/Wiki.en/05.%20Test%20Authoring%20Workflow.md). Keep test problems and follow-up actions in the shared [issue list](docs/Wiki.en/Tests/Issues.md), with links to each module's detailed results.
 - Keep README examples small; put component responsibilities in implementation documents and tutorials in usage documents. Follow the shared translation guidance when synchronizing languages.
 
 ## Verification
 
 For documentation-only changes, inspect links, headings, code fences, blank lines, LF endings, and trailing whitespace. For code changes, build the solution and run the affected NUnit projects; shared runtime changes require both projects.
 
-Agents follow the explicit-test-request rule in [AGENTS.md](AGENTS.md). A user request to run the relevant verification authorizes those tests for the task. CI continues to build and test on its configured triggers.
+Agents select the verification scope according to [AGENTS.md](AGENTS.md): builds for behavior-preserving changes, affected tests for local behavior changes, and the full suite for cross-module, public API, build/dependency, release, or packaging changes. Long-running tests and tests requiring external services or equipment require confirmation first. CI continues to build and test on its configured triggers.
 
 ```powershell
 dotnet test BlackThunder.UniTest.sln --configuration Release --no-build --no-restore -m:1
@@ -55,7 +56,7 @@ The sample checks cover one-shot termination, all scenarios, exit codes, output 
 
 ## Stable Packages
 
-The package ID and assembly name are `BlackThunder.UniTest`; the next package version is `0.4.0`. Consumers upgrading from `0.3.0` follow the [migration guide](docs/Wiki.en/05-Migration.md).
+The package ID and assembly name are `BlackThunder.UniTest`; the next package version is `0.4.0`. Consumers upgrading from `0.3.0` should review the breaking changes in the [changelog](CHANGELOG.md).
 
 After verification, commit the source before preparing a stable distribution package with provenance:
 

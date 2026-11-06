@@ -25,7 +25,10 @@ namespace BlackThunder.UniTest.Tests.Unit
 
         // Content --------------------
         // Fixture
-        private void SetUp(Lab<Model> lab, int targetDepth = int.MaxValue, ExecutionMode executionMode = ExecutionMode.ThreadPool)
+        private void SetUp(
+            Lab<Model> lab,
+            int targetDepth = int.MaxValue,
+            ExecutionMode executionMode = ExecutionMode.ThreadPool)
         {
             _project = new ProjectMock(executionMode).SetTargetDepth(targetDepth);
 
@@ -45,8 +48,7 @@ namespace BlackThunder.UniTest.Tests.Unit
                     BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic,
                     binder: null,
                     types: new[] { typeof(Project<Model>), typeof(Node<Model>) },
-                    modifiers: null
-                );
+                    modifiers: null);
 
             _testExecutor = ctorInfo.Invoke(new object[] { _project, _node });
         }
@@ -67,8 +69,14 @@ namespace BlackThunder.UniTest.Tests.Unit
             _idleNodes = null;
         }
 
-        public void CheckNode(Node<Model> node, Node<Model>.NodeStatus status, int depth,
-            Node<Model> before, IEnumerable<Node<Model>> afters, Type expectedExceptionType, Lab<Model> lab)
+        public void CheckNode(
+            Node<Model> node,
+            Node<Model>.NodeStatus status,
+            int depth,
+            Node<Model> before,
+            IEnumerable<Node<Model>> afters,
+            Type expectedExceptionType,
+            Lab<Model> lab)
         {
             Assert.That(node.Status, Is.EqualTo(status));
             Assert.That(node.Depth, Is.EqualTo(depth));
@@ -93,8 +101,7 @@ namespace BlackThunder.UniTest.Tests.Unit
                     BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public,
                     binder: null,
                     types: new[] { typeof(CancellationToken) },
-                    modifiers: null
-                );
+                    modifiers: null);
 
             await (Task)method.Invoke(_testExecutor, new object[] { _cts.Token });
         }
@@ -290,12 +297,15 @@ namespace BlackThunder.UniTest.Tests.Unit
             // Arrange
             var entered = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
             using var release = new ManualResetEventSlim();
+
             SetUp(new Lab<Model>(actor: (_, _) =>
             {
                 entered.TrySetResult(true);
+
                 if (!release.Wait(TimeSpan.FromSeconds(10)))
                     throw new TimeoutException("The test did not release the executor callback.");
             }));
+
             var task = Execute();
 
             // Act

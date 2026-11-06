@@ -7,10 +7,10 @@ namespace BlackThunder.UniTest
     {
         protected CompactProject() { }
 
-        protected CompactProject(ExecutionMode executionMode)
-            : base(executionMode) { }
+        protected CompactProject(ExecutionMode executionMode) : base(executionMode) { }
 
-        public sealed override IEnumerable<ILab<TModel>> CreateLabs(TModel model) => CreateCompactLabs(model).Select(l => l.Build());
+        public sealed override IEnumerable<ILab<TModel>> CreateLabs(TModel model) =>
+            CreateCompactLabs(model).Select(l => l.Build());
 
         public abstract IEnumerable<CompactLab<TModel>> CreateCompactLabs(TModel model);
     }

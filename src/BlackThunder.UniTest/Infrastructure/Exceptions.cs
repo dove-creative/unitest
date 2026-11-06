@@ -7,14 +7,11 @@ namespace BlackThunder.UniTest
     /// </summary>
     public class ExecutionException : Exception
     {
-        public ExecutionException()
-            : this(string.Empty, null) { }
+        public ExecutionException() : this(string.Empty, null) { }
 
-        public ExecutionException(string message)
-            : this(message, null) { }
+        public ExecutionException(string message) : this(message, null) { }
 
-        public ExecutionException(string message, Exception innerException)
-            : base(message, innerException) { }
+        public ExecutionException(string message, Exception innerException) : base(message, innerException) { }
     }
 
     /// <summary>
@@ -39,11 +36,9 @@ namespace BlackThunder.UniTest
     /// </summary>
     public class TestCaseAbsentException : ArgumentException
     {
-        public TestCaseAbsentException()
-            : this(null, null) { }
+        public TestCaseAbsentException() : this(null, null) { }
 
-        public TestCaseAbsentException(string paramName)
-            : this(paramName, null) { }
+        public TestCaseAbsentException(string paramName) : this(paramName, null) { }
 
         public TestCaseAbsentException(string paramName, Exception innerException)
             : base("Cannot proceed: the required test state is absent.", paramName, innerException) { }
@@ -54,11 +49,9 @@ namespace BlackThunder.UniTest
     /// </summary>
     public class UndefinedTestCaseException : InvalidOperationException
     {
-        public UndefinedTestCaseException()
-            : base("Cannot execute undefined test case.") { }
+        public UndefinedTestCaseException() : base("Cannot execute undefined test case.") { }
 
-        public UndefinedTestCaseException(object testCase)
-            : this(testCase, null) { }
+        public UndefinedTestCaseException(object testCase) : this(testCase, null) { }
 
         public UndefinedTestCaseException(object testCase, Exception innerException)
             : base($"Cannot execute undefined test case '{testCase}'.", innerException) { }
@@ -69,8 +62,7 @@ namespace BlackThunder.UniTest
     /// </summary>
     public class InvalidTestException : InvalidOperationException
     {
-        public InvalidTestException()
-            : base("Cannot execute test due to invalid case or state.") { }
+        public InvalidTestException() : base("Cannot execute test due to invalid case or state.") { }
 
         public InvalidTestException(object currentCase, object currentModelState)
             : this(currentCase, currentModelState, null) { }
@@ -84,9 +76,7 @@ namespace BlackThunder.UniTest
     /// </summary>
     public class ProbeException : Exception
     {
-        public ProbeException(string message)
-            : base(message) { }
-        public ProbeException()
-            : this("Probe Exception") { }
+        public ProbeException(string message) : base(message) { }
+        public ProbeException() : this("Probe Exception") { }
     }
 }

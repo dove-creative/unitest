@@ -27,7 +27,10 @@ namespace BlackThunder.UniTest.Tests.Unit
 
         // Content --------------------
         // Fixture
-        private void SetUp(Func<Model, IEnumerable<ILab<Model>>> createLabs, bool withRootNode, bool secondFailure = false)
+        private void SetUp(
+            Func<Model, IEnumerable<ILab<Model>>> createLabs,
+            bool withRootNode,
+            bool secondFailure = false)
         {
             _project = new ProjectMock(createLabs);
 
@@ -36,7 +39,7 @@ namespace BlackThunder.UniTest.Tests.Unit
                 .GetValue(_project);
 
             _cts = new();
-            int executionCount = 0;
+            var executionCount = 0;
 
             if (withRootNode)
                 _lab = null;
@@ -60,8 +63,7 @@ namespace BlackThunder.UniTest.Tests.Unit
                     BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic,
                     binder: null,
                     types: new[] { typeof(Project<Model>), typeof(Node<Model>) },
-                    modifiers: null
-                );
+                    modifiers: null);
 
             _testDesigner = ctorInfo.Invoke(new object[] { _project, _node });
         }
@@ -83,8 +85,14 @@ namespace BlackThunder.UniTest.Tests.Unit
             _preparedNodes = null;
         }
 
-        public void CheckNode(Node<Model> node, Node<Model>.NodeStatus status, int depth,
-            Node<Model> before, IEnumerable<Node<Model>> afters, Type expectedExceptionType, Lab<Model> lab)
+        public void CheckNode(
+            Node<Model> node,
+            Node<Model>.NodeStatus status,
+            int depth,
+            Node<Model> before,
+            IEnumerable<Node<Model>> afters,
+            Type expectedExceptionType,
+            Lab<Model> lab)
         {
             Assert.That(node.Status, Is.EqualTo(status), node.Exception?.Message ?? "No exception");
             Assert.That(node.Depth, Is.EqualTo(depth));
@@ -109,8 +117,7 @@ namespace BlackThunder.UniTest.Tests.Unit
                     BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public,
                     binder: null,
                     types: new[] { typeof(CancellationToken) },
-                    modifiers: null
-                );
+                    modifiers: null);
 
             await (Task)method.Invoke(_testDesigner, new object[] { _cts.Token });
         }
@@ -129,10 +136,16 @@ namespace BlackThunder.UniTest.Tests.Unit
             // Assert
             Assert.That(_preparedNodes.Select(n => n.Lab), Is.EqualTo(labs));
 
-            CheckNode(_node, withRootNode ? Node<Model>.NodeStatus.Root : Node<Model>.NodeStatus.Success,
-                0, null, _preparedNodes, null, _lab);
+            CheckNode(
+                _node,
+                withRootNode ? Node<Model>.NodeStatus.Root : Node<Model>.NodeStatus.Success,
+                0,
+                null,
+                _preparedNodes,
+                null,
+                _lab);
 
-            int i = 0;
+            var i = 0;
             foreach (var preparedNode in _preparedNodes)
                 CheckNode(preparedNode, Node<Model>.NodeStatus.Ready, 1, _node, null, null, labs[i++]);
         }
@@ -167,8 +180,14 @@ namespace BlackThunder.UniTest.Tests.Unit
             // Assert
             Assert.That(_preparedNodes, Is.Empty);
 
-            CheckNode(_node, withRootNode ? Node<Model>.NodeStatus.Root : Node<Model>.NodeStatus.Success,
-                0, null, null, null, _lab);
+            CheckNode(
+                _node,
+                withRootNode ? Node<Model>.NodeStatus.Root : Node<Model>.NodeStatus.Success,
+                0,
+                null,
+                null,
+                null,
+                _lab);
         }
 
         // Idle - On Cancel
@@ -185,8 +204,14 @@ namespace BlackThunder.UniTest.Tests.Unit
             // Assert
             Assert.That(_preparedNodes, Is.Empty);
 
-            CheckNode(_node, withRootNode ? Node<Model>.NodeStatus.Root : Node<Model>.NodeStatus.Success,
-                0, null, null, null, _lab);
+            CheckNode(
+                _node,
+                withRootNode ? Node<Model>.NodeStatus.Root : Node<Model>.NodeStatus.Success,
+                0,
+                null,
+                null,
+                null,
+                _lab);
         }
         [TestCase(true), TestCase(false)]
         public void OnCancel_Idle_ExecptionThrown_CreateLabs(bool withRootNode)
@@ -200,8 +225,14 @@ namespace BlackThunder.UniTest.Tests.Unit
             // Assert
             Assert.That(_preparedNodes, Is.Empty);
 
-            CheckNode(_node, withRootNode ? Node<Model>.NodeStatus.Root : Node<Model>.NodeStatus.Success,
-                0, null, null, null, _lab);
+            CheckNode(
+                _node,
+                withRootNode ? Node<Model>.NodeStatus.Root : Node<Model>.NodeStatus.Success,
+                0,
+                null,
+                null,
+                null,
+                _lab);
         }
         [Test]
         public void OnCancel_Idle_ExecptionThrown_CreateLabs_Append()
@@ -230,8 +261,14 @@ namespace BlackThunder.UniTest.Tests.Unit
             // Assert
             Assert.That(_preparedNodes, Is.Empty);
 
-            CheckNode(_node, withRootNode ? Node<Model>.NodeStatus.Root : Node<Model>.NodeStatus.Success,
-                0, null, null, null, _lab);
+            CheckNode(
+                _node,
+                withRootNode ? Node<Model>.NodeStatus.Root : Node<Model>.NodeStatus.Success,
+                0,
+                null,
+                null,
+                null,
+                _lab);
         }
 
         // Cancelled - Execute
@@ -248,8 +285,14 @@ namespace BlackThunder.UniTest.Tests.Unit
 
             // Assert
             Assert.That(_preparedNodes, Is.Empty);
-            CheckNode(_node, withRootNode ? Node<Model>.NodeStatus.Root : Node<Model>.NodeStatus.Success,
-                0, null, null, null, _lab);
+            CheckNode(
+                _node,
+                withRootNode ? Node<Model>.NodeStatus.Root : Node<Model>.NodeStatus.Success,
+                0,
+                null,
+                null,
+                null,
+                _lab);
         }
         [TestCase(true), TestCase(false)]
         public async Task Execute_Cancelled_ExecptionThrown_CreateLab(bool withRootNode)
@@ -263,8 +306,14 @@ namespace BlackThunder.UniTest.Tests.Unit
 
             // Assert
             Assert.That(_preparedNodes, Is.Empty);
-            CheckNode(_node, withRootNode ? Node<Model>.NodeStatus.Root : Node<Model>.NodeStatus.Success,
-                0, null, null, null, _lab);
+            CheckNode(
+                _node,
+                withRootNode ? Node<Model>.NodeStatus.Root : Node<Model>.NodeStatus.Success,
+                0,
+                null,
+                null,
+                null,
+                _lab);
         }
         [Test]
         public async Task Execute_Cancelled_ExecptionThrown_Append()
@@ -293,8 +342,14 @@ namespace BlackThunder.UniTest.Tests.Unit
 
             // Assert
             Assert.That(_preparedNodes, Is.Empty);
-            CheckNode(_node, withRootNode ? Node<Model>.NodeStatus.Root : Node<Model>.NodeStatus.Success,
-                0, null, null, null, _lab);
+            CheckNode(
+                _node,
+                withRootNode ? Node<Model>.NodeStatus.Root : Node<Model>.NodeStatus.Success,
+                0,
+                null,
+                null,
+                null,
+                _lab);
         }
 
         // Executing - Execute
@@ -303,6 +358,7 @@ namespace BlackThunder.UniTest.Tests.Unit
         {
             // Arrange
             var labs = new[] { new Lab<Model>(), new Lab<Model>() };
+
             _createLabs = _ =>
             {
                 Thread.Sleep(_delay);
@@ -335,9 +391,11 @@ namespace BlackThunder.UniTest.Tests.Unit
             var entered = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
             using var release = new ManualResetEventSlim();
             var labs = new[] { new Lab<Model>(), new Lab<Model>() };
+
             _createLabs = _ =>
             {
                 entered.TrySetResult(true);
+
                 if (!release.Wait(TimeSpan.FromSeconds(10)))
                     throw new TimeoutException("The test did not release the designer callback.");
 
@@ -364,8 +422,7 @@ namespace BlackThunder.UniTest.Tests.Unit
 
             // Assert
             Assert.That(_preparedNodes, Is.Empty);
-            CheckNode(_node, Node<Model>.NodeStatus.Cancelled,
-                0, null, null, typeof(OperationCanceledException), _lab);
+            CheckNode(_node, Node<Model>.NodeStatus.Cancelled, 0, null, null, typeof(OperationCanceledException), _lab);
         }
         [TestCase(true), TestCase(false)]
         public async Task OnCancel_Executing_NoTest(bool withRootNode)
@@ -373,9 +430,11 @@ namespace BlackThunder.UniTest.Tests.Unit
             // Arrange
             var entered = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
             using var release = new ManualResetEventSlim();
+
             _createLabs = _ =>
             {
                 entered.TrySetResult(true);
+
                 if (!release.Wait(TimeSpan.FromSeconds(10)))
                     throw new TimeoutException("The test did not release the designer callback.");
 
@@ -401,8 +460,14 @@ namespace BlackThunder.UniTest.Tests.Unit
 
             // Assert
             Assert.That(_preparedNodes, Is.Empty);
-            CheckNode(_node, withRootNode ? Node<Model>.NodeStatus.Root : Node<Model>.NodeStatus.Success,
-                0, null, null, null, _lab);
+            CheckNode(
+                _node,
+                withRootNode ? Node<Model>.NodeStatus.Root : Node<Model>.NodeStatus.Success,
+                0,
+                null,
+                null,
+                null,
+                _lab);
         }
 
         // Executed - Execute

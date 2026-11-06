@@ -35,7 +35,7 @@ UniTest는 모델의 상태와 가능한 동작을 조합해 테스트 경로를
 dotnet add package BlackThunder.UniTest --version "[0.4.0]"
 ```
 
-패키지 ID, 네임스페이스와 DLL 이름은 각각 `BlackThunder.UniTest`, `BlackThunder.UniTest`, `BlackThunder.UniTest.dll`이다. 이전 버전 사용자는 [0.4.0 이전 안내](docs/Wiki.ko/05-Migration.md)를 따른다. DLL을 직접 사용하는 호스트에는 `lib/netstandard2.1`의 DLL을 전달한다.
+패키지 ID, 네임스페이스와 DLL 이름은 각각 `BlackThunder.UniTest`, `BlackThunder.UniTest`, `BlackThunder.UniTest.dll`이다. DLL을 직접 사용하는 호스트에는 `lib/netstandard2.1`의 DLL을 전달한다.
 
 ## 빠른 시작
 
@@ -109,16 +109,17 @@ dotnet run --project samples/BlackThunder.UniTest.Samples.csproj -- single
 
 ## 문서
 
-- [테스트 방법론](docs/Wiki.ko/00-Unit-Test-Guideline.md): 상태-동작 표와 테스트 범위
-- [개요](docs/Wiki.ko/01-Overview.md): 목적, 핵심 구조와 대표 흐름
-- [구현](docs/Wiki.ko/02-Implementations.md): 구성 요소의 책임과 실행·종료 처리
-- [확장 기능](docs/Wiki.ko/03-Uni-Test-Extensions.md): 실패 중단, 재실행과 연속 실행
-- [사용법](docs/Wiki.ko/04-Usage.md): API 선택과 단일·다중 상태 튜토리얼
-- [테스트 작성 워크플로](docs/Workflow.ko/01-Test-Authoring-Workflow.md): 에이전트 보조 작성과 결과 기록
-- [외부 NUnit 실행](docs/Workflow.ko/02-External-NUnit-Executor-Workflow.md): 소비 프로젝트의 CLI 검증
+- [테스트 방법론](docs/Wiki.ko/00.%20Unit%20Test%20Guideline.md): 상태-동작 표와 테스트 범위
+- [개요](docs/Wiki.ko/01.%20Overview.md): 목적, 핵심 구조와 대표 흐름
+- [구현](docs/Wiki.ko/02.%20Implementations.md): 구성 요소의 책임과 실행·종료 처리
+- [확장 기능](docs/Wiki.ko/03.%20UniTest%20Extensions.md): 실패 중단, 재실행과 연속 실행
+- [사용법](docs/Wiki.ko/04.%20Usage.md): API 선택과 단일·다중 상태 튜토리얼
+- [테스트 작성 워크플로](docs/Wiki.ko/05.%20Test%20Authoring%20Workflow.md): 테스트 작성, 프로젝트 구성, CLI 실행과 결과 기록
 - [기여 지침](CONTRIBUTING.md): 공통 컨벤션, 개발 환경과 패키지 검증
 
 ## 테스트
+
+[테스트 구성과 결과](docs/Wiki.ko/Tests/Result.md)에서 일반 단위 테스트와 UniTest 기반 자체 테스트의 범위 및 전체 실행 결과를 확인할 수 있다.
 
 ```powershell
 dotnet restore BlackThunder.UniTest.sln

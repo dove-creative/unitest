@@ -9,10 +9,13 @@ namespace BlackThunder.UniTest.Tests.Unit
     {
         public Func<Model, IEnumerable<ILab<Model>>> CreateLabsHandler;
 
-        public ProjectMock(Func<Model, IEnumerable<ILab<Model>>> createLabs = null) => this.CreateLabsHandler = createLabs;
+        public ProjectMock(Func<Model, IEnumerable<ILab<Model>>> createLabs = null) =>
+            this.CreateLabsHandler = createLabs;
 
-        public ProjectMock(ExecutionMode executionMode, Func<Model, IEnumerable<ILab<Model>>> createLabs = null)
-            : base(executionMode) => this.CreateLabsHandler = createLabs;
+        public ProjectMock(
+            ExecutionMode executionMode,
+            Func<Model, IEnumerable<ILab<Model>>> createLabs = null) : base(executionMode) =>
+            this.CreateLabsHandler = createLabs;
 
         public ProjectMock SetTargetDepth(int depth)
         {

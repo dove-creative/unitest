@@ -37,19 +37,17 @@ namespace BlackThunder.UniTest.Samples.Scenarios.MultiState
 
                     if (_tc.Confineable(1, out tc, "Null"))
                     {
-                        labs.AddRange(new Lab<Model>("disposed", asserter: Check)
-                            .Extend(CreateKickboardLabs(model, tc)));
+                        labs.AddRange(
+                            new Lab<Model>("disposed", asserter: Check).Extend(CreateKickboardLabs(model, tc)));
                     }
                 }
                 else if (!model.Kickboard.Available)
                 {
-                    labs.AddRange(new Lab<Model>("discharged", asserter: Check)
-                        .Merge(GetTemplates(_tc)));
+                    labs.AddRange(new Lab<Model>("discharged", asserter: Check).Merge(GetTemplates(_tc)));
                 }
                 else
                 {
-                    labs.AddRange(new Lab<Model>("available", asserter: Check)
-                        .Extend(CreateKickboardLabs(model, _tc)));
+                    labs.AddRange(new Lab<Model>("available", asserter: Check).Extend(CreateKickboardLabs(model, _tc)));
                 }
             }
 
@@ -65,8 +63,7 @@ namespace BlackThunder.UniTest.Samples.Scenarios.MultiState
                 }
                 else if (!model.Kickboard.Available)
                 {
-                    labs.AddRange(new Lab<Model>("discharged", asserter: Check)
-                        .Merge(GetTemplates(tc)));
+                    labs.AddRange(new Lab<Model>("discharged", asserter: Check).Merge(GetTemplates(tc)));
                 }
                 else
                 {
@@ -85,8 +82,7 @@ namespace BlackThunder.UniTest.Samples.Scenarios.MultiState
 
             if (testCase.ConfineableExcept(0, out tc, MainTestCase.Mount, MainTestCase.Ride))
             {
-                labs.AddRange(new Lab<Model>("pass")
-                    .Extend(CreateKickboardLabs(model, tc)));
+                labs.AddRange(new Lab<Model>("pass").Extend(CreateKickboardLabs(model, tc)));
             }
 
             return labs;

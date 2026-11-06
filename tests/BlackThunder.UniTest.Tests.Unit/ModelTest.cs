@@ -393,17 +393,20 @@ namespace BlackThunder.UniTest.Tests.Unit
             // Assert
             CheckModel(false, count > 0, count);
         }
+        // M02-M03: reducing a limit cannot revive an already noncontinuable model.
         [TestCase(5), TestCase(0)]
         public void SetRemainingExecutionCount_Limited_Smaller_Noncontinuable(int count)
         {
             // Arrange
             _model.RemainingExecutionCount = 10;
+            _model.Continuable = false;
+            CheckModel(false, false, 10);
 
             // Act
             _model.RemainingExecutionCount = count;
 
             // Assert
-            CheckModel(false, count > 0, count);
+            CheckModel(false, false, count);
         }
     }
 }

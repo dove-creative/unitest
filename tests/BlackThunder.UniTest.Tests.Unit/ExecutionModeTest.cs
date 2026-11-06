@@ -19,8 +19,10 @@ namespace BlackThunder.UniTest.Tests.Unit
 
             public ModeProject() { }
 
-            public ModeProject(ExecutionMode executionMode, Func<Model, IEnumerable<ILab<Model>>> createLabs = null)
-                : base(executionMode) => _createLabs = createLabs;
+            public ModeProject(
+                ExecutionMode executionMode,
+                Func<Model, IEnumerable<ILab<Model>>> createLabs = null) : base(executionMode) =>
+                _createLabs = createLabs;
 
             public override IEnumerable<ILab<Model>> CreateLabs(Model model) => _createLabs?.Invoke(model);
         }
@@ -29,10 +31,10 @@ namespace BlackThunder.UniTest.Tests.Unit
         {
             public ModeCompactProject() { }
 
-            public ModeCompactProject(ExecutionMode executionMode)
-                : base(executionMode) { }
+            public ModeCompactProject(ExecutionMode executionMode) : base(executionMode) { }
 
-            public override IEnumerable<CompactLab<Model>> CreateCompactLabs(Model model) => Array.Empty<CompactLab<Model>>();
+            public override IEnumerable<CompactLab<Model>> CreateCompactLabs(Model model) =>
+                Array.Empty<CompactLab<Model>>();
         }
         [Test]
         public void DefaultConstructorsPreserveThreadPoolMode()
@@ -55,7 +57,8 @@ namespace BlackThunder.UniTest.Tests.Unit
         {
             var executionMode = (ExecutionMode)value;
             var projectException = Assert.Throws<ArgumentOutOfRangeException>(() => new ModeProject(executionMode));
-            var compactException = Assert.Throws<ArgumentOutOfRangeException>(() => new ModeCompactProject(executionMode));
+            var compactException = Assert.Throws<ArgumentOutOfRangeException>(
+                () => new ModeCompactProject(executionMode));
 
             Assert.That(projectException.ParamName, Is.EqualTo("executionMode"));
             Assert.That(compactException.ParamName, Is.EqualTo("executionMode"));
@@ -70,18 +73,21 @@ namespace BlackThunder.UniTest.Tests.Unit
             using var context = new QueuedSynchronizationContext();
             var designerContexts = new ConcurrentQueue<SynchronizationContext>();
             var executorContexts = new ConcurrentQueue<SynchronizationContext>();
+
             var project = new ModeProject(executionMode, _ =>
             {
                 designerContexts.Enqueue(SynchronizationContext.Current);
+
                 return new[]
                 {
-                new Lab<Model>("advance", actor: (model, _) =>
-                {
-                    executorContexts.Enqueue(SynchronizationContext.Current);
-                    model.Subject = model.Subject is int value ? value + 1 : 1;
-                })
+                    new Lab<Model>("advance", actor: (model, _) =>
+                    {
+                        executorContexts.Enqueue(SynchronizationContext.Current);
+                        model.Subject = model.Subject is int value ? value + 1 : 1;
+                    })
                 };
             });
+
             Node<Model> result = null;
 
             context.Run(async () =>
@@ -89,7 +95,7 @@ namespace BlackThunder.UniTest.Tests.Unit
                 result = continuous ? await project.ExecuteContinuously(2) : await project.Execute(2);
             });
 
-            Assert.That(result.AllSucceed(out bool cancelled), Is.True);
+            Assert.That(result.AllSucceed(out var cancelled), Is.True);
             Assert.That(cancelled, Is.False);
             Assert.That(result.GetLastNode().Model.ExecutionCount, Is.EqualTo(2));
             Assert.That(result.GetLastNode().Model.Subject, Is.EqualTo(2));
@@ -125,8 +131,8 @@ namespace BlackThunder.UniTest.Tests.Unit
         {
             var project = new ModeProject(executionMode, _ => new[]
             {
-            new Lab<Model>("fail", actor: (_, _) => throw new ProbeException())
-        });
+                new Lab<Model>("fail", actor: (_, _) => throw new ProbeException())
+            });
 
             var result = await project.Execute(1);
             var failedNode = result.Afters.Single();
@@ -141,14 +147,18 @@ namespace BlackThunder.UniTest.Tests.Unit
         [TestCase(ExecutionMode.ThreadPool, "TestExecutor")]
         [TestCase(ExecutionMode.Inline, "TestDesigner")]
         [TestCase(ExecutionMode.Inline, "TestExecutor")]
-        public async Task PreCancelledWorkerCompletesWithoutRunningUserCode(ExecutionMode executionMode, string workerName)
+        public async Task PreCancelledWorkerCompletesWithoutRunningUserCode(
+            ExecutionMode executionMode,
+            string workerName)
         {
-            bool userCodeRan = false;
+            var userCodeRan = false;
+
             var project = new ModeProject(executionMode, _ =>
             {
                 userCodeRan = true;
                 return Array.Empty<ILab<Model>>();
             });
+
             var node = workerName == "TestDesigner"
                 ? new Node<Model>(null)
                 : new Node<Model>(new Lab<Model>(actor: (_, _) => userCodeRan = true));
@@ -158,8 +168,12 @@ namespace BlackThunder.UniTest.Tests.Unit
             await ExecuteWorker(workerName, project, node, cancellation.Token);
 
             Assert.That(userCodeRan, Is.False);
-            Assert.That(node.Status, Is.EqualTo(workerName == "TestDesigner"
-                ? Node<Model>.NodeStatus.Root : Node<Model>.NodeStatus.Cancelled));
+            Assert.That(
+                node.Status,
+                Is.EqualTo(
+                    workerName == "TestDesigner"
+                        ? Node<Model>.NodeStatus.Root
+                        : Node<Model>.NodeStatus.Cancelled));
             Assert.That(project.ProcessCount, Is.EqualTo(workerName == "TestDesigner" ? 0 : 1));
         }
 
@@ -167,14 +181,18 @@ namespace BlackThunder.UniTest.Tests.Unit
         [TestCase(ExecutionMode.ThreadPool, "TestExecutor")]
         [TestCase(ExecutionMode.Inline, "TestDesigner")]
         [TestCase(ExecutionMode.Inline, "TestExecutor")]
-        public async Task CancellationDuringWorkerPreservesCancelledState(ExecutionMode executionMode, string workerName)
+        public async Task CancellationDuringWorkerPreservesCancelledState(
+            ExecutionMode executionMode,
+            string workerName)
         {
             using var cancellation = new CancellationTokenSource();
+
             var project = new ModeProject(executionMode, _ =>
             {
                 cancellation.Cancel();
                 return new[] { new Lab<Model>() };
             });
+
             var node = workerName == "TestDesigner"
                 ? new Node<Model>(null)
                 : new Node<Model>(new Lab<Model>(actor: (_, _) => cancellation.Cancel()));
@@ -186,13 +204,21 @@ namespace BlackThunder.UniTest.Tests.Unit
             Assert.That(project.ProcessCount, Is.EqualTo(workerName == "TestDesigner" ? 0 : 1));
         }
 
-        private static Task ExecuteWorker(string workerName, Project<Model> project, Node<Model> node, CancellationToken cancellationToken)
+        private static Task ExecuteWorker(
+            string workerName,
+            Project<Model> project,
+            Node<Model> node,
+            CancellationToken cancellationToken)
         {
             var workerType = typeof(Project<Model>).GetNestedType(workerName, BindingFlags.NonPublic)
                 .MakeGenericType(typeof(Model));
+
             var constructor = workerType.GetConstructor(
                 BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic,
-                null, new[] { typeof(Project<Model>), typeof(Node<Model>) }, null);
+                null,
+                new[] { typeof(Project<Model>), typeof(Node<Model>) },
+                null);
+
             var worker = constructor.Invoke(new object[] { project, node });
             var execute = workerType.GetMethod("Execute", new[] { typeof(CancellationToken) });
             return (Task)execute.Invoke(worker, new object[] { cancellationToken });

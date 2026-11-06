@@ -15,16 +15,20 @@ namespace BlackThunder.UniTest.Samples
                 return await RunCommandAsync(args);
 
             PrintUsage();
+
             while (true)
             {
                 Console.Write("sample> ");
                 var input = Console.ReadLine();
+
                 if (input == null)
                     return 0;
 
                 var command = input.Trim();
+
                 if (command.Length == 0)
                     continue;
+
                 if (string.Equals(command, "exit", StringComparison.OrdinalIgnoreCase))
                     return 0;
 
@@ -48,19 +52,24 @@ namespace BlackThunder.UniTest.Samples
                 {
                     case "single":
                         return await RunScenarioAsync(
-                            () => new SingleProject().Execute(SampleEnvironment.SingleStateDepth), "SingleState");
+                            () => new SingleProject().Execute(SampleEnvironment.SingleStateDepth),
+                            "SingleState");
                     case "single-replay":
                         return await RunScenarioAsync(
-                            () => new SingleProject().Execute(SampleEnvironment.SingleStateReplayIds), "SingleStateReplay");
+                            () => new SingleProject().Execute(SampleEnvironment.SingleStateReplayIds),
+                            "SingleStateReplay");
                     case "multi":
                         return await RunScenarioAsync(
-                            () => new MultiProject().Execute(SampleEnvironment.MultiStateDepth), "MultiState");
+                            () => new MultiProject().Execute(SampleEnvironment.MultiStateDepth),
+                            "MultiState");
                     case "single-continuous":
                         return await RunScenarioAsync(
-                            () => new SingleProject().ExecuteContinuously(SampleEnvironment.SingleStateContinuousDepth), "SingleStateContinuous");
+                            () => new SingleProject().ExecuteContinuously(SampleEnvironment.SingleStateContinuousDepth),
+                            "SingleStateContinuous");
                     case "multi-continuous":
                         return await RunScenarioAsync(
-                            () => new MultiProject().ExecuteContinuously(SampleEnvironment.MultiStateContinuousDepth), "MultiStateContinuous");
+                            () => new MultiProject().ExecuteContinuously(SampleEnvironment.MultiStateContinuousDepth),
+                            "MultiStateContinuous");
                     case "help":
                         PrintUsage();
                         return 0;

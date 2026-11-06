@@ -20,7 +20,8 @@ namespace BlackThunder.UniTest.Tests.Unit
 
         private sealed class ThrowingModelProject : Project<ThrowingModel>
         {
-            public override IEnumerable<ILab<ThrowingModel>> CreateLabs(ThrowingModel model) => Array.Empty<ILab<ThrowingModel>>();
+            public override IEnumerable<ILab<ThrowingModel>> CreateLabs(ThrowingModel model) =>
+                Array.Empty<ILab<ThrowingModel>>();
         }
 
 
@@ -77,11 +78,12 @@ namespace BlackThunder.UniTest.Tests.Unit
         [TestCase("pass/missing/pass", false, 1)]
         public void Execute_Targeted_UnknownIdThrows(string ids, bool stopOnFailure, int expectedActorCalls)
         {
-            int actorCalls = 0;
+            var actorCalls = 0;
+
             var targetedProject = new ProjectMock(_ => new[]
             {
-            new Lab<Model>("pass", actor: (_, _) => actorCalls++)
-        });
+                new Lab<Model>("pass", actor: (_, _) => actorCalls++)
+            });
 
             var exception = Assert.ThrowsAsync<ArgumentException>(() => targetedProject.Execute(ids, stopOnFailure));
 
@@ -111,7 +113,10 @@ namespace BlackThunder.UniTest.Tests.Unit
         public async Task Run_Targeted_UnknownIdReturnsFalse(string ids)
         {
             var targetedProject = new ProjectMock(_ => new[] { new Lab<Model>("pass") });
-            var reportPath = Path.Combine(TestContext.CurrentContext.WorkDirectory, "ReplayRegression", Guid.NewGuid().ToString("N"));
+            var reportPath = Path.Combine(
+                TestContext.CurrentContext.WorkDirectory,
+                "ReplayRegression",
+                Guid.NewGuid().ToString("N"));
 
             var result = await targetedProject.Run(reportPath, "replay", ids, printResult: false);
 
@@ -121,7 +126,8 @@ namespace BlackThunder.UniTest.Tests.Unit
         public async Task Execute_Targeted_StopOnFailure()
         {
             // Arrange
-            bool LabCreatedAfterFailure = false;
+            var LabCreatedAfterFailure = false;
+
             var targetedProject = new ProjectMock(model =>
             {
                 if (model.ExecutionCount > 0)
@@ -129,8 +135,8 @@ namespace BlackThunder.UniTest.Tests.Unit
 
                 return new[]
                 {
-                new Lab<Model>("fail", actor: (_, _) => throw new ProbeException()),
-                new Lab<Model>("after")
+                    new Lab<Model>("fail", actor: (_, _) => throw new ProbeException()),
+                    new Lab<Model>("after")
                 };
             });
 
@@ -171,6 +177,7 @@ namespace BlackThunder.UniTest.Tests.Unit
         public async Task Execute_Continuous_LabCreationFailureIsRecorded(bool deferred)
         {
             var expected = new ProbeException("Cannot create continuous labs.");
+
             var project = new ProjectMock(model => model.ExecutionCount == 0
                 ? new[] { new Lab<Model>("pass") }
                 : deferred ? CreateLabs() : throw expected);

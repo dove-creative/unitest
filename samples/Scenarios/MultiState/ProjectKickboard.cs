@@ -98,58 +98,70 @@ namespace BlackThunder.UniTest.Samples.Scenarios.MultiState
                 }
                 else if (state == State.Mounted)
                 {
-                    labs.AddRange(new Lab<Model>("mounted",
-                        expectedExceptionType: typeof(InvalidOperationException),
-                        toUncontinuable: true)
-                        .Merge(GetTemplates(tc)));
+                    labs.AddRange(
+                        new Lab<Model>(
+                            "mounted",
+                            expectedExceptionType: typeof(InvalidOperationException),
+                            toUncontinuable: true).Merge(GetTemplates(tc)));
                 }
                 else if (state == State.Disposed)
                 {
-                    labs.AddRange(new Lab<Model>("disposed",
-                        asserter: Check,
-                        expectedExceptionType: typeof(ObjectDisposedException),
-                        toUncontinuable: true)
-                        .Merge(GetTemplates(tc)));
+                    labs.AddRange(
+                        new Lab<Model>(
+                            "disposed",
+                            asserter: Check,
+                            expectedExceptionType: typeof(ObjectDisposedException),
+                            toUncontinuable: true).Merge(GetTemplates(tc)));
                 }
                 else
                     throw new InvalidTestException(state, model);
             }
+
             void Same()
             {
                 if (state == State.Mounted)
                 {
-                    labs.AddRange(new Lab<Model>("mounted", asserter: Check)
-                        .Merge(GetTemplates(tc)));
+                    labs.AddRange(new Lab<Model>("mounted", asserter: Check).Merge(GetTemplates(tc)));
                 }
                 else
                     throw new InvalidTestException(state, model);
             }
+
             void NotLicensed()
             {
                 if (state == State.Idle)
                 {
-                    labs.AddRange(new Lab<Model>("idle", expectedExceptionType: typeof(InvalidOperationException), toUncontinuable: true)
-                        .Merge(GetTemplates(tc)));
+                    labs.AddRange(
+                        new Lab<Model>(
+                            "idle",
+                            expectedExceptionType: typeof(InvalidOperationException),
+                            toUncontinuable: true).Merge(GetTemplates(tc)));
                 }
                 else if (state == State.Mounted)
                 {
-                    labs.AddRange(new Lab<Model>("mounted", expectedExceptionType: typeof(InvalidOperationException), toUncontinuable: true)
-                        .Merge(GetTemplates(tc)));
+                    labs.AddRange(
+                        new Lab<Model>(
+                            "mounted",
+                            expectedExceptionType: typeof(InvalidOperationException),
+                            toUncontinuable: true).Merge(GetTemplates(tc)));
                 }
                 else if (state == State.Disposed)
                 {
-                    labs.AddRange(new Lab<Model>("disposed", expectedExceptionType: typeof(ObjectDisposedException), toUncontinuable: true)
-                        .Merge(GetTemplates(tc)));
+                    labs.AddRange(
+                        new Lab<Model>(
+                            "disposed",
+                            expectedExceptionType: typeof(ObjectDisposedException),
+                            toUncontinuable: true).Merge(GetTemplates(tc)));
                 }
                 else
                     throw new InvalidTestException(state, model);
             }
+
             void Null()
             {
                 if (state == State.Idle)
                 {
-                    labs.AddRange(new Lab<Model>("idle", asserter: Check)
-                        .Merge(GetTemplates(tc)));
+                    labs.AddRange(new Lab<Model>("idle", asserter: Check).Merge(GetTemplates(tc)));
                 }
                 else if (state == State.Mounted)
                 {
@@ -162,8 +174,7 @@ namespace BlackThunder.UniTest.Samples.Scenarios.MultiState
                 }
                 else if (state == State.Disposed)
                 {
-                    labs.AddRange(new Lab<Model>("disposed", asserter: Check)
-                        .Merge(GetTemplates(tc)));
+                    labs.AddRange(new Lab<Model>("disposed", asserter: Check).Merge(GetTemplates(tc)));
                 }
                 else
                     throw new InvalidTestException(state, model);
@@ -173,8 +184,11 @@ namespace BlackThunder.UniTest.Samples.Scenarios.MultiState
             {
                 if (state == State.Idle)
                 {
-                    labs.AddRange(new Lab<Model>("idle", expectedExceptionType: typeof(InvalidOperationException), toUncontinuable: true)
-                            .Merge(GetTemplates(tc)));
+                    labs.AddRange(
+                        new Lab<Model>(
+                            "idle",
+                            expectedExceptionType: typeof(InvalidOperationException),
+                            toUncontinuable: true).Merge(GetTemplates(tc)));
                 }
                 else if (state == State.Mounted)
                 {
@@ -197,18 +211,22 @@ namespace BlackThunder.UniTest.Samples.Scenarios.MultiState
                 }
                 else if (state == State.Disposed)
                 {
-                    labs.AddRange(new Lab<Model>("disposed", asserter: Check, expectedExceptionType: typeof(ObjectDisposedException), toUncontinuable: true)
-                        .Merge(GetTemplates(tc)));
+                    labs.AddRange(
+                        new Lab<Model>(
+                            "disposed",
+                            asserter: Check,
+                            expectedExceptionType: typeof(ObjectDisposedException),
+                            toUncontinuable: true).Merge(GetTemplates(tc)));
                 }
                 else
                     throw new InvalidTestException(state, model);
             }
+
             void Dismount()
             {
                 if (state == State.Idle)
                 {
-                    labs.AddRange(new Lab<Model>("idle", asserter: Check)
-                        .Merge(GetTemplates(tc)));
+                    labs.AddRange(new Lab<Model>("idle", asserter: Check).Merge(GetTemplates(tc)));
                 }
                 else if (state == State.Mounted)
                 {
@@ -221,12 +239,12 @@ namespace BlackThunder.UniTest.Samples.Scenarios.MultiState
                 }
                 else if (state == State.Disposed)
                 {
-                    labs.AddRange(new Lab<Model>("disposed", asserter: Check)
-                        .Merge(GetTemplates(tc)));
+                    labs.AddRange(new Lab<Model>("disposed", asserter: Check).Merge(GetTemplates(tc)));
                 }
                 else
                     throw new InvalidTestException(state, model);
             }
+
             void Dispose()
             {
                 if (state == State.Idle)
@@ -261,8 +279,7 @@ namespace BlackThunder.UniTest.Samples.Scenarios.MultiState
                 }
                 else if (state == State.Disposed)
                 {
-                    labs.AddRange(new Lab<Model>("disposed", asserter: Check)
-                        .Merge(GetTemplates(tc)));
+                    labs.AddRange(new Lab<Model>("disposed", asserter: Check).Merge(GetTemplates(tc)));
                 }
                 else
                     throw new InvalidTestException(state, model);

@@ -15,10 +15,10 @@ namespace BlackThunder.UniTest
 
         // Content
         private CompositeLab() { }
-        public CompositeLab(Lab<TModel> original, Lab<TModel> extension)
-            : this()
+        public CompositeLab(Lab<TModel> original, Lab<TModel> extension) : this()
         {
             _labs = new() { original, extension };
+
             Id = string.Join(Lab<TModel>.Separator, extension.Id, original.Id);
         }
 
@@ -66,40 +66,32 @@ namespace BlackThunder.UniTest
                 }
             }
 
-            bool expectedExceptionThrown = false;
+            var actException = _labs[0].CaptureAct(model);
+            var expectedTypes = model.MetadataGroup.Values
+                .Select(md => md.ExpectedExceptionType)
+                .Where(type => type != null)
+                .ToList();
 
-            try
+            if (actException != null && !expectedTypes.Any(type => type.IsInstanceOfType(actException)))
             {
-                _labs[0].DoAct(model);
-            }
-            catch (Exception ex)
-            {
-                if (!model.MetadataGroup.Values.Any(md => md.ExpectedExceptionType?.IsAssignableFrom(ex.GetType()) ?? false))
-                {
-                    exception = new($"Act failed at '{_labs[0].Id}'", ex);
-                    model.Continuable = false;
-                    return;
-                }
-
-                expectedExceptionThrown = true;
+                exception = new($"Act failed at '{_labs[0].Id}'", actException);
+                model.Continuable = false;
+                return;
             }
 
-            if (!expectedExceptionThrown)
-            {
-                var missingExpectedException = model.MetadataGroup
-                    .Where(pair => !ReferenceEquals(pair.Key, _labs[0]))
-                    .Select(pair => pair.Value.ExpectedExceptionType)
-                    .FirstOrDefault(type => type != null);
+            // Every declared expectation must match, so a layer's type cannot be satisfied by another layer's match.
+            var missingType = expectedTypes.FirstOrDefault(type => !type.IsInstanceOfType(actException));
 
-                if (missingExpectedException != null)
-                {
-                    exception = new($"Act failed at '{_labs[0].Id}'",
-                        new MissingExpectedException(
-                            $"Expected exception '{missingExpectedException.Name}' was not thrown.",
-                            missingExpectedException));
-                    model.Continuable = false;
-                    return;
-                }
+            if (missingType != null)
+            {
+                exception = new(
+                    $"Act failed at '{_labs[0].Id}'",
+                    new MissingExpectedException(
+                        $"Expected exception '{missingType.Name}' was not thrown.",
+                        missingType,
+                        actException));
+                model.Continuable = false;
+                return;
             }
 
 

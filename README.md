@@ -35,7 +35,7 @@ Keep the validated `BlackThunder.UniTest.0.4.0.nupkg` in the consuming repositor
 dotnet add package BlackThunder.UniTest --version "[0.4.0]"
 ```
 
-The package ID, namespace, and DLL name are `BlackThunder.UniTest`, `BlackThunder.UniTest`, and `BlackThunder.UniTest.dll`, respectively. Existing consumers should follow the [0.4.0 migration guide](docs/Wiki.en/05-Migration.md). Hosts that load DLLs directly use the DLL under `lib/netstandard2.1`.
+The package ID, namespace, and DLL name are `BlackThunder.UniTest`, `BlackThunder.UniTest`, and `BlackThunder.UniTest.dll`, respectively. Hosts that load DLLs directly use the DLL under `lib/netstandard2.1`.
 
 ## Quick Start
 
@@ -109,16 +109,17 @@ Without arguments, the app opens the `sample>` prompt. With a command argument, 
 
 ## Documentation
 
-- [Testing methodology](docs/Wiki.en/00-Unit-Test-Guideline.md): state-action tables and test scope
-- [Overview](docs/Wiki.en/01-Overview.md): purpose, core structure, and representative flow
-- [Implementation](docs/Wiki.en/02-Implementations.md): component responsibilities, execution, and shutdown
-- [Extensions](docs/Wiki.en/03-Uni-Test-Extensions.md): failure stopping, replay, and continuous execution
-- [Usage](docs/Wiki.en/04-Usage.md): API selection and single-state/multi-state tutorials
-- [Test authoring workflow](docs/Workflow.en/01-Test-Authoring-Workflow.md): agent-assisted authoring and result recording
-- [External NUnit execution](docs/Workflow.en/02-External-NUnit-Executor-Workflow.md): CLI verification in consuming projects
+- [Testing methodology](docs/Wiki.en/00.%20Unit%20Test%20Guideline.md): state-action tables and test scope
+- [Overview](docs/Wiki.en/01.%20Overview.md): purpose, core structure, and representative flow
+- [Implementation](docs/Wiki.en/02.%20Implementations.md): component responsibilities, execution, and shutdown
+- [Extensions](docs/Wiki.en/03.%20UniTest%20Extensions.md): failure stopping, replay, and continuous execution
+- [Usage](docs/Wiki.en/04.%20Usage.md): API selection and single-state/multi-state tutorials
+- [Test authoring workflow](docs/Wiki.en/05.%20Test%20Authoring%20Workflow.md): test authoring, project setup, CLI execution, and result recording
 - [Contributing](CONTRIBUTING.md): shared conventions, development environment, and package verification
 
 ## Tests
+
+See [test structure and results](docs/Wiki.en/Tests/Result.md) for the scope of ordinary unit tests and UniTest-based self-tests, along with the overall execution results.
 
 ```powershell
 dotnet restore BlackThunder.UniTest.sln

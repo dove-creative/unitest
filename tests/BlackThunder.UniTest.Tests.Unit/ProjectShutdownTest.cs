@@ -16,12 +16,14 @@ namespace BlackThunder.UniTest.Tests.Unit
 
         private sealed class WorkerGate : IDisposable
         {
-            public readonly TaskCompletionSource<bool> Entered = new(TaskCreationOptions.RunContinuationsAsynchronously);
+            public readonly TaskCompletionSource<bool> Entered = new(
+                TaskCreationOptions.RunContinuationsAsynchronously);
             public readonly ManualResetEventSlim Release = new();
 
             public void Wait()
             {
                 Entered.TrySetResult(true);
+
                 if (!Release.Wait(TimeSpan.FromSeconds(15)))
                     throw new TimeoutException("The test did not release the worker.");
             }
@@ -34,10 +36,12 @@ namespace BlackThunder.UniTest.Tests.Unit
         {
             using var gate = new WorkerGate();
             using var cancellation = new CancellationTokenSource();
+
             var project = new ProjectMock(mode, _ => new[]
             {
-            new Lab<Model>("slow", actor: (_, _) => gate.Wait())
-        });
+                new Lab<Model>("slow", actor: (_, _) => gate.Wait())
+            });
+
             var execution = Task.Run(() => project.Execute(2, cancellation.Token));
 
             try
@@ -68,21 +72,26 @@ namespace BlackThunder.UniTest.Tests.Unit
             using var gate = new WorkerGate();
             using var cancellation = new CancellationTokenSource();
             var expected = new ProbeException("Designer failed during shutdown.");
-            int actorCalls = 0;
-            int observedFaults = 0;
+            var actorCalls = 0;
+            var observedFaults = 0;
             var previousLogger = Logger.ExceptionLogger;
+
             Logger.ExceptionLogger = exception =>
             {
                 if (ReferenceEquals(exception.InnerException, expected))
                     Interlocked.Increment(ref observedFaults);
             };
+
             var project = new ProjectMock(mode, _ =>
             {
                 gate.Wait();
+
                 if (fail)
                     throw expected;
+
                 return new[] { new Lab<Model>("never", actor: (_, _) => actorCalls++) };
             });
+
             var execution = Task.Run(() => project.Execute(1, cancellation.Token));
 
             try
@@ -94,6 +103,7 @@ namespace BlackThunder.UniTest.Tests.Unit
             finally
             {
                 gate.Release.Set();
+
                 try { await FinishExecution(project, execution); }
                 finally { Logger.ExceptionLogger = previousLogger; }
             }
@@ -102,8 +112,11 @@ namespace BlackThunder.UniTest.Tests.Unit
             Assert.That(actorCalls, Is.Zero);
             Assert.That(root.Afters, Is.Empty);
             Assert.That(GetWorkerTasks(project), Is.Empty);
-            Assert.That(root.Status, Is.EqualTo(fail ? Node<Model>.NodeStatus.Failure : Node<Model>.NodeStatus.Cancelled));
+            Assert.That(
+                root.Status,
+                Is.EqualTo(fail ? Node<Model>.NodeStatus.Failure : Node<Model>.NodeStatus.Cancelled));
             Assert.That(observedFaults, Is.EqualTo(fail ? 1 : 0));
+
             if (fail)
                 Assert.That(root.Exception.InnerException, Is.SameAs(expected));
         }
@@ -114,16 +127,19 @@ namespace BlackThunder.UniTest.Tests.Unit
         {
             using var gate = new WorkerGate();
             var stopped = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+
             var project = new ProjectMock(mode, _ => new[]
             {
-            new Lab<Model>("slow", actor: (_, _) => gate.Wait()),
-            new Lab<Model>("fail", actor: (_, _) =>
-            {
-                if (!gate.Entered.Task.Wait(TimeSpan.FromSeconds(10)))
-                    throw new TimeoutException("The slow actor did not start.");
-                throw new ProbeException();
-            })
-        });
+                new Lab<Model>("slow", actor: (_, _) => gate.Wait()),
+                new Lab<Model>("fail", actor: (_, _) =>
+                {
+                    if (!gate.Entered.Task.Wait(TimeSpan.FromSeconds(10)))
+                        throw new TimeoutException("The slow actor did not start.");
+
+                    throw new ProbeException();
+                })
+            });
+
             using var registration = GetInternalCancellation(project).Register(() => stopped.TrySetResult(true));
             var execution = Task.Run(() => project.Execute(1));
 
@@ -156,8 +172,9 @@ namespace BlackThunder.UniTest.Tests.Unit
         {
             using var gate = new WorkerGate();
             var limitReached = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
-            int cancellationMessages = 0;
+            var cancellationMessages = 0;
             var previousLogger = Logger.NormalLogger;
+
             Logger.NormalLogger = message =>
             {
                 if (message.StartsWith("Cancelling test: time limit exceeded", StringComparison.Ordinal))
@@ -166,8 +183,12 @@ namespace BlackThunder.UniTest.Tests.Unit
                     limitReached.TrySetResult(true);
                 }
             };
+
             var project = new ProjectMock(_ => new[] { new Lab<Model>("slow", actor: (_, _) => gate.Wait()) });
-            var reportPath = Path.Combine(TestContext.CurrentContext.WorkDirectory, "ShutdownRegression", Guid.NewGuid().ToString("N"));
+            var reportPath = Path.Combine(
+                TestContext.CurrentContext.WorkDirectory,
+                "ShutdownRegression",
+                Guid.NewGuid().ToString("N"));
             var execution = project.Run(reportPath, "shutdown", 1, timeLimit: 1, printResult: false);
 
             try
@@ -180,6 +201,7 @@ namespace BlackThunder.UniTest.Tests.Unit
             finally
             {
                 gate.Release.Set();
+
                 try { await FinishExecution(project, execution); }
                 finally { Logger.NormalLogger = previousLogger; }
             }
@@ -201,6 +223,7 @@ namespace BlackThunder.UniTest.Tests.Unit
             await execution.WaitAsync(TimeSpan.FromSeconds(10));
             // Also clean up workers when exercising the old, early-return behavior.
             var workers = Task.WhenAll(GetWorkerTasks(project));
+
             try { await workers.WaitAsync(TimeSpan.FromSeconds(10)); }
             catch when (workers.IsCompleted) { }
         }

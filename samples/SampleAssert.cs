@@ -40,7 +40,8 @@ namespace BlackThunder.UniTest.Samples
                     exception);
             }
 
-            throw new InvalidOperationException($"Expected exception '{typeof(TException).Name}', but no exception was thrown.");
+            throw new InvalidOperationException(
+                $"Expected exception '{typeof(TException).Name}', but no exception was thrown.");
         }
 
         public static void DoesNotThrow(Action action)

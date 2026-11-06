@@ -33,7 +33,7 @@ jobs:
         run: dotnet build BlackThunder.UniTest.sln --configuration Release --no-restore -m:1
 
       - name: Test
-        run: dotnet test BlackThunder.UniTest.sln --configuration Release --no-build --no-restore -m:1 --logger trx --results-directory TestResults
+        run: dotnet test BlackThunder.UniTest.sln --configuration Release --no-build --no-restore -m:1 --logger trx
 
       - name: Verify sample CLI
         shell: pwsh
@@ -44,6 +44,8 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: test-results-${{ matrix.os }}
-          path: TestResults/**/*.trx
+          path: |
+            docs/Wiki.ko/Tests/Unit/**/*.trx
+            docs/Wiki.ko/Tests/UniTest/**/*.trx
           if-no-files-found: warn
           retention-days: 7

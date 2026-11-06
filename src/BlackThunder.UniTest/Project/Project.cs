@@ -53,20 +53,24 @@ namespace BlackThunder.UniTest
 
 
         // Content
-        protected Project()
-            : this(BlackThunder.UniTest.ExecutionMode.ThreadPool) { }
+        protected Project() : this(BlackThunder.UniTest.ExecutionMode.ThreadPool) { }
 
         protected Project(ExecutionMode executionMode)
         {
-            if (executionMode != BlackThunder.UniTest.ExecutionMode.ThreadPool && executionMode != BlackThunder.UniTest.ExecutionMode.Inline)
+            if (executionMode != BlackThunder.UniTest.ExecutionMode.ThreadPool
+                && executionMode != BlackThunder.UniTest.ExecutionMode.Inline)
                 throw new ArgumentOutOfRangeException(nameof(executionMode), executionMode, "Unknown execution mode.");
 
             ExecutionMode = executionMode;
         }
 
-        public Task<Node<TModel>> Execute(int depth, CancellationToken cancellationToken) => Execute(depth, true, cancellationToken);
+        public Task<Node<TModel>> Execute(int depth, CancellationToken cancellationToken) =>
+            Execute(depth, true, cancellationToken);
 
-        public async Task<Node<TModel>> Execute(int depth, bool stopOnFailure = true, CancellationToken cancellationToken = default)
+        public async Task<Node<TModel>> Execute(
+            int depth,
+            bool stopOnFailure = true,
+            CancellationToken cancellationToken = default)
         {
             DoExecute(cancellationToken);
             _targetDepth = depth;
@@ -94,6 +98,7 @@ namespace BlackThunder.UniTest
                         while (_idleNodes.Count > 0)
                         {
                             ct.ThrowIfCancellationRequested();
+
                             if (stopOnFailure && _failureOccurred)
                                 break;
 
@@ -113,6 +118,7 @@ namespace BlackThunder.UniTest
                         while (_preparedNodes.Count > 0)
                         {
                             ct.ThrowIfCancellationRequested();
+
                             if (stopOnFailure && _failureOccurred)
                                 break;
 
@@ -140,7 +146,7 @@ namespace BlackThunder.UniTest
 
                     if (_designerTasks.Count == 0 && _executorTasks.Count == 0)
                     {
-                        bool isEmpty = true;
+                        var isEmpty = true;
 
                         lock (_idleLock)
                             if (_idleNodes.Count > 0) isEmpty = false;
@@ -182,9 +188,13 @@ namespace BlackThunder.UniTest
             }
         }
 
-        public Task<Node<TModel>> Execute(string ids, CancellationToken cancellationToken) => Execute(ids, true, cancellationToken);
+        public Task<Node<TModel>> Execute(string ids, CancellationToken cancellationToken) =>
+            Execute(ids, true, cancellationToken);
 
-        public async Task<Node<TModel>> Execute(string ids, bool stopOnFailure = true, CancellationToken cancellationToken = default)
+        public async Task<Node<TModel>> Execute(
+            string ids,
+            bool stopOnFailure = true,
+            CancellationToken cancellationToken = default)
         {
             DoExecute(cancellationToken);
 
@@ -244,7 +254,11 @@ namespace BlackThunder.UniTest
         public Task<Node<TModel>> ExecuteContinuously(int depth, int seed, CancellationToken cancellationToken) =>
             ExecuteContinuously(depth, seed, true, cancellationToken);
 
-        public async Task<Node<TModel>> ExecuteContinuously(int depth, int seed = 0, bool stopOnFailure = true, CancellationToken cancellationToken = default)
+        public async Task<Node<TModel>> ExecuteContinuously(
+            int depth,
+            int seed = 0,
+            bool stopOnFailure = true,
+            CancellationToken cancellationToken = default)
         {
             DoExecute(cancellationToken);
 
@@ -276,6 +290,7 @@ namespace BlackThunder.UniTest
 
 
                     var candidates = _idleNodes.Where(n => n.Model.Sustainable);
+
                     if (!candidates.Any()) break;
 
                     node = candidates
@@ -330,17 +345,25 @@ namespace BlackThunder.UniTest
             }
         }
 
-        private void TrackTask<TWorker>(Dictionary<TWorker, Task> tasks, ConcurrentQueue<TWorker> completed, TWorker worker, Task task)
+        private void TrackTask<TWorker>(
+            Dictionary<TWorker, Task> tasks,
+            ConcurrentQueue<TWorker> completed,
+            TWorker worker,
+            Task task)
         {
             tasks.Add(worker, task);
 
             // Publish completion only after the entire async worker Task has ended,
             // including faults and cancellation before its core starts running.
-            _ = task.ContinueWith(_ =>
-            {
-                completed.Enqueue(worker);
-                SignalStateChange();
-            }, CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
+            _ = task.ContinueWith(
+                _ =>
+                {
+                    completed.Enqueue(worker);
+                    SignalStateChange();
+                },
+                CancellationToken.None,
+                TaskContinuationOptions.ExecuteSynchronously,
+                TaskScheduler.Default);
         }
 
         private void ObserveTask<TWorker>(Dictionary<TWorker, Task> tasks, TWorker worker)
@@ -362,6 +385,7 @@ namespace BlackThunder.UniTest
             // Only the coordinator starts workers and changes these dictionaries.
             // Once scheduling stops, this snapshot covers every remaining worker.
             var tasks = _designerTasks.Values.Concat(_executorTasks.Values).ToArray();
+
             try
             {
                 // Do not cancel this wait: callbacks must finish before the result
@@ -376,6 +400,7 @@ namespace BlackThunder.UniTest
 
             foreach (var designer in _designerTasks.Keys.ToArray())
                 ObserveTask(_designerTasks, designer);
+
             foreach (var executor in _executorTasks.Keys.ToArray())
                 ObserveTask(_executorTasks, executor);
 

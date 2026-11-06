@@ -32,12 +32,14 @@ namespace BlackThunder.UniTest
             }
 
             sb.Append('[');
+
             for (int i = 0; i < nodes.Count; i++)
             {
                 sb.Append(i == 0 ? NewLine : "," + NewLine);
                 AppendIndent(sb, depth + 1);
                 AppendNode(sb, depth + 1, nodes[i]);
             }
+
             sb.Append(NewLine);
             AppendIndent(sb, depth);
             sb.Append(']');
@@ -122,9 +124,11 @@ namespace BlackThunder.UniTest
             }
 
             sb.Append('"');
+
             for (int i = 0; i < value.Length; i++)
             {
-                char c = value[i];
+                var c = value[i];
+
                 switch (c)
                 {
                     case '"': sb.Append("\\\""); break;
@@ -143,9 +147,11 @@ namespace BlackThunder.UniTest
                             sb.Append("\\u").Append(((int)c).ToString("X4", CultureInfo.InvariantCulture));
                         else
                             sb.Append(c);
+
                         break;
                 }
             }
+
             sb.Append('"');
         }
     }

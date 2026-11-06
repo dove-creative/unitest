@@ -36,6 +36,7 @@ namespace BlackThunder.UniTest.Tests.Unit
                 Actor = (_, _) => _lab1Act = ++_executionOrder,
                 Asserter = (_, _) => _lab1Assert = ++_executionOrder
             };
+
             var extendingLab = new Lab<Model>
             {
                 SetMetadata = _ => _lab2SetMd = ++_executionOrder,
@@ -43,7 +44,6 @@ namespace BlackThunder.UniTest.Tests.Unit
                 Actor = (_, _) => _lab2Act = ++_executionOrder,
                 Asserter = (_, _) => _lab2Assert = ++_executionOrder
             };
-
 
             // Act
             var extendedLab = extendingLab.Extend(new[] { originalLab });
@@ -74,6 +74,7 @@ namespace BlackThunder.UniTest.Tests.Unit
                 Actor = (_, _) => _lab1Act = ++_executionOrder,
                 Asserter = (_, _) => _lab1Assert = ++_executionOrder
             };
+
             var sourceLab_lower = new Lab<Model>
             {
                 SetMetadata = _ => _lab2SetMd = ++_executionOrder,
@@ -81,6 +82,7 @@ namespace BlackThunder.UniTest.Tests.Unit
                 Actor = (_, _) => _lab2Act = ++_executionOrder,
                 Asserter = (_, _) => _lab2Assert = ++_executionOrder
             };
+
             var originalLab = new CompositeLab<Model>(sourceLab_uppder, sourceLab_lower);
 
             var extendingLab = new Lab<Model>
@@ -90,7 +92,6 @@ namespace BlackThunder.UniTest.Tests.Unit
                 Actor = (_, _) => _lab3Act = ++_executionOrder,
                 Asserter = (_, _) => _lab3Assert = ++_executionOrder
             };
-
 
             // Act
             var extendedLab = extendingLab.Extend(new[] { originalLab });
@@ -133,6 +134,7 @@ namespace BlackThunder.UniTest.Tests.Unit
                 Actor = (_, _) => _lab2Act = ++_executionOrder,
                 Asserter = (_, _) => _lab2Assert = ++_executionOrder
             };
+
             var sourceLab_lower = new Lab<Model>
             {
                 SetMetadata = _ => _lab3SetMd = ++_executionOrder,
@@ -140,6 +142,7 @@ namespace BlackThunder.UniTest.Tests.Unit
                 Actor = (_, _) => _lab3Act = ++_executionOrder,
                 Asserter = (_, _) => _lab3Assert = ++_executionOrder
             };
+
             var originalLab_composite = new CompositeLab<Model>(sourceLab_uppder, sourceLab_lower);
 
             var extendingLab = new Lab<Model>
@@ -149,7 +152,6 @@ namespace BlackThunder.UniTest.Tests.Unit
                 Actor = (_, _) => _lab4Act = ++_executionOrder,
                 Asserter = (_, _) => _lab4Assert = ++_executionOrder
             };
-
 
             // Act 1
             var extendedLab = extendingLab.Extend(new ILab<Model>[] { originalLab_normal, originalLab_composite });
@@ -210,7 +212,6 @@ namespace BlackThunder.UniTest.Tests.Unit
                 Actor = (_, _) => _lab2Act = ++_executionOrder
             };
 
-
             // Act
             var extended = assertionLab.Extend(new[] { actorLab });
             extended.First().Execute(new Model(), out var ex);
@@ -244,12 +245,12 @@ namespace BlackThunder.UniTest.Tests.Unit
                 SetMetadata = _ => _lab2SetMd = ++_executionOrder,
                 Actor = (_, _) => _lab2Act = ++_executionOrder
             };
+
             var actorLab_2 = new Lab<Model>("Actor_2")
             {
                 SetMetadata = _ => _lab3SetMd = ++_executionOrder,
                 Actor = (_, _) => _lab3Act = ++_executionOrder
             };
-
 
             // Act 1
             var extended = assertionLab.Extend(new[] { actorLab_1, actorLab_2 });

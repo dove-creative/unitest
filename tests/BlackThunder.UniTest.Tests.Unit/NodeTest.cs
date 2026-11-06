@@ -38,11 +38,13 @@ namespace BlackThunder.UniTest.Tests.Unit
                 Arranger = (_, _) => _lab1Executed = true,
                 Actor = (_, _) => { if (!_lab1Success) throw new ProbeException(); }
             };
+
             _lab2 = new Lab<Model>("lab_1")
             {
                 Arranger = (_, _) => _lab2Executed = true,
                 Actor = (_, _) => { if (!_lab2Success) throw new ProbeException(); }
             };
+
             _lab3 = new Lab<Model>("lab_3")
             {
                 Arranger = (_, _) => _lab3Executed = true,
@@ -73,8 +75,15 @@ namespace BlackThunder.UniTest.Tests.Unit
             _cts.Dispose();
         }
 
-        public void CheckNode(Node<Model> node,
-            Node<Model>.NodeStatus status, int depth, Node<Model> before, IEnumerable<Node<Model>> afters, Lab<Model> lab, Type exception, bool continuable)
+        public void CheckNode(
+            Node<Model> node,
+            Node<Model>.NodeStatus status,
+            int depth,
+            Node<Model> before,
+            IEnumerable<Node<Model>> afters,
+            Lab<Model> lab,
+            Type exception,
+            bool continuable)
         {
             Assert.That(node.Status, Is.EqualTo(status));
             Assert.That(node.Depth, Is.EqualTo(depth));
@@ -269,7 +278,8 @@ namespace BlackThunder.UniTest.Tests.Unit
             _node = new Node<Model>(null);
 
             // Act & Assert
-            Assert.Throws<ArgumentNullException>(() => _node.SetExternalException(null, Node<Model>.NodeStatus.Cancelled));
+            Assert.Throws<ArgumentNullException>(
+                () => _node.SetExternalException(null, Node<Model>.NodeStatus.Cancelled));
         }
         [Test]
         public void SetExternalException_Null_Idle()
@@ -278,7 +288,8 @@ namespace BlackThunder.UniTest.Tests.Unit
             _node = new Node<Model>(_lab1);
 
             // Act & Assert
-            Assert.Throws<ArgumentNullException>(() => _node.SetExternalException(null, Node<Model>.NodeStatus.Cancelled));
+            Assert.Throws<ArgumentNullException>(
+                () => _node.SetExternalException(null, Node<Model>.NodeStatus.Cancelled));
         }
         [Test]
         public void SetExternalException_Null_Executed_Continuable()
@@ -288,7 +299,8 @@ namespace BlackThunder.UniTest.Tests.Unit
             _node.Execute();
 
             // Act & Assert
-            Assert.Throws<ArgumentNullException>(() => _node.SetExternalException(null, Node<Model>.NodeStatus.Cancelled));
+            Assert.Throws<ArgumentNullException>(
+                () => _node.SetExternalException(null, Node<Model>.NodeStatus.Cancelled));
         }
         [Test]
         public void SetExternalException_Null_Executed_NotContinuable()
@@ -302,7 +314,8 @@ namespace BlackThunder.UniTest.Tests.Unit
 
             // Act & Assert
             Assert.True(_lab1Executed);
-            Assert.Throws<ArgumentNullException>(() => _node.SetExternalException(null, Node<Model>.NodeStatus.Cancelled));
+            Assert.Throws<ArgumentNullException>(
+                () => _node.SetExternalException(null, Node<Model>.NodeStatus.Cancelled));
         }
 
         // Append
@@ -463,13 +476,19 @@ namespace BlackThunder.UniTest.Tests.Unit
         [Test]
         public async Task Append_Executed_Continuable_Idle_Cancelling()
         {
-            // Arrange
+            // N14: Cancel after replay enters, and always release and observe the append task.
+            var entered = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+            using var release = new ManualResetEventSlim();
             var lab_1_executionCount = 0;
 
             var lab_1 = new Lab<Model>(actor: (_, _) =>
             {
-                lab_1_executionCount++;
-                Thread.Sleep(Delay);
+                if (Interlocked.Increment(ref lab_1_executionCount) == 1) return;
+
+                entered.TrySetResult(true);
+
+                if (!release.Wait(TimeSpan.FromSeconds(10)))
+                    throw new TimeoutException("The test did not release the replay callback.");
             });
 
             Node<Model> after = null;
@@ -480,19 +499,25 @@ namespace BlackThunder.UniTest.Tests.Unit
 
             // Act
             var task = Task.Run(() => after = new Node<Model>(_node, _lab2, _cts.Token));
-            await Task.Run(async () =>
-            {
-                await Task.Delay(Delay / 2);
-                _cts.Cancel();
-            });
 
             try
             {
-                await task;
+                await entered.Task.WaitAsync(TimeSpan.FromSeconds(10));
+                Assert.That(task.IsCompleted, Is.False);
+                _cts.Cancel();
             }
-            catch (Exception _ex)
+            finally
             {
-                ex = _ex;
+                release.Set();
+
+                try
+                {
+                    await task;
+                }
+                catch (Exception caught)
+                {
+                    ex = caught;
+                }
             }
 
             // Assert
@@ -502,6 +527,7 @@ namespace BlackThunder.UniTest.Tests.Unit
 
             Assert.That(ex, Is.AssignableTo<OperationCanceledException>());
             Assert.That(after, Is.Null);
+            Assert.That(_lab2Executed, Is.False);
         }
 
 
@@ -536,6 +562,7 @@ namespace BlackThunder.UniTest.Tests.Unit
         {
             // Arrange
             _node = new Node<Model>(beforeIsRoot ? null : _lab1);
+
             if (!beforeIsRoot) _node.Execute();
 
             var node_2 = new Node<Model>(_node, _lab2, _cts.Token);
@@ -568,6 +595,7 @@ namespace BlackThunder.UniTest.Tests.Unit
         {
             // Arrange
             _node = new Node<Model>(beforeIsRoot ? null : _lab1);
+
             if (!beforeIsRoot) _node.Execute();
 
 

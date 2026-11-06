@@ -49,7 +49,7 @@ namespace BlackThunder.UniTest
                 if (ct.IsCancellationRequested)
                     return;
 
-                Node<TModel> currentNode = _node;
+                var currentNode = _node;
                 IEnumerable<ILab<TModel>> labs;
 
                 try
@@ -58,8 +58,7 @@ namespace BlackThunder.UniTest
                 }
                 catch (Exception ex)
                 {
-                    ex = new ExecutionException(
-                        $"An exception occurred while creating labs for node '{_node}'.", ex);
+                    ex = new ExecutionException($"An exception occurred while creating labs for node '{_node}'.", ex);
 
                     currentNode.SetExternalException(ex, Node<TModel>.NodeStatus.Failure);
 
@@ -87,8 +86,7 @@ namespace BlackThunder.UniTest
                 }
                 catch (Exception ex)
                 {
-                    ex = new ExecutionException(
-                        $"Test Designer failed at node '{_node}'.", ex);
+                    ex = new ExecutionException($"Test Designer failed at node '{_node}'.", ex);
 
                     _node.SetExternalException(ex, Node<TModel>.NodeStatus.Failure);
                     throw ex;

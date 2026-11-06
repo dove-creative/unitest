@@ -12,7 +12,9 @@ namespace BlackThunder.UniTest
             get
             {
                 if (TestCases.Length <= i)
-                    throw new ArgumentOutOfRangeException(nameof(i), $"Index must be in range [0..{TestCases.Length - 1}] but was {i}");
+                    throw new ArgumentOutOfRangeException(
+                        nameof(i),
+                        $"Index must be in range [0..{TestCases.Length - 1}] but was {i}");
 
                 var (include, defs) = TestCases[i];
 
@@ -25,21 +27,26 @@ namespace BlackThunder.UniTest
         public int Count => TestCases.Length;
 
         // Internal
-        private readonly (bool include, object[] definitions)[] TestCases => _testCases ?? Array.Empty<(bool, object[])>();
+        private readonly (bool include, object[] definitions)[] TestCases =>
+            _testCases ?? Array.Empty<(bool, object[])>();
         private readonly (bool, object[])[] _testCases;
 
 
         // Content
         public TestCase(params object[] testCases)
             : this(testCases.Select(tc => (true, new object[] { tc })).ToArray()) { }
-        public TestCase(IEnumerable<(bool include, object[] definitions)> testCases) => _testCases = testCases.ToArray();
+        public TestCase(IEnumerable<(bool include, object[] definitions)> testCases) =>
+            _testCases = testCases.ToArray();
 
         public readonly TestCase Append(object definition, bool include = true) =>
             new TestCase(TestCases.Append((include, new object[] { definition })));
         public readonly TestCase Confine(int index, object definition)
         {
             if (index < 0 || index > TestCases.Length)
-                throw new ArgumentOutOfRangeException(nameof(index), $"Index must be in range [0..{TestCases.Length}] but was {index}");
+                throw new ArgumentOutOfRangeException(
+                    nameof(index),
+                    $"Index must be in range [0..{TestCases.Length}] but was {index}");
+
             if (definition == null)
                 throw new ArgumentNullException(nameof(definition), "The definition must not be null.");
 
@@ -47,6 +54,7 @@ namespace BlackThunder.UniTest
                 return Append(definition, true);
 
             var tc = new TestCase(TestCases.Select(tc => (tc.include, tc.definitions.ToArray())));
+
             tc.TestCases[index] = (true, new object[] { definition });
 
             return tc;
@@ -57,9 +65,14 @@ namespace BlackThunder.UniTest
         private TestCase Set(int index, object[] definitions, bool include)
         {
             if (index < 0 || index > TestCases.Length)
-                throw new ArgumentOutOfRangeException(nameof(index), $"Index must be in range [0..{TestCases.Length}] but was {index}");
+                throw new ArgumentOutOfRangeException(
+                    nameof(index),
+                    $"Index must be in range [0..{TestCases.Length}] but was {index}");
+
             if (definitions.Length == 0 || definitions.Any(d => d == null))
-                throw new ArgumentNullException(nameof(definitions), "Definitions must not be empty or contain null elements.");
+                throw new ArgumentNullException(
+                    nameof(definitions),
+                    "Definitions must not be empty or contain null elements.");
 
             var updatedTestCases = TestCases.Select(tc => (tc.include, tc.definitions.ToArray()));
 
@@ -98,9 +111,14 @@ namespace BlackThunder.UniTest
         public readonly bool Confineable(int index, params object[] definitions)
         {
             if (index < 0)
-                throw new ArgumentOutOfRangeException(nameof(index), $"Index must be greater than or equal to 0 but was {index}");
+                throw new ArgumentOutOfRangeException(
+                    nameof(index),
+                    $"Index must be greater than or equal to 0 but was {index}");
+
             if (definitions.Length == 0 || definitions.Any(d => d == null))
-                throw new ArgumentNullException(nameof(definitions), "Definitions must not be empty or contain null elements.");
+                throw new ArgumentNullException(
+                    nameof(definitions),
+                    "Definitions must not be empty or contain null elements.");
 
             if (Count <= index)
                 return true;
@@ -116,15 +134,19 @@ namespace BlackThunder.UniTest
         public readonly bool ConfineableExcept(int index, out TestCase confined, params object[] definitions)
         {
             if (index < 0 || index > TestCases.Length)
-                throw new ArgumentOutOfRangeException(nameof(index), $"Index must be in range [0..{TestCases.Length}] but was {index}");
+                throw new ArgumentOutOfRangeException(
+                    nameof(index),
+                    $"Index must be in range [0..{TestCases.Length}] but was {index}");
+
             if (definitions.Length == 0 || definitions.Any(d => d == null))
-                throw new ArgumentException("Definitions must not be empty or contain null elements.", nameof(definitions));
+                throw new ArgumentException(
+                    "Definitions must not be empty or contain null elements.",
+                    nameof(definitions));
 
             if (index == TestCases.Length)
             {
-                confined = new TestCase(TestCases
-                    .Select(tc => (tc.include, tc.definitions.ToArray()))
-                    .Append((false, definitions)));
+                confined = new TestCase(
+                    TestCases.Select(tc => (tc.include, tc.definitions.ToArray())).Append((false, definitions)));
 
                 return true;
             }
@@ -136,7 +158,8 @@ namespace BlackThunder.UniTest
                 if (defs.Any(d => !definitions.Contains(d)))
                 {
                     confined = new TestCase(TestCases.Select(tc => (tc.include, tc.definitions.ToArray())));
-                    confined.TestCases[index] = (true, confined.TestCases[index].definitions.Except(definitions).ToArray());
+                    confined.TestCases[index]
+                        = (true, confined.TestCases[index].definitions.Except(definitions).ToArray());
 
                     return true;
                 }

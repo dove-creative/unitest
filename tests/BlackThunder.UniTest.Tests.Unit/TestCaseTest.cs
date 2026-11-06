@@ -152,8 +152,7 @@ namespace BlackThunder.UniTest.Tests.Unit
         public void Include_Override_Negative()
         {
             // Arrange
-            var tc = new TestCase(
-                new[] { (true, new object[] { 0 }), (false, new object[] { 1, 10 }) });
+            var tc = new TestCase(new[] { (true, new object[] { 0 }), (false, new object[] { 1, 10 }) });
 
             // Act
             tc = tc.Include(1, 10);
@@ -193,8 +192,7 @@ namespace BlackThunder.UniTest.Tests.Unit
         public void Exclude_Override_Positive()
         {
             // Arrange
-            var tc = new TestCase(
-                new[] { (true, new object[] { 0 }), (false, new object[] { 1 }) });
+            var tc = new TestCase(new[] { (true, new object[] { 0 }), (false, new object[] { 1 }) });
 
             // Act
             tc = tc.Exclude(1, 10);
@@ -213,8 +211,7 @@ namespace BlackThunder.UniTest.Tests.Unit
         public void Exclude_Override_Negative()
         {
             // Arrange
-            var tc = new TestCase(
-                new[] { (true, new object[] { 0 }), (true, new object[] { 1, 10 }) });
+            var tc = new TestCase(new[] { (true, new object[] { 0 }), (true, new object[] { 1, 10 }) });
 
             // Act
             tc = tc.Exclude(1, 10);
@@ -235,9 +232,7 @@ namespace BlackThunder.UniTest.Tests.Unit
         public void Confineable_SingleParams_Positive_1()
         {
             // Arrange
-            var tc = new TestCase(
-                new[] { (true, new object[] { 0 }), (true, new object[] { 1, 10 }) });
-
+            var tc = new TestCase(new[] { (true, new object[] { 0 }), (true, new object[] { 1, 10 }) });
 
             // Act
             var confineable = tc.Confineable(1, out var _tc, 10);
@@ -259,9 +254,7 @@ namespace BlackThunder.UniTest.Tests.Unit
         public void Confineable_SingleParams_Positive_2()
         {
             // Arrange
-            var tc = new TestCase(
-                new[] { (true, new object[] { 0 }), (true, new object[] { 1, 10 }) });
-
+            var tc = new TestCase(new[] { (true, new object[] { 0 }), (true, new object[] { 1, 10 }) });
 
             // Act
             var confineable = tc.Confineable(1, out var _tc, -1);
@@ -273,9 +266,7 @@ namespace BlackThunder.UniTest.Tests.Unit
         public void Confineable_SingleParams_Positive_3()
         {
             // Arrange
-            var tc = new TestCase(
-                new[] { (true, new object[] { 0 }), (true, new object[] { 1, 10 }) });
-
+            var tc = new TestCase(new[] { (true, new object[] { 0 }), (true, new object[] { 1, 10 }) });
 
             // Act
             var confineable = tc.Confineable(2, out var _tc, 2);
@@ -302,9 +293,7 @@ namespace BlackThunder.UniTest.Tests.Unit
         public void Confineable_SingleParams_Negative_1()
         {
             // Arrange
-            var tc = new TestCase(
-                new[] { (true, new object[] { 0 }), (false, new object[] { 1, 10 }) });
-
+            var tc = new TestCase(new[] { (true, new object[] { 0 }), (false, new object[] { 1, 10 }) });
 
             // Act
             var confineable = tc.Confineable(1, out var _tc, 2);
@@ -326,9 +315,7 @@ namespace BlackThunder.UniTest.Tests.Unit
         public void Confineable_SingleParams_Negative_2()
         {
             // Arrange
-            var tc = new TestCase(
-                new[] { (true, new object[] { 0 }), (false, new object[] { 1, 10 }) });
-
+            var tc = new TestCase(new[] { (true, new object[] { 0 }), (false, new object[] { 1, 10 }) });
 
             // Act
             var confineable = tc.Confineable(1, out var _tc, 1);
@@ -341,9 +328,7 @@ namespace BlackThunder.UniTest.Tests.Unit
         public void Confineable_SingleParams_Negative_3()
         {
             // Arrange
-            var tc = new TestCase(
-                new[] { (true, new object[] { 0 }), (false, new object[] { 1, 10 }) });
-
+            var tc = new TestCase(new[] { (true, new object[] { 0 }), (false, new object[] { 1, 10 }) });
 
             // Act
             var confineable = tc.Confineable(2, out var _tc, 2);
@@ -370,9 +355,7 @@ namespace BlackThunder.UniTest.Tests.Unit
         public void Confineable_MultiParams_Positive()
         {
             // Arrange
-            var tc = new TestCase(
-                new[] { (true, new object[] { 0 }), (true, new object[] { 1, 10 }) });
-
+            var tc = new TestCase(new[] { (true, new object[] { 0 }), (true, new object[] { 1, 10 }) });
 
             // Act & Asserts
             Assert.That(tc.Confineable(1, 1, 10), Is.True);
@@ -384,9 +367,7 @@ namespace BlackThunder.UniTest.Tests.Unit
         public void Confineable_MultiParams_Negative()
         {
             // Arrange
-            var tc = new TestCase(
-                new[] { (true, new object[] { 0 }), (false, new object[] { 1, 10 }) });
-
+            var tc = new TestCase(new[] { (true, new object[] { 0 }), (false, new object[] { 1, 10 }) });
 
             // Act & Asserts
             Assert.That(tc.Confineable(1, 2, 3), Is.True);
@@ -399,9 +380,7 @@ namespace BlackThunder.UniTest.Tests.Unit
         public void ConfineableExcept_Positive_1()
         {
             // Arrange
-            var tc = new TestCase(
-                new[] { (true, new object[] { 0 }), (true, new object[] { 1, 10 }) });
-
+            var tc = new TestCase(new[] { (true, new object[] { 0 }), (true, new object[] { 1, 10 }) });
 
             // Act
             var confineable = tc.ConfineableExcept(1, out var _tc, 2, 3);
@@ -423,9 +402,7 @@ namespace BlackThunder.UniTest.Tests.Unit
         public void ConfineableExcept_Positive_2()
         {
             // Arrange
-            var tc = new TestCase(
-                new[] { (true, new object[] { 0 }), (true, new object[] { 1, 10 }) });
-
+            var tc = new TestCase(new[] { (true, new object[] { 0 }), (true, new object[] { 1, 10 }) });
 
             // Act
             var confineable = tc.ConfineableExcept(1, out var _tc, 1, 2);
@@ -447,9 +424,7 @@ namespace BlackThunder.UniTest.Tests.Unit
         public void ConfineableExcept_Positive_3()
         {
             // Arrange
-            var tc = new TestCase(
-                new[] { (true, new object[] { 0 }), (true, new object[] { 1, 10 }) });
-
+            var tc = new TestCase(new[] { (true, new object[] { 0 }), (true, new object[] { 1, 10 }) });
 
             // Act
             var confineable = tc.ConfineableExcept(1, out _, 1, 10, 100);
@@ -461,9 +436,7 @@ namespace BlackThunder.UniTest.Tests.Unit
         public void ConfineableExcept_Positive_4()
         {
             // Arrange
-            var tc = new TestCase(
-                new[] { (true, new object[] { 0 }), (true, new object[] { 1, 10 }) });
-
+            var tc = new TestCase(new[] { (true, new object[] { 0 }), (true, new object[] { 1, 10 }) });
 
             // Act
             var confineable = tc.ConfineableExcept(2, out var _tc, 3, 4);
@@ -490,9 +463,7 @@ namespace BlackThunder.UniTest.Tests.Unit
         public void ConfineableExcept_Negative_1()
         {
             // Arrange
-            var tc = new TestCase(
-                new[] { (true, new object[] { 0 }), (false, new object[] { 1, 10 }) });
-
+            var tc = new TestCase(new[] { (true, new object[] { 0 }), (false, new object[] { 1, 10 }) });
 
             // Act
             var confineable = tc.ConfineableExcept(1, out var _tc, 20, 30);
@@ -514,9 +485,7 @@ namespace BlackThunder.UniTest.Tests.Unit
         public void ConfineableExcept_Negative_2()
         {
             // Arrange
-            var tc = new TestCase(
-                new[] { (true, new object[] { 0 }), (false, new object[] { 1, 10 }) });
-
+            var tc = new TestCase(new[] { (true, new object[] { 0 }), (false, new object[] { 1, 10 }) });
 
             // Act
             var confineable = tc.ConfineableExcept(1, out var _tc, 1, 2);
@@ -538,9 +507,7 @@ namespace BlackThunder.UniTest.Tests.Unit
         public void ConfineableExcept_Negative_3()
         {
             // Arrange
-            var tc = new TestCase(
-                new[] { (true, new object[] { 0 }), (false, new object[] { 1, 10 }) });
-
+            var tc = new TestCase(new[] { (true, new object[] { 0 }), (false, new object[] { 1, 10 }) });
 
             // Act
             var confineable = tc.ConfineableExcept(1, out var _tc, 1);
@@ -561,9 +528,7 @@ namespace BlackThunder.UniTest.Tests.Unit
         public void ConfineableExcept_Negative_4()
         {
             // Arrange
-            var tc = new TestCase(
-                new[] { (true, new object[] { 0 }), (false, new object[] { 1, 10 }) });
-
+            var tc = new TestCase(new[] { (true, new object[] { 0 }), (false, new object[] { 1, 10 }) });
 
             // Act
             var confineable = tc.ConfineableExcept(2, out var _tc, 3, 4);

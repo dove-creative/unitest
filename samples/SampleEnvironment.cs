@@ -13,8 +13,7 @@ namespace BlackThunder.UniTest.Samples
 
         public const string SingleStateReplayIds = "Ignite/Mount_Null/Mount_Targeted";
 
-        public static readonly string ReportPath
-            = Path.Combine(AppContext.BaseDirectory, "SampleOutput");
+        public static readonly string ReportPath = Path.Combine(AppContext.BaseDirectory, "SampleOutput");
 
 
         // Content

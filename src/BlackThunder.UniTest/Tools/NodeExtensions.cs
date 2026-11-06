@@ -21,7 +21,7 @@ namespace BlackThunder.UniTest
             if (node == null)
                 return 0;
 
-            int count = 1;
+            var count = 1;
 
             foreach (var child in node.Afters)
                 count += child.GetCount();
@@ -38,6 +38,7 @@ namespace BlackThunder.UniTest
                 cancelled = false;
                 return false;
             }
+
             if (status == Node<TModel>.NodeStatus.Cancelled)
             {
                 cancelled = true;
@@ -72,6 +73,7 @@ namespace BlackThunder.UniTest
 
             var nodes = new List<NodeReport>();
             int? parentId = null;
+
             foreach (var ancestor in node.GetAncestors())
             {
                 var id = nodes.Count;
@@ -81,14 +83,17 @@ namespace BlackThunder.UniTest
 
             var pending = new Stack<(Node<TModel> Node, int? ParentId)>();
             pending.Push((node, parentId));
+
             while (pending.Count > 0)
             {
                 var current = pending.Pop();
                 var id = nodes.Count;
                 nodes.Add(current.Node.CaptureReport(id, current.ParentId));
+
                 for (var i = current.Node.Afters.Count - 1; i >= 0; i--)
                     pending.Push((current.Node.Afters[i], id));
             }
+
             return new TestReport(nodes);
         }
 
@@ -98,14 +103,18 @@ namespace BlackThunder.UniTest
             var report = node.GetReport();
             var keep = new bool[report.Nodes.Count];
             keep[0] = true;
+
             for (var i = report.Nodes.Count - 1; i >= 0; i--)
             {
                 var current = report.Nodes[i];
+
                 if (current.Status == Node<TModel>.NodeStatus.Failure.ToString())
                     keep[i] = true;
+
                 if (keep[i] && current.ParentId.HasValue)
                     keep[current.ParentId.Value] = true;
             }
+
             return new TestReport(report.Nodes.Where(n => keep[n.NodeId]));
         }
     }

@@ -49,6 +49,7 @@ namespace BlackThunder.UniTest.Tests.Unit
                 Lab1Conditions = new[] { true, true, true },
                 Lab2Conditions = new[] { false, true, true }
             }).SetName("[1].Arranger Failure");
+
             yield return new TestCaseData(new Order
             {
                 Lab1Conditions = new[] { false, true, true },
@@ -60,6 +61,7 @@ namespace BlackThunder.UniTest.Tests.Unit
                 Lab1Conditions = new[] { true, true, true },
                 Lab2Conditions = new[] { true, false, true }
             }).SetName("[1].Actor Failure");
+
             yield return new TestCaseData(new Order
             {
                 Lab1Conditions = new[] { true, false, true },
@@ -71,11 +73,13 @@ namespace BlackThunder.UniTest.Tests.Unit
                 Lab1Conditions = new[] { true, true, true },
                 Lab2Conditions = new[] { true, true, false }
             }).SetName("[1].Asserter Failure");
+
             yield return new TestCaseData(new Order
             {
                 Lab1Conditions = new[] { true, true, false },
                 Lab2Conditions = new[] { true, true, true }
             }).SetName("[0].Asserter Failure");
+
             yield return new TestCaseData(new Order
             {
                 Lab1Conditions = new[] { true, true, true },
@@ -89,11 +93,13 @@ namespace BlackThunder.UniTest.Tests.Unit
                 if (!order.Lab1Conditions[0])
                     throw new ProbeException($"{lab_1.Id}.Arranger Failure");
             };
+
             lab_1.Actor = (_, _) =>
             {
                 if (!order.Lab1Conditions[1])
                     throw new ProbeException($"{lab_1.Id}.Actor Failure");
             };
+
             lab_1.Asserter = (_, _) =>
             {
                 if (!order.Lab1Conditions[2])
@@ -105,11 +111,13 @@ namespace BlackThunder.UniTest.Tests.Unit
                 if (!order.Lab2Conditions[0])
                     throw new ProbeException($"{lab_2.Id}.Arranger Failure");
             };
+
             lab_2.Actor = (_, _) =>
             {
                 if (!order.Lab2Conditions[1])
                     throw new ProbeException($"{lab_2.Id}.Actor Failure");
             };
+
             lab_2.Asserter = (_, _) =>
             {
                 if (!order.Lab2Conditions[2])
@@ -169,6 +177,7 @@ namespace BlackThunder.UniTest.Tests.Unit
                 Assert.That(_model.Continuable, Is.False);
                 return;
             }
+
             if (!order.Lab1Conditions[0])
             {
                 Assert.That(ex, Is.AssignableTo<ExecutionException>());
@@ -181,11 +190,11 @@ namespace BlackThunder.UniTest.Tests.Unit
                 return;
             }
 
-
             if (!order.Lab2Conditions[1])
             {
                 Assert.That(ex, Is.Null);
             }
+
             if (!order.Lab1Conditions[1])
             {
                 Assert.That(ex, Is.AssignableTo<ExecutionException>());
@@ -198,7 +207,6 @@ namespace BlackThunder.UniTest.Tests.Unit
                 return;
             }
 
-
             if (!order.Lab2Conditions[2])
             {
                 Assert.That(ex, Is.AssignableTo<ExecutionException>());
@@ -210,6 +218,7 @@ namespace BlackThunder.UniTest.Tests.Unit
                 Assert.That(_model.Continuable, Is.False);
                 return;
             }
+
             if (!order.Lab1Conditions[2])
             {
                 Assert.That(ex, Is.AssignableTo<ExecutionException>());
@@ -231,9 +240,7 @@ namespace BlackThunder.UniTest.Tests.Unit
         {
             // Arrange
             _lab1.Actor = (_, _) => { };
-            _lab2 = new Lab<Model>(
-                "lab_2",
-                expectedExceptionType: typeof(ProbeException));
+            _lab2 = new Lab<Model>("lab_2", expectedExceptionType: typeof(ProbeException));
             _compositeLab = new CompositeLab<Model>(_lab1, _lab2);
 
             // Act
@@ -242,14 +249,21 @@ namespace BlackThunder.UniTest.Tests.Unit
             // Assert
             Assert.That(ex, Is.AssignableTo<ExecutionException>());
             Assert.That(ex.InnerException, Is.AssignableTo<MissingExpectedException>());
-            Assert.That(((MissingExpectedException)ex.InnerException).ExpectedExceptionType, Is.EqualTo(typeof(ProbeException)));
+            Assert.That(
+                ((MissingExpectedException)ex.InnerException).ExpectedExceptionType,
+                Is.EqualTo(typeof(ProbeException)));
             Assert.That(_model.Continuable, Is.False);
         }
 
 
         [TestCaseSource(nameof(GetProperties))]
         public void CheckMetadata(
-            bool lab_1_ts, bool lab_1_tu, int lab_1_rec, bool lab_2_ts, bool lab_2_tu, int lab_2_rec)
+            bool lab_1_ts,
+            bool lab_1_tu,
+            int lab_1_rec,
+            bool lab_2_ts,
+            bool lab_2_tu,
+            int lab_2_rec)
         {
             // Arrange
             _lab1.Arranger = (_, md) =>
@@ -258,6 +272,7 @@ namespace BlackThunder.UniTest.Tests.Unit
                 md.ToUncontinuable = lab_1_tu;
                 md.RemainingExecutionCount = lab_1_rec;
             };
+
             _lab2.Arranger = (_, md) =>
             {
                 md.ToUnsustainable = lab_2_ts;
@@ -270,12 +285,18 @@ namespace BlackThunder.UniTest.Tests.Unit
 
             // Assert
             Assert.That(ex, Is.Null);
-            Assert.That(!_model.Sustainable, Is.EqualTo((lab_1_ts || lab_2_ts) || (lab_1_tu || lab_2_tu) || (lab_1_rec >= 0 || lab_2_rec >= 0)));
+            Assert.That(
+                !_model.Sustainable,
+                Is.EqualTo((lab_1_ts || lab_2_ts) || (lab_1_tu || lab_2_tu) || (lab_1_rec >= 0 || lab_2_rec >= 0)));
             Assert.That(!_model.Continuable, Is.EqualTo((lab_1_tu || lab_2_tu) || (lab_1_rec == 0 || lab_2_rec == 0)));
 
             if (lab_1_rec >= 0 || lab_2_rec >= 0)
             {
-                Assert.That(_model.RemainingExecutionCount, Is.EqualTo(Math.Min(lab_1_rec >= 0 ? lab_1_rec : int.MaxValue, lab_2_rec >= 0 ? lab_2_rec : int.MaxValue)));
+                Assert.That(
+                    _model.RemainingExecutionCount,
+                    Is.EqualTo(Math.Min(
+                        lab_1_rec >= 0 ? lab_1_rec : int.MaxValue,
+                        lab_2_rec >= 0 ? lab_2_rec : int.MaxValue)));
             }
             else
                 Assert.That(_model.RemainingExecutionCount, Is.Null);
@@ -341,6 +362,7 @@ namespace BlackThunder.UniTest.Tests.Unit
                 Assert.That(_model.Continuable, Is.False);
                 return;
             }
+
             if (!order.Lab1Conditions[0])
             {
                 Assert.That(ex, Is.AssignableTo<ExecutionException>());
@@ -352,7 +374,6 @@ namespace BlackThunder.UniTest.Tests.Unit
                 Assert.That(_model.Continuable, Is.False);
                 return;
             }
-
 
             if (!order.Lab1Conditions[1] && lab_a == _lab1)
             {
@@ -366,7 +387,6 @@ namespace BlackThunder.UniTest.Tests.Unit
                 return;
             }
 
-
             if (!order.Lab2Conditions[2])
             {
                 Assert.That(ex, Is.AssignableTo<ExecutionException>());
@@ -378,6 +398,7 @@ namespace BlackThunder.UniTest.Tests.Unit
                 Assert.That(_model.Continuable, Is.False);
                 return;
             }
+
             if (!order.Lab1Conditions[2])
             {
                 Assert.That(ex, Is.AssignableTo<ExecutionException>());

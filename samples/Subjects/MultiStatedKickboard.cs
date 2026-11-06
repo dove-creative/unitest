@@ -70,6 +70,7 @@ namespace BlackThunder.UniTest.Samples.Subjects
             ThrowIfDisposed();
 
             if (Charging) return;
+
             Charging = true;
 
             _handle = charger.Subscribe(new Charger(this));
@@ -77,6 +78,7 @@ namespace BlackThunder.UniTest.Samples.Subjects
         public void StopCharging()
         {
             if (!Charging) return;
+
             Charging = false;
 
             _handle.Dispose();

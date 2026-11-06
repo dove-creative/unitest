@@ -72,78 +72,99 @@ namespace BlackThunder.UniTest.Samples.Scenarios.SingleState
                         Actor = m => m.Kickboard.Mount(m.Rider),
                         Asserter = Check
                     });
+
                     labs.Add(new("Mount_Targeted")
                     {
                         Arranger = m => m.Rider = m.TargetedRider,
                         Actor = m => m.Kickboard.Mount(m.Rider),
                         Asserter = Check
                     });
+
                     labs.Add(new("Mount_NotLicensed")
                     {
-                        Actor = m => SampleAssert.Throws<InvalidOperationException>(() => m.Kickboard.Mount(new Rider(false))),
+                        Actor = m => SampleAssert.Throws<InvalidOperationException>(
+                            () => m.Kickboard.Mount(new Rider(false))),
                         ToUncontinuable = true
                     });
+
                     labs.Add(new("Mount_Null")
                     {
                         Arranger = m => m.Rider = null,
                         Actor = m => m.Kickboard.Mount(null),
                         Asserter = Check
                     });
+
                     break;
 
 
                 case KickboardState.Mounted:
                     labs.Add(new("Mount_Licensed")
                     {
-                        Actor = m => SampleAssert.Throws<InvalidOperationException>(() => m.Kickboard.Mount(new Rider(true))),
+                        Actor = m => SampleAssert.Throws<InvalidOperationException>(
+                            () => m.Kickboard.Mount(new Rider(true))),
                         ToUncontinuable = true
                     });
-                    if (model.Kickboard.Rider != model.TargetedRider) labs.Add(new()
-                    {
-                        Id = "Mount_Targeted",
-                        Actor = m => SampleAssert.Throws<InvalidOperationException>(() => m.Kickboard.Mount(m.TargetedRider)),
-                        ToUncontinuable = true
-                    });
+
+                    if (model.Kickboard.Rider != model.TargetedRider)
+                        labs.Add(new()
+                        {
+                            Id = "Mount_Targeted",
+                            Actor = m => SampleAssert.Throws<InvalidOperationException>(
+                                () => m.Kickboard.Mount(m.TargetedRider)),
+                            ToUncontinuable = true
+                        });
+
                     labs.Add(new("Mount_Same")
                     {
                         Actor = m => SampleAssert.DoesNotThrow(() => m.Kickboard.Mount(m.Rider)),
                         Asserter = Check
                     });
+
                     labs.Add(new("Mount_NotLicensed")
                     {
-                        Actor = m => SampleAssert.Throws<InvalidOperationException>(() => m.Kickboard.Mount(new Rider(false))),
+                        Actor = m => SampleAssert.Throws<InvalidOperationException>(
+                            () => m.Kickboard.Mount(new Rider(false))),
                         ToUncontinuable = true
                     });
+
                     labs.Add(new("Mount_Null")
                     {
                         Arranger = m => m.Rider = null,
                         Actor = m => m.Kickboard.Mount(null),
                         Asserter = Check
                     });
+
                     break;
 
 
                 case KickboardState.Disposed:
                     labs.Add(new("Mount_Licensed")
                     {
-                        Actor = m => SampleAssert.Throws<ObjectDisposedException>(() => m.Kickboard.Mount(new Rider(true))),
+                        Actor = m => SampleAssert.Throws<ObjectDisposedException>(
+                            () => m.Kickboard.Mount(new Rider(true))),
                         Asserter = Check
                     });
+
                     labs.Add(new("Mount_Targeted")
                     {
-                        Actor = m => SampleAssert.Throws<ObjectDisposedException>(() => m.Kickboard.Mount(m.TargetedRider)),
+                        Actor = m => SampleAssert.Throws<ObjectDisposedException>(
+                            () => m.Kickboard.Mount(m.TargetedRider)),
                         Asserter = Check
                     });
+
                     labs.Add(new("Mount_NotLicensed")
                     {
-                        Actor = m => SampleAssert.Throws<ObjectDisposedException>(() => m.Kickboard.Mount(new Rider(false))),
+                        Actor = m => SampleAssert.Throws<ObjectDisposedException>(
+                            () => m.Kickboard.Mount(new Rider(false))),
                         Asserter = Check
                     });
+
                     labs.Add(new("Mount_Null")
                     {
                         Actor = m => SampleAssert.DoesNotThrow(() => m.Kickboard.Mount(null)),
                         Asserter = Check
                     });
+
                     break;
             }
 
@@ -157,6 +178,7 @@ namespace BlackThunder.UniTest.Samples.Scenarios.SingleState
                         Actor = m => SampleAssert.Throws<InvalidOperationException>(() => m.Kickboard.Ride()),
                         ToUncontinuable = true
                     });
+
                     break;
 
 
@@ -173,6 +195,7 @@ namespace BlackThunder.UniTest.Samples.Scenarios.SingleState
                             model.RideCount = 0;
                         }
                     });
+
                     break;
 
 
@@ -182,6 +205,7 @@ namespace BlackThunder.UniTest.Samples.Scenarios.SingleState
                         Actor = model => SampleAssert.Throws<ObjectDisposedException>(() => model.Kickboard.Ride()),
                         Asserter = Check
                     });
+
                     break;
             }
 
@@ -195,6 +219,7 @@ namespace BlackThunder.UniTest.Samples.Scenarios.SingleState
                         Actor = model => model.Kickboard.Dismount(),
                         Asserter = Check
                     });
+
                     break;
 
 
@@ -205,6 +230,7 @@ namespace BlackThunder.UniTest.Samples.Scenarios.SingleState
                         Actor = model => model.Kickboard.Dismount(),
                         Asserter = Check
                     });
+
                     break;
 
 
@@ -214,6 +240,7 @@ namespace BlackThunder.UniTest.Samples.Scenarios.SingleState
                         Actor = model => SampleAssert.DoesNotThrow(() => model.Kickboard.Dismount()),
                         Asserter = Check
                     });
+
                     break;
             }
 
@@ -229,6 +256,7 @@ namespace BlackThunder.UniTest.Samples.Scenarios.SingleState
                         Asserter = Check,
                         RemainingExecutionCount = PostExecutionCount
                     });
+
                     break;
 
 
@@ -244,6 +272,7 @@ namespace BlackThunder.UniTest.Samples.Scenarios.SingleState
                         Asserter = Check,
                         RemainingExecutionCount = PostExecutionCount
                     });
+
                     break;
 
 
@@ -254,6 +283,7 @@ namespace BlackThunder.UniTest.Samples.Scenarios.SingleState
                         Asserter = Check,
                         RemainingExecutionCount = PostExecutionCount
                     });
+
                     break;
             }
 

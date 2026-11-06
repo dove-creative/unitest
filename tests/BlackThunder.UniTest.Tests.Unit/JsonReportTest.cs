@@ -29,9 +29,12 @@ namespace BlackThunder.UniTest.Tests.Unit
         private sealed class ReportProject : Project<Model>
         {
             private readonly Func<Model, IEnumerable<ILab<Model>>> _createLabs;
-            public ReportProject(ExecutionMode mode, Func<Model, IEnumerable<ILab<Model>>> createLabs)
-                : base(mode) => _createLabs = createLabs;
-            public override IEnumerable<ILab<Model>> CreateLabs(Model model) => _createLabs(model);
+            public ReportProject(
+                ExecutionMode mode,
+                Func<Model, IEnumerable<ILab<Model>>> createLabs) : base(mode) =>
+                _createLabs = createLabs;
+            public override IEnumerable<ILab<Model>> CreateLabs(Model model) =>
+                _createLabs(model);
         }
         [TestCase("Charge 50%")]
         [TestCase("충전 \"50%\" & <준비>")]
@@ -55,7 +58,7 @@ namespace BlackThunder.UniTest.Tests.Unit
         [Test]
         public void SlashIsRejectedBeforeAttachingOrReplaying()
         {
-            int executions = 0;
+            var executions = 0;
             var root = new Node<Model>(null);
             var first = root.Append(new Lab<Model>("first", actor: (_, _) => executions++), default);
             first.Execute();
@@ -101,7 +104,9 @@ namespace BlackThunder.UniTest.Tests.Unit
             Assert.That(report.Nodes.Select(n => n.LabId), Is.EqualTo(new[] { null, "branch", "leaf" }));
             Assert.That(report.Nodes.Select(n => n.ParentId), Is.EqualTo(new int?[] { null, 0, 1 }));
             leaf.SetExternalException(new Exception("failure"), Node<Model>.NodeStatus.Failure);
-            Assert.That(branch.GetFailedReports().Nodes.Select(n => n.Status),
+
+            Assert.That(
+                branch.GetFailedReports().Nodes.Select(n => n.Status),
                 Is.EqualTo(new[] { "Root", "Success", "Failure" }));
         }
 
@@ -110,11 +115,13 @@ namespace BlackThunder.UniTest.Tests.Unit
         {
             var root = new Node<Model>(null);
             var current = root;
+
             for (int i = 0; i < 120; i++)
             {
                 current = current.Append(new Lab<Model>("same ID"), default);
                 current.Execute();
             }
+
             var report = root.GetReport();
             using var json = JsonDocument.Parse(report.ToJson());
             Assert.That(json.RootElement.GetProperty("nodes").GetArrayLength(), Is.EqualTo(121));
@@ -130,8 +137,10 @@ namespace BlackThunder.UniTest.Tests.Unit
             var child = root.Append(new Lab<BrokenDescriptionModel>("child"), default);
             child.Execute();
             Exception failure;
+
             try { throw new InvalidOperationException("inner detail"); }
             catch (Exception inner) { failure = new ExecutionException("outer detail", inner); }
+
             root.SetExternalException(failure, Node<BrokenDescriptionModel>.NodeStatus.Failure);
             var report = root.GetReport();
             Assert.That(report.Nodes.Count, Is.EqualTo(2));
@@ -139,7 +148,10 @@ namespace BlackThunder.UniTest.Tests.Unit
             Assert.That(result.Status, Is.EqualTo("Failure"));
             Assert.That(result.Error.Type, Is.EqualTo(typeof(ExecutionException).FullName));
             Assert.That(result.Error.Message, Is.EqualTo("outer detail"));
-            Assert.That(result.Error.Details, Does.Contain("inner detail").And.Contain(nameof(ModelDescriptionFailureDoesNotLoseExecutionFailureOrChildren)));
+            Assert.That(
+                result.Error.Details,
+                Does.Contain("inner detail")
+                    .And.Contain(nameof(ModelDescriptionFailureDoesNotLoseExecutionFailureOrChildren)));
             Assert.That(result.Model, Is.Null);
             Assert.That(result.ReportError.Message, Is.EqualTo("description failed"));
             Assert.That(result.History, Is.EqualTo(string.Empty));
@@ -169,7 +181,9 @@ namespace BlackThunder.UniTest.Tests.Unit
             var root = new Node<Model>(null);
             var first = root.Append(new Lab<Model>("first", actor: (m, _) => m.Subject = 10), default);
             first.Execute();
-            var second = first.Append(new Lab<Model>("second", actor: (m, _) => m.Subject = (int)m.Subject + 2), default);
+            var second = first.Append(
+                new Lab<Model>("second", actor: (m, _) => m.Subject = (int)m.Subject + 2),
+                default);
             second.Execute();
             var original = root.GetReport().ToJson();
             var restored = second.DetachAndRestore();
@@ -183,7 +197,11 @@ namespace BlackThunder.UniTest.Tests.Unit
             third.Execute();
             Assert.That(third.Model.Subject, Is.EqualTo(15));
             Assert.That(third.Model.GetExecutionHistory(), Is.EqualTo("first/second/third"));
-            Assert.That(third.GetReport().Nodes.Select(n => n.LabId), Is.EqualTo(new[] { null, "first", "second", "third" }));
+
+            Assert.That(
+                third.GetReport().Nodes.Select(n => n.LabId),
+                Is.EqualTo(new[] { null, "first", "second", "third" }));
+
             Assert.That(third.GetReport().Nodes.Select(n => n.Depth), Is.EqualTo(new[] { 0, 1, 2, 3 }));
             Assert.That(root.GetReport().ToJson(), Is.EqualTo(original));
 
@@ -196,7 +214,9 @@ namespace BlackThunder.UniTest.Tests.Unit
         [TestCase(ExecutionMode.Inline)]
         public async Task BranchingReportsAreCompleteAndStableAfterExecution(ExecutionMode mode)
         {
-            var project = new ReportProject(mode, _ => Enumerable.Range(0, 3).Select(i => new Lab<Model>($"branch {i}")));
+            var project = new ReportProject(
+                mode,
+                _ => Enumerable.Range(0, 3).Select(i => new Lab<Model>($"branch {i}")));
             var root = await project.Execute(5).WaitAsync(TimeSpan.FromSeconds(20));
             var report = root.GetReport();
             Assert.That(report.Nodes.Count, Is.EqualTo(364));
@@ -218,6 +238,7 @@ namespace BlackThunder.UniTest.Tests.Unit
             node.Execute();
             var report = node.GetReport();
             var directory = Path.Combine(Path.GetTempPath(), "unitest-json-" + Guid.NewGuid().ToString("N"));
+
             try
             {
                 Tools.ExportJson(report, "result", directory);
@@ -227,7 +248,9 @@ namespace BlackThunder.UniTest.Tests.Unit
                 Assert.That(text, Is.EqualTo(report.ToJson()));
                 Assert.That(text, Does.Contain("\n").And.Contain("충전 50%"));
                 using var parsed = JsonDocument.Parse(bytes);
-                Assert.That(parsed.RootElement.GetProperty("nodes")[0].GetProperty("model").GetString(), Does.Contain("한글 상태"));
+                Assert.That(
+                    parsed.RootElement.GetProperty("nodes")[0].GetProperty("model").GetString(),
+                    Does.Contain("한글 상태"));
             }
             finally
             {
@@ -239,18 +262,25 @@ namespace BlackThunder.UniTest.Tests.Unit
         [Test]
         public void BuiltInWriterMatchesSerializerOutput()
         {
-            var tricky = "quote \" backslash \\ slash / tab \t line \r\n nul \0 bell \u0007 sep " + (char)0x2028 + (char)0x2029 + " 한글 emoji 😀 <&'+>";
+            var tricky = "quote \" backslash \\ slash / tab \t line \r\n nul \0 bell \u0007 sep "
+                + (char)0x2028 + (char)0x2029 + " 한글 emoji 😀 <&'+>";
             var root = new Node<Model>(null);
-            var child = root.Append(new Lab<Model>("lab " + tricky.Replace("/", "|"), actor: (m, _) => m.Subject = tricky), default);
+            var child = root.Append(
+                new Lab<Model>("lab " + tricky.Replace("/", "|"), actor: (m, _) => m.Subject = tricky),
+                default);
             child.Execute();
             child.Append(new Lab<Model>("waiting"), default);
             Exception failure;
+
             try { throw new InvalidOperationException("inner " + tricky); }
             catch (Exception inner) { failure = new ExecutionException("outer " + tricky, inner); }
+
             root.SetExternalException(failure, Node<Model>.NodeStatus.Failure);
             var report = root.GetReport();
 
-            var expected = JsonSerializer.SerializeToNode(report, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
+            var expected = JsonSerializer.SerializeToNode(
+                report,
+                new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
             var actual = JsonNode.Parse(report.ToJson());
 
             Assert.That(JsonNode.DeepEquals(actual, expected), Is.True, report.ToJson());

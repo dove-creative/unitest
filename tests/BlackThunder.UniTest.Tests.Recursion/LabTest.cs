@@ -40,6 +40,7 @@ namespace BlackThunder.UniTest.Tests.Recursion
 
         private class Project : Project<Model>
         {
+            public Project(ExecutionMode executionMode) : base(executionMode) { }
 
             private struct ExecuteModelCase
             {
@@ -88,7 +89,8 @@ namespace BlackThunder.UniTest.Tests.Recursion
                 {
                     var captured = testCase;
                     yield return Scenario(
-                        $"Execute_Model_{(captured.SetMetadataByConstructor ? "Constructor" : "Delegate")}_{captured.SetMetadata}_{captured.Arranger}_{captured.Actor}_{captured.Asserter}",
+                        $"Execute_Model_{(captured.SetMetadataByConstructor ? "Constructor" : "Delegate")}_"
+                        + $"{captured.SetMetadata}_{captured.Arranger}_{captured.Actor}_{captured.Asserter}",
                         () => ExecuteModel(captured));
                 }
 
@@ -99,7 +101,8 @@ namespace BlackThunder.UniTest.Tests.Recursion
                 {
                     var captured = testCase;
                     yield return Scenario(
-                        $"MergeMetadata_RemainingExecutionCount_{CountName(captured.Current)}_{CountName(captured.Template)}",
+                        $"MergeMetadata_RemainingExecutionCount_{CountName(captured.Current)}_"
+                        + CountName(captured.Template),
                         () => MergeMetadataChooseRemainingExecutionCount(captured));
                 }
 
@@ -107,7 +110,8 @@ namespace BlackThunder.UniTest.Tests.Recursion
                 {
                     var captured = testCase;
                     yield return Scenario(
-                        $"Copy_{(captured.SetMetadataByConstructor ? "Constructor" : "Delegate")}_{captured.SetMetadata}_{captured.Arranger}_{captured.Actor}_{captured.Asserter}",
+                        $"Copy_{(captured.SetMetadataByConstructor ? "Constructor" : "Delegate")}_"
+                        + $"{captured.SetMetadata}_{captured.Arranger}_{captured.Actor}_{captured.Asserter}",
                         () => Copy(captured));
                 }
             }
@@ -155,10 +159,7 @@ namespace BlackThunder.UniTest.Tests.Recursion
                 yield return new MergeMetadataCase(0, 5, 0);
             }
 
-            private static Lab<Model> CreateLab(
-                ExecuteModelCase testCase,
-                out Model targetModel,
-                out object metadata)
+            private static Lab<Model> CreateLab(ExecuteModelCase testCase, out Model targetModel, out object metadata)
             {
                 var lab = testCase.SetMetadataByConstructor
                     ? new Lab<Model>(
@@ -258,18 +259,21 @@ namespace BlackThunder.UniTest.Tests.Recursion
                     Assert.That(targetModel.Continuable, Is.False);
                     return;
                 }
+
                 if (testCase.Arranger == Condition.Failure)
                 {
                     AssertExecutionException(ex, "Arrange failed", typeof(ProbeException), "Arranger Failure");
                     Assert.That(targetModel.Continuable, Is.False);
                     return;
                 }
+
                 if (testCase.Actor == Condition.Failure && !testCase.SetMetadataByConstructor)
                 {
                     AssertExecutionException(ex, "Act failed", typeof(ProbeException), "Actor Failure");
                     Assert.That(targetModel.Continuable, Is.False);
                     return;
                 }
+
                 if (testCase.Actor != Condition.Failure && testCase.SetMetadataByConstructor)
                 {
                     Assert.That(ex, Is.AssignableTo<ExecutionException>());
@@ -278,6 +282,7 @@ namespace BlackThunder.UniTest.Tests.Recursion
                     Assert.That(targetModel.Continuable, Is.False);
                     return;
                 }
+
                 if (testCase.Asserter == Condition.Failure)
                 {
                     AssertExecutionException(ex, "Assert failed", typeof(ProbeException), "Asserter Failure");
@@ -287,7 +292,9 @@ namespace BlackThunder.UniTest.Tests.Recursion
 
                 Assert.That(ex, Is.Null);
                 Assert.That(!targetModel.Continuable, Is.EqualTo(testCase.SetMetadataByConstructor));
-                Assert.That(targetModel.RemainingExecutionCount, Is.EqualTo(testCase.SetMetadataByConstructor ? 10 : null));
+                Assert.That(
+                    targetModel.RemainingExecutionCount,
+                    Is.EqualTo(testCase.SetMetadataByConstructor ? 10 : null));
             }
 
             private static void AssertExecutionException(
@@ -306,12 +313,13 @@ namespace BlackThunder.UniTest.Tests.Recursion
 
             private static void SetMetadataByConstructor()
             {
-                SubjectMetadata template = new()
+                var template = new SubjectMetadata()
                 {
                     ExpectedExceptionType = typeof(ProbeException),
                     ToUncontinuable = true,
                     RemainingExecutionCount = 10
                 };
+
                 SubjectMetadata metadata = null;
 
                 var lab = new Lab<Model>(
@@ -334,13 +342,14 @@ namespace BlackThunder.UniTest.Tests.Recursion
 
             private static void SetMetadataByDelegate()
             {
-                SubjectMetadata template = new()
+                var template = new SubjectMetadata()
                 {
                     Metadata = new object(),
                     ExpectedExceptionType = typeof(ProbeException),
                     ToUncontinuable = true,
                     RemainingExecutionCount = 10
                 };
+
                 SubjectMetadata metadata = null;
 
                 var lab = new Lab<Model>
@@ -372,6 +381,7 @@ namespace BlackThunder.UniTest.Tests.Recursion
                 {
                     RemainingExecutionCount = testCase.Current
                 };
+
                 var template = new SubjectMetadata
                 {
                     RemainingExecutionCount = testCase.Template
@@ -398,43 +408,267 @@ namespace BlackThunder.UniTest.Tests.Recursion
                 var metadataTemplateOriginal = lab.MetadataTemplate;
                 var metadataTemplateCopied = copied.MetadataTemplate;
 
-                Assert.That(metadataTemplateCopied.ExpectedExceptionType, Is.EqualTo(metadataTemplateOriginal.ExpectedExceptionType));
-                Assert.That(metadataTemplateCopied.ToUnsustainable, Is.EqualTo(metadataTemplateOriginal.ToUnsustainable));
-                Assert.That(metadataTemplateCopied.ToUncontinuable, Is.EqualTo(metadataTemplateOriginal.ToUncontinuable));
-                Assert.That(metadataTemplateCopied.RemainingExecutionCount, Is.EqualTo(metadataTemplateOriginal.RemainingExecutionCount));
+                Assert.That(
+                    metadataTemplateCopied.ExpectedExceptionType,
+                    Is.EqualTo(metadataTemplateOriginal.ExpectedExceptionType));
+                Assert.That(
+                    metadataTemplateCopied.ToUnsustainable,
+                    Is.EqualTo(metadataTemplateOriginal.ToUnsustainable));
+                Assert.That(
+                    metadataTemplateCopied.ToUncontinuable,
+                    Is.EqualTo(metadataTemplateOriginal.ToUncontinuable));
+                Assert.That(
+                    metadataTemplateCopied.RemainingExecutionCount,
+                    Is.EqualTo(metadataTemplateOriginal.RemainingExecutionCount));
             }
         }
-        private static void AssertSucceed(Node<Model> result)
+        public class SequenceModel : BlackThunder.UniTest.Model
+        {
+            public int Value;
+            public object Payload;
+            public SubjectMetadata PreviousMetadata;
+            public List<string> Operations { get; } = new();
+            public List<string> Phases { get; } = new();
+        }
+
+        private class SequenceProject : Project<SequenceModel>
+        {
+            private readonly Lab<SequenceModel>[] _labs;
+
+            public SequenceProject(ExecutionMode executionMode, bool wrongExpectation = false) : base(executionMode)
+            {
+                _labs = new[]
+                {
+                    CreateSequenceLab("Add2", 2, wrongExpectation),
+                    CreateSequenceLab("Subtract1", -1, wrongExpectation)
+                };
+            }
+
+            public override IEnumerable<ILab<SequenceModel>> CreateLabs(SequenceModel model) => _labs;
+
+            // LB-R01..LB-R04: reuse two Labs while each replay owns its model and metadata.
+            private static Lab<SequenceModel> CreateSequenceLab(string id, int delta, bool wrongExpectation)
+            {
+                var lab = new Lab<SequenceModel>(id);
+
+                lab.SetMetadata = model =>
+                {
+                    Assert.That(model.MetadataGroup, Is.Empty);
+                    Assert.That(model.ExecutionCount, Is.EqualTo(model.Operations.Count + 1));
+                    Assert.That(model.Phases, Is.EqualTo(ExpectedPhases(model.Operations)));
+                    model.Phases.Add(id + ":SetMetadata");
+                    model.Payload = new object();
+                    return model.Payload;
+                };
+
+                lab.Arranger = (model, metadata) =>
+                {
+                    Assert.That(model.Phases.Last(), Is.EqualTo(id + ":SetMetadata"));
+                    Assert.That(metadata, Is.Not.SameAs(model.PreviousMetadata));
+                    Assert.That(metadata, Is.Not.SameAs(lab.MetadataTemplate));
+                    Assert.That(metadata.Metadata, Is.SameAs(model.Payload));
+                    Assert.That(metadata.ExpectedExceptionType, Is.Null);
+                    Assert.That(metadata.ToUnsustainable, Is.False);
+                    Assert.That(metadata.ToUncontinuable, Is.False);
+                    Assert.That(metadata.RemainingExecutionCount, Is.EqualTo(-1));
+                    Assert.That(model.MetadataGroup.Count, Is.EqualTo(1));
+                    Assert.That(model.MetadataGroup[lab], Is.SameAs(metadata));
+                    model.Phases.Add(id + ":Arrange");
+
+                    if (model.ExecutionCount % 2 == 1)
+                        metadata.ExpectedExceptionType = typeof(ProbeException);
+                };
+
+                lab.Actor = (model, metadata) =>
+                {
+                    Assert.That(model.Phases.Last(), Is.EqualTo(id + ":Arrange"));
+                    Assert.That(metadata.Metadata, Is.SameAs(model.Payload));
+                    model.Phases.Add(id + ":Act");
+                    model.Value += delta;
+
+                    if (model.ExecutionCount % 2 == 1)
+                        throw new ProbeException("Expected sequence exception");
+                };
+
+                lab.Asserter = (model, metadata) =>
+                {
+                    Assert.That(model.Phases.Last(), Is.EqualTo(id + ":Act"));
+                    Assert.That(metadata.Metadata, Is.SameAs(model.Payload));
+                    Assert.That(lab.MetadataTemplate.ExpectedExceptionType, Is.Null);
+                    model.Phases.Add(id + ":Assert");
+                    model.Operations.Add(id);
+                    model.PreviousMetadata = metadata;
+                    AssertSequenceModel(model, model.Operations.ToArray(), wrongExpectation ? 1 : 0);
+                };
+
+                return lab;
+            }
+        }
+
+        private static void AssertSucceed<TModel>(Node<TModel> result) where TModel : BlackThunder.UniTest.Model, new()
         {
             Assert.That(result.AllSucceed(out var cancelled), Is.True, result.GetFailedReports().ToJson());
             Assert.That(cancelled, Is.False);
+            Assert.That(result.GetReport().Nodes.Skip(1).Select(node => node.Status), Is.All.EqualTo("Success"));
         }
 
-
-        [Test]
-        public async Task Test()
+        // LB-G01: this fixed catalog is independent of Project.CreateLabs and its case generator.
+        private static string[] ExpectedScenarioIds()
         {
-            // Arrange
-            var project = new Project();
+            var signatures = new[]
+            {
+                "FNNN", "NFNN", "SFNN", "NNFN", "NSFN", "SNFN", "SSFN",
+                "NNNN", "NNNS", "NNNF", "NNSN", "NNSS", "NNSF",
+                "NSNN", "NSNS", "NSNF", "NSSN", "NSSS", "NSSF",
+                "SNNN", "SNNS", "SNNF", "SNSN", "SNSS", "SNSF",
+                "SSNN", "SSNS", "SSNF", "SSSN", "SSSS", "SSSF"
+            };
 
-            // Act
-            var result = await project.Execute(6);
+            var expected = new List<string>
+            {
+                "Execute_NullModel", "SetMetadata_ByConstructor", "SetMetadata_ByDelegate",
+                "MergeMetadata_RemainingExecutionCount_Minus1_Minus1",
+                "MergeMetadata_RemainingExecutionCount_Minus1_3",
+                "MergeMetadata_RemainingExecutionCount_3_Minus1",
+                "MergeMetadata_RemainingExecutionCount_1_10",
+                "MergeMetadata_RemainingExecutionCount_10_1",
+                "MergeMetadata_RemainingExecutionCount_0_5"
+            };
 
-            // Assert
-            AssertSucceed(result);
+            foreach (var signature in signatures)
+            {
+                var suffix = string.Join(
+                    "_",
+                    signature.Select(c => c == 'N' ? "None" : c == 'S' ? "Success" : "Failure"));
+
+                foreach (var source in new[] { "Constructor", "Delegate" })
+                {
+                    expected.Add($"Execute_Model_{source}_{suffix}");
+                    expected.Add($"Copy_{source}_{suffix}");
+                }
+            }
+
+            return expected.ToArray();
         }
 
-        [TestCase(0), TestCase(1), TestCase(2)]
-        public async Task ContinuousTest(int seed)
+        private static IEnumerable<string> ExpectedPhases(IEnumerable<string> path) =>
+            path.SelectMany(id => new[] { ":SetMetadata", ":Arrange", ":Act", ":Assert" }.Select(phase => id + phase));
+
+        private static void AssertSequenceModel(SequenceModel model, string[] path, int wrongOffset = 0)
         {
-            // Arrange
-            var project = new Project();
+            var expectedValue = 2 * path.Count(id => id == "Add2") - path.Count(id => id == "Subtract1");
+            Assert.That(model.Value, Is.EqualTo(expectedValue + wrongOffset));
+            Assert.That(model.Operations, Is.EqualTo(path));
+            Assert.That(model.Phases, Is.EqualTo(ExpectedPhases(path)));
+            Assert.That(model.ExecutionCount, Is.EqualTo(path.Length));
+            Assert.That(model.GetExecutionHistory(), Is.EqualTo(string.Join("/", path)));
+            Assert.That(model.MetadataGroup.Count, Is.EqualTo(1));
+            Assert.That(model.MetadataGroup.Values.Single(), Is.SameAs(model.PreviousMetadata));
+            Assert.That(model.Continuable, Is.True);
+            Assert.That(model.Sustainable, Is.True);
+            Assert.That(model.RemainingExecutionCount, Is.Null);
+        }
 
-            // Act
-            var result = await project.ExecuteContinuously(100, seed);
+        private static IEnumerable<Node<SequenceModel>> SequenceNodes(Node<SequenceModel> root)
+        {
+            foreach (var child in root.Afters)
+            {
+                yield return child;
 
-            // Assert
+                foreach (var descendant in SequenceNodes(child))
+                    yield return descendant;
+            }
+        }
+
+        private static void AssertSequenceTree(Node<SequenceModel> root, int depth, bool exhaustive)
+        {
+            AssertSucceed(root);
+            var nodes = SequenceNodes(root).ToArray();
+            Assert.That(nodes.Length, Is.EqualTo(exhaustive ? (1 << (depth + 1)) - 2 : 2 * depth));
+            Assert.That(nodes.Max(node => node.Depth), Is.EqualTo(depth));
+            Assert.That(nodes.Select(node => node.Model).Distinct().Count(), Is.EqualTo(nodes.Length));
+
+            for (var level = 1; level <= depth; level++)
+                Assert.That(nodes.Count(node => node.Depth == level), Is.EqualTo(exhaustive ? 1 << level : 2));
+
+            foreach (var parent in new[] { root }.Concat(nodes).Where(node => node.Afters.Count > 0))
+                Assert.That(parent.Afters.Select(node => node.Id), Is.EquivalentTo(new[] { "Add2", "Subtract1" }));
+
+            foreach (var node in nodes)
+            {
+                var path = new Stack<string>();
+
+                for (var current = node; current.Before != null; current = current.Before)
+                    path.Push(current.Id);
+
+                AssertSequenceModel(node.Model, path.ToArray());
+            }
+
+            Assert.That(root.Model.Operations, Is.Empty);
+            Assert.That(root.Model.Phases, Is.Empty);
+            Assert.That(root.Model.MetadataGroup, Is.Empty);
+        }
+
+        // LB-M01..LB-M05, LB-G01: every existing scenario must execute exactly once in both modes.
+        [TestCase(ExecutionMode.Inline), TestCase(ExecutionMode.ThreadPool)]
+        public async Task ScenarioMatrixExecutesEveryExpectedCase(ExecutionMode mode)
+        {
+            var result = await new Project(mode).Execute(1, stopOnFailure: false);
+            var expected = ExpectedScenarioIds();
+
             AssertSucceed(result);
+            Assert.That(expected.Length, Is.EqualTo(133));
+            Assert.That(expected.Distinct().Count(), Is.EqualTo(133));
+            Assert.That(result.GetCount(), Is.EqualTo(134));
+            Assert.That(result.Afters.Select(node => node.Id), Is.EquivalentTo(expected));
+
+            foreach (var node in result.Afters)
+            {
+                Assert.That(node.Depth, Is.EqualTo(1));
+                Assert.That(node.Model.ExecutionCount, Is.EqualTo(1));
+                Assert.That(node.Model.GetExecutionHistory(), Is.EqualTo(node.Id));
+            }
+        }
+
+        // LB-R01..LB-R04, LB-G02: bounded branching covers all repeated and mixed paths of length three.
+        [TestCase(ExecutionMode.Inline), TestCase(ExecutionMode.ThreadPool)]
+        public async Task RepeatedLabsExploreEveryShortPath(ExecutionMode mode)
+        {
+            var result = await new SequenceProject(mode).Execute(3, stopOnFailure: false);
+
+            AssertSequenceTree(result, 3, true);
+        }
+
+        // LB-R01..LB-R04, LB-G02: each seed must reach eight real executions, with two candidates per step.
+        [TestCase(ExecutionMode.Inline, 0), TestCase(ExecutionMode.ThreadPool, 0)]
+        [TestCase(ExecutionMode.Inline, 1), TestCase(ExecutionMode.ThreadPool, 1)]
+        [TestCase(ExecutionMode.Inline, 2), TestCase(ExecutionMode.ThreadPool, 2)]
+        public async Task ContinuousLabsReachRequestedDepth(ExecutionMode mode, int seed)
+        {
+            var result = await new SequenceProject(mode).ExecuteContinuously(8, seed, stopOnFailure: false);
+
+            AssertSequenceTree(result, 8, false);
+        }
+
+        // LB-G03: a wrong independent expectation must produce a real failed execution.
+        [TestCase(ExecutionMode.Inline), TestCase(ExecutionMode.ThreadPool)]
+        public async Task WrongSequenceExpectationIsReportedAsFailure(ExecutionMode mode)
+        {
+            Node<SequenceModel> result;
+
+            using (new NUnit.Framework.Internal.TestExecutionContext.IsolatedContext())
+            {
+                result = await new SequenceProject(mode, true).Execute("Add2", stopOnFailure: false);
+            }
+
+            Assert.That(result.AllSucceed(out var cancelled), Is.False);
+            Assert.That(cancelled, Is.False);
+            Assert.That(result.GetCount(), Is.EqualTo(2));
+            var failed = result.Afters.Single();
+            Assert.That(failed.Id, Is.EqualTo("Add2"));
+            Assert.That(failed.Model.ExecutionCount, Is.EqualTo(1));
+            Assert.That(failed.Status, Is.EqualTo(Node<SequenceModel>.NodeStatus.Failure));
+            Assert.That(failed.Exception.GetBaseException(), Is.TypeOf<AssertionException>());
         }
 
         //[Test]

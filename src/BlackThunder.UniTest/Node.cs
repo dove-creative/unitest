@@ -32,8 +32,7 @@ namespace BlackThunder.UniTest
 
         public Exception Exception { get; private set; }
 
-        public bool Continuable =>
-            Model.Continuable && (Status == NodeStatus.Root || Status == NodeStatus.Success);
+        public bool Continuable => Model.Continuable && (Status == NodeStatus.Root || Status == NodeStatus.Success);
 
         // Internal
         private volatile bool _executed = false;
@@ -71,10 +70,13 @@ namespace BlackThunder.UniTest
         {
             if (lab == null)
                 throw new InvalidOperationException("Lab of a non-root Node cannot be null.");
+
             if (before == null)
                 throw new ArgumentNullException(nameof(before), "Before Node cannot be null.");
+
             if (!before.Continuable)
-                throw new InvalidOperationException($"Before Node must be in 'Continuable' state(Root or Succeded) but was '{before.Status}'.");
+                throw new InvalidOperationException(
+                    $"Before Node must be in 'Continuable' state(Root or Succeded) but was '{before.Status}'.");
 
             ct.ThrowIfCancellationRequested();
             ValidateLabId(lab);
@@ -95,7 +97,9 @@ namespace BlackThunder.UniTest
         private static void ValidateLabId(ILab<TModel> lab)
         {
             if (lab?.Id?.Contains(BlackThunder.UniTest.Model.Separator) == true)
-                throw new ArgumentException($"Lab ID '{lab.Id}' cannot contain '{BlackThunder.UniTest.Model.Separator}', the execution path separator.", nameof(lab));
+                throw new ArgumentException(
+                    $"Lab ID '{lab.Id}' cannot contain '{BlackThunder.UniTest.Model.Separator}', the execution path separator.",
+                    nameof(lab));
         }
 
         public Node<TModel> Append(ILab<TModel> lab, CancellationToken ct) => new(this, lab, ct);
@@ -124,8 +128,10 @@ namespace BlackThunder.UniTest
         {
             var trace = GetTrace();
             var lineage = new List<TraceEntry>(trace[0]._restoredAncestors);
+
             foreach (var ancestor in trace.Take(trace.Count - 1))
                 lineage.Add(new TraceEntry(ancestor.Lab, ancestor.CaptureReport(0, null)));
+
             return lineage.AsReadOnly();
         }
         private IEnumerable<ILab<TModel>> GetReplayLabs()
@@ -145,7 +151,9 @@ namespace BlackThunder.UniTest
                 lab.Execute(Model, out var ex);
 
                 if (ex != null)
-                    throw new ExecutionException("An error occurred while re-running Lab during the Append process.", ex);
+                    throw new ExecutionException(
+                        "An error occurred while re-running Lab during the Append process.",
+                        ex);
 
                 ct.ThrowIfCancellationRequested();
             }
@@ -153,6 +161,7 @@ namespace BlackThunder.UniTest
         private List<Node<TModel>> GetTrace()
         {
             var current = this;
+
             var trace = new List<Node<TModel>> { current };
 
             while (current.Before != null)
@@ -170,6 +179,7 @@ namespace BlackThunder.UniTest
         {
             if (Lab == null)
                 throw new InvalidOperationException("Cannot execute Node without Lab.");
+
             if (_executed)
                 throw new InvalidOperationException("Cannot re-execute a node that has already been executed.");
 
@@ -200,7 +210,9 @@ namespace BlackThunder.UniTest
         public void SetCancellationException(Exception ex = null)
         {
             SetExternalException(
-                new OperationCanceledException("The operation cannot be performed because the Project has been cancelled.", ex),
+                new OperationCanceledException(
+                    "The operation cannot be performed because the Project has been cancelled.",
+                    ex),
                 NodeStatus.Cancelled);
         }
         public void SetExternalException(Exception ex, NodeStatus status)
@@ -220,6 +232,7 @@ namespace BlackThunder.UniTest
             _error = ReportException.Capture(Exception);
             _modelDescription = null;
             _reportError = null;
+
             try
             {
                 _modelDescription = Model.ToString();
@@ -230,8 +243,18 @@ namespace BlackThunder.UniTest
             }
         }
 
-        internal NodeReport CaptureReport(int nodeId, int? parentId) => new(nodeId, parentId,
-            Lab?.Id, Depth, Status.ToString(), _modelDescription, _history, Continuable, _error, _reportError);
+        internal NodeReport CaptureReport(int nodeId, int? parentId) =>
+            new(
+                nodeId,
+                parentId,
+                Lab?.Id,
+                Depth,
+                Status.ToString(),
+                _modelDescription,
+                _history,
+                Continuable,
+                _error,
+                _reportError);
 
         public override string ToString() => $"Node '{Id}' (Depth={Depth}, Status={Status})";
     }

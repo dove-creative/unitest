@@ -35,7 +35,15 @@ namespace BlackThunder.UniTest.Samples.Scenarios.MultiState
             if (testCase.Confineable(0, out tc, MainTestCase.Dispose))
                 Dispose();
 
-            if (testCase.ConfineableExcept(0, out tc, MainTestCase.Mount, MainTestCase.Ride, MainTestCase.Charge, MainTestCase.DoCharge, MainTestCase.StopCharging, MainTestCase.Dispose))
+            if (testCase.ConfineableExcept(
+                0,
+                out tc,
+                MainTestCase.Mount,
+                MainTestCase.Ride,
+                MainTestCase.Charge,
+                MainTestCase.DoCharge,
+                MainTestCase.StopCharging,
+                MainTestCase.Dispose))
                 labs.AddRange(new Lab<Model>("pass").Extend(CreateBatteryLabs(model, tc)));
 
             return labs;
@@ -65,8 +73,8 @@ namespace BlackThunder.UniTest.Samples.Scenarios.MultiState
 
                     if (tc.Confineable(1, out _tc, "Null"))
                     {
-                        labs.AddRange(new Lab<Model>("disposed", asserter: Check)
-                            .Extend(CreateBatteryLabs(model, _tc)));
+                        labs.AddRange(
+                            new Lab<Model>("disposed", asserter: Check).Extend(CreateBatteryLabs(model, _tc)));
                     }
                 }
                 else if (model.Charging)
@@ -78,6 +86,7 @@ namespace BlackThunder.UniTest.Samples.Scenarios.MultiState
                             Id = "charging_discharged",
                             Asserter = Check
                         }.Merge(GetTemplates(tc)));
+
                         return;
                     }
 
@@ -86,16 +95,17 @@ namespace BlackThunder.UniTest.Samples.Scenarios.MultiState
                         Id = "charging_available",
                         // Any non-null mount request stops charging before rider validation,
                         // including requests that are expected to throw for an unlicensed rider.
-                        Arranger = (m, _) => m.Charging = !m.MetadataGroup.Values.Any(metadata => metadata.Metadata is Rider),
+                        Arranger = (m, _) =>
+                            m.Charging = !m.MetadataGroup.Values.Any(metadata => metadata.Metadata is Rider),
                         Asserter = Check
                     }.Extend(CreateBatteryLabs(model, tc)));
                 }
                 else
                 {
-                    labs.AddRange(new Lab<Model>("notCharging")
-                        .Extend(CreateBatteryLabs(model, tc)));
+                    labs.AddRange(new Lab<Model>("notCharging").Extend(CreateBatteryLabs(model, tc)));
                 }
             }
+
             void Ride()
             {
                 if (model.IsDisposed)
@@ -104,13 +114,15 @@ namespace BlackThunder.UniTest.Samples.Scenarios.MultiState
                 }
                 else if (model.Charging)
                 {
-                    labs.AddRange(new Lab<Model>("charging", expectedExceptionType: typeof(InvalidOperationException), toUncontinuable: true)
-                        .Merge(GetTemplates(tc)));
+                    labs.AddRange(
+                        new Lab<Model>(
+                            "charging",
+                            expectedExceptionType: typeof(InvalidOperationException),
+                            toUncontinuable: true).Merge(GetTemplates(tc)));
                 }
                 else
                 {
-                    labs.AddRange(new Lab<Model>("notCharging")
-                        .Extend(CreateBatteryLabs(model, tc)));
+                    labs.AddRange(new Lab<Model>("notCharging").Extend(CreateBatteryLabs(model, tc)));
                 }
             }
 
@@ -122,8 +134,7 @@ namespace BlackThunder.UniTest.Samples.Scenarios.MultiState
                 }
                 else if (model.Charging)
                 {
-                    labs.AddRange(new Lab<Model>("charging", arranger: Check)
-                        .Merge(GetTemplates(tc)));
+                    labs.AddRange(new Lab<Model>("charging", arranger: Check).Merge(GetTemplates(tc)));
                 }
                 else
                 {
@@ -135,6 +146,7 @@ namespace BlackThunder.UniTest.Samples.Scenarios.MultiState
                     }.Merge(GetTemplates(tc)));
                 }
             }
+
             void DoCharge()
             {
                 if (model.Charging)
@@ -147,6 +159,7 @@ namespace BlackThunder.UniTest.Samples.Scenarios.MultiState
                     }.Merge(GetTemplates(tc)));
                 }
             }
+
             void StopCharging()
             {
                 if (model.Charging)
@@ -160,8 +173,7 @@ namespace BlackThunder.UniTest.Samples.Scenarios.MultiState
                 }
                 else
                 {
-                    labs.AddRange(new Lab<Model>("notCharging")
-                        .Merge(GetTemplates(tc)));
+                    labs.AddRange(new Lab<Model>("notCharging").Merge(GetTemplates(tc)));
                 }
             }
 
@@ -178,8 +190,7 @@ namespace BlackThunder.UniTest.Samples.Scenarios.MultiState
                 }
                 else
                 {
-                    labs.AddRange(new Lab<Model>("notCharging")
-                        .Extend(CreateBatteryLabs(model, tc)));
+                    labs.AddRange(new Lab<Model>("notCharging").Extend(CreateBatteryLabs(model, tc)));
                 }
             }
 

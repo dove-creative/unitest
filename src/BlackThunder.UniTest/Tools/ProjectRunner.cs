@@ -6,20 +6,55 @@ namespace BlackThunder.UniTest
 {
     public static partial class Tools
     {
-        public static Task<bool> Run<TModel>(this Project<TModel> project, string projectPath, string reportName, int depth, int processLimit = -1, int timeLimit = -1, bool printResult = false) where TModel : Model, new() =>
+        public static Task<bool> Run<TModel>(
+            this Project<TModel> project,
+            string projectPath,
+            string reportName,
+            int depth,
+            int processLimit = -1,
+            int timeLimit = -1,
+            bool printResult = false) where TModel : Model, new() =>
             RunAsync(project, project.Execute(depth), projectPath, reportName, processLimit, timeLimit, printResult);
 
-        public static Task<bool> Run<TModel>(this Project<TModel> project, string projectPath, string reportName, string executionIds, int timeLimit = -1, bool printResult = false) where TModel : Model, new() =>
+        public static Task<bool> Run<TModel>(
+            this Project<TModel> project,
+            string projectPath,
+            string reportName,
+            string executionIds,
+            int timeLimit = -1,
+            bool printResult = false) where TModel : Model, new() =>
             RunAsync(project, project.Execute(executionIds), projectPath, reportName, -1, timeLimit, printResult);
 
-        public static Task<bool> RunContinuously<TModel>(this Project<TModel> project, string projectPath, string projectName, int depth, int seed = 0, int processLimit = -1, int timeLimit = -1, bool printResult = false) where TModel : Model, new() =>
-            RunAsync(project, project.ExecuteContinuously(depth, seed), projectPath, projectName, processLimit, timeLimit, printResult);
+        public static Task<bool> RunContinuously<TModel>(
+            this Project<TModel> project,
+            string projectPath,
+            string projectName,
+            int depth,
+            int seed = 0,
+            int processLimit = -1,
+            int timeLimit = -1,
+            bool printResult = false) where TModel : Model, new() =>
+            RunAsync(
+                project,
+                project.ExecuteContinuously(depth, seed),
+                projectPath,
+                projectName,
+                processLimit,
+                timeLimit,
+                printResult);
 
-        private static async Task<bool> RunAsync<TModel>(Project<TModel> project, Task<Node<TModel>> task, string projectPath, string projectName, int processLimit, int timeLimit, bool printResult) where TModel : Model, new()
+        private static async Task<bool> RunAsync<TModel>(
+            Project<TModel> project,
+            Task<Node<TModel>> task,
+            string projectPath,
+            string projectName,
+            int processLimit,
+            int timeLimit,
+            bool printResult) where TModel : Model, new()
         {
-            int timespan = 1;
-            int times = 1;
-            bool limitCancellationRequested = false;
+            var timespan = 1;
+            var times = 1;
+            var limitCancellationRequested = false;
             var stopwatch = System.Diagnostics.Stopwatch.StartNew();
 
             try
@@ -32,14 +67,17 @@ namespace BlackThunder.UniTest
                         {
                             limitCancellationRequested = true;
                             Logger.Log(Project<Model>.DividingLine);
-                            Logger.Log($"Cancelling test: process limit exceeded ({project.ProcessCount}/{processLimit})");
+                            Logger.Log(
+                                $"Cancelling test: process limit exceeded ({project.ProcessCount}/{processLimit})");
                             project.Cancel();
                         }
-                        else if (!limitCancellationRequested && timeLimit > 0 && stopwatch.Elapsed.TotalSeconds > timeLimit)
+                        else if (!limitCancellationRequested && timeLimit > 0
+                            && stopwatch.Elapsed.TotalSeconds > timeLimit)
                         {
                             limitCancellationRequested = true;
                             Logger.Log(Project<Model>.DividingLine);
-                            Logger.Log($"Cancelling test: time limit exceeded ({stopwatch.Elapsed.TotalSeconds:F1}/{timeLimit})");
+                            Logger.Log(
+                                $"Cancelling test: time limit exceeded ({stopwatch.Elapsed.TotalSeconds:F1}/{timeLimit})");
                             project.Cancel();
                         }
 
@@ -55,7 +93,8 @@ namespace BlackThunder.UniTest
 
                         if (result.AllSucceed(out var cancelled))
                         {
-                            Logger.Log($"{projectName} {(!cancelled ? "Succeed" : "Cancelled")} ({project.ProcessCount} / {elapsed:F2}s)");
+                            Logger.Log(
+                                $"{projectName} {(!cancelled ? "Succeed" : "Cancelled")} ({project.ProcessCount} / {elapsed:F2}s)");
 
                             if (printResult)
                                 ExportJson(result.GetReport(), projectName, projectPath, true);
@@ -73,7 +112,8 @@ namespace BlackThunder.UniTest
                         }
                     }
 
-                    int current = (int)Math.Ceiling(stopwatch.Elapsed.TotalSeconds / timespan);
+                    var current = (int)Math.Ceiling(stopwatch.Elapsed.TotalSeconds / timespan);
+
                     if (current != times)
                     {
                         times = current;

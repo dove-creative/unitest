@@ -8,6 +8,7 @@ The format follows Keep a Changelog, and version numbers follow Semantic Version
 
 ### Changed
 
+- Update shared conventions to `0567373`, refresh convention references, and standardize Markdown filenames, contents lists, and indentation. Preserve indented blank lines in Markdown editor settings.
 - **Breaking (0.4.0):** move the runtime namespace and assembly from `UniTest` to `BlackThunder.UniTest`. Keep the package ID `BlackThunder.UniTest` and the `netstandard2.1` target. Consumers must update imports, DLL references, and qualified type names and rebuild; no compatibility wrappers are included.
 - **Breaking (0.4.0):** rename `ID` to `Id` on Labs, Nodes, and `ILab`, `DefaultID` to `DefaultId`, and the Run parameter `executionIDs` to `executionIds`. Stored Lab ID strings, replay paths, and JSON fields remain unchanged.
 - Target .NET 10 for tests and samples and use C# 9 throughout through `Directory.Build.props`. Align project paths, namespaces, constants, accessibility, and formatting with the pinned BlackThunder conventions.
@@ -16,10 +17,12 @@ The format follows Keep a Changelog, and version numbers follow Semantic Version
 
 ### Fixed
 
+- **Behavior change:** CompositeLab now requires the actual exception to match the expected type on every layer that declares one. An expectation shared by the original and an extension is no longer reported as missing after the exception occurs, and declaring `Exception` is no longer satisfied by the framework's own `MissingExpectedException` when nothing was thrown. Compositions that passed because only one of several declared types matched now fail with `MissingExpectedException`, which keeps the actual exception as its inner exception. Public signatures are unchanged.
 - Correct the multi-state sample's expected charging state for a non-null mount request that subsequently fails rider validation. The existing sample subject stops charging before throwing; the test model now verifies that behavior without changing runtime execution or subject logic.
 
 ### Added
 
+- Add UniTest-based coverage for Node, TestCase, CompositeLab, and Project, strengthen existing Model and Lab tests, and organize matching Korean and English test plans, results, and shared issue tracking by module.
 - Add sample CLI verification on Windows and Ubuntu for all scenarios, one-shot termination, report output, invalid arguments, interactive input, and recovery after an I/O error.
 
 ## [0.3.0] - 2026-10-27

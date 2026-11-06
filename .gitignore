@@ -1,6 +1,7 @@
 bin/
 obj/
-TestResults/
+/docs/Wiki.ko/Tests/**/*.trx
+/docs/Wiki.ko/Tests/**/*.log
 /artifacts/
 .vs/
 .obsidian/

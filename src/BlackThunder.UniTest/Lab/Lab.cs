@@ -20,8 +20,15 @@ namespace BlackThunder.UniTest
 
 
         // Content
-        public Lab(string id = DefaultId, Action<TModel, SubjectMetadata> arranger = null, Action<TModel, SubjectMetadata> actor = null, Action<TModel, SubjectMetadata> asserter = null,
-            Type expectedExceptionType = null, bool toUnsustainable = false, bool toUncontinuable = false, int remainingExecutionCount = -1)
+        public Lab(
+            string id = DefaultId,
+            Action<TModel, SubjectMetadata> arranger = null,
+            Action<TModel, SubjectMetadata> actor = null,
+            Action<TModel, SubjectMetadata> asserter = null,
+            Type expectedExceptionType = null,
+            bool toUnsustainable = false,
+            bool toUncontinuable = false,
+            int remainingExecutionCount = -1)
         {
             Id = id;
             (Arranger, Actor, Asserter) = (arranger, actor, asserter);
@@ -35,8 +42,15 @@ namespace BlackThunder.UniTest
             };
         }
 
-        public Lab<TModel> Copy(string id) => new(id, Arranger, Actor, Asserter,
-            MetadataTemplate.ExpectedExceptionType, MetadataTemplate.ToUnsustainable, MetadataTemplate.ToUncontinuable, MetadataTemplate.RemainingExecutionCount)
+        public Lab<TModel> Copy(string id) => new(
+            id,
+            Arranger,
+            Actor,
+            Asserter,
+            MetadataTemplate.ExpectedExceptionType,
+            MetadataTemplate.ToUnsustainable,
+            MetadataTemplate.ToUncontinuable,
+            MetadataTemplate.RemainingExecutionCount)
         { SetMetadata = SetMetadata };
 
 
@@ -52,22 +66,29 @@ namespace BlackThunder.UniTest
         internal void DoAct(TModel model)
         {
             var metadata = model.MetadataGroup[this];
-            Exception exception = null;
-
-            try
-            {
-                Actor?.Invoke(model, metadata);
-            }
-            catch (Exception ex)
-            {
-                exception = ex;
-            }
+            var exception = CaptureAct(model);
 
             if (exception != null && (!metadata.ExpectedExceptionType?.IsAssignableFrom(exception.GetType()) ?? true))
                 throw exception;
 
             if (exception == null && metadata.ExpectedExceptionType != null)
-                throw new MissingExpectedException($"Expected exception '{metadata.ExpectedExceptionType.Name}' was not thrown.", metadata.ExpectedExceptionType);
+                throw new MissingExpectedException(
+                    $"Expected exception '{metadata.ExpectedExceptionType.Name}' was not thrown.",
+                    metadata.ExpectedExceptionType);
+        }
+
+        // Returns the Actor's exception unjudged, because a composition compares it with every layer's expectation.
+        internal Exception CaptureAct(TModel model)
+        {
+            try
+            {
+                Actor?.Invoke(model, model.MetadataGroup[this]);
+                return null;
+            }
+            catch (Exception ex)
+            {
+                return ex;
+            }
         }
 
         internal void DoAssert(TModel model) => Asserter?.Invoke(model, model.MetadataGroup[this]);

@@ -7,7 +7,7 @@ namespace BlackThunder.UniTest.Tests.Unit
 {
     internal sealed class QueuedSynchronizationContext : SynchronizationContext, IDisposable
     {
-        private readonly BlockingCollection<Action> _callbacks = new BlockingCollection<Action>();
+        private readonly BlockingCollection<Action> _callbacks = new();
 
         public override void Post(SendOrPostCallback callback, object state) => _callbacks.Add(() => callback(state));
 
@@ -15,17 +15,23 @@ namespace BlackThunder.UniTest.Tests.Unit
         {
             var previousContext = Current;
             SetSynchronizationContext(this);
+
             try
             {
                 var execution = action();
-                var completion = execution.ContinueWith(_ => _callbacks.Add(() => { }),
-                    CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
+
+                var completion = execution.ContinueWith(
+                    _ => _callbacks.Add(() => { }),
+                    CancellationToken.None,
+                    TaskContinuationOptions.ExecuteSynchronously,
+                    TaskScheduler.Default);
 
                 while (!execution.IsCompleted)
                 {
                     // This timeout only bounds a broken test; scheduling assertions use the observed context.
                     if (!_callbacks.TryTake(out var callback, TimeSpan.FromSeconds(10)))
-                        throw new TimeoutException("The execution did not make progress on the synchronization context.");
+                        throw new TimeoutException(
+                            "The execution did not make progress on the synchronization context.");
 
                     callback();
                 }

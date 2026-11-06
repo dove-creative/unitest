@@ -32,8 +32,17 @@ namespace BlackThunder.UniTest
         public ReportException Error { get; }
         public ReportException ReportError { get; }
 
-        internal NodeReport(int nodeId, int? parentId, string labId, int depth, string status,
-            string model, string history, bool continuable, ReportException error, ReportException reportError)
+        internal NodeReport(
+            int nodeId,
+            int? parentId,
+            string labId,
+            int depth,
+            string status,
+            string model,
+            string history,
+            bool continuable,
+            ReportException error,
+            ReportException reportError)
         {
             NodeId = nodeId;
             ParentId = parentId;
@@ -47,8 +56,8 @@ namespace BlackThunder.UniTest
             ReportError = reportError;
         }
 
-        internal NodeReport WithIdentity(int nodeId, int? parentId) => new(nodeId, parentId,
-            LabId, Depth, Status, Model, History, Continuable, Error, ReportError);
+        internal NodeReport WithIdentity(int nodeId, int? parentId) =>
+            new(nodeId, parentId, LabId, Depth, Status, Model, History, Continuable, Error, ReportError);
     }
 
     public sealed class ReportException

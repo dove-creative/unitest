@@ -19,16 +19,16 @@ namespace BlackThunder.UniTest
                 const uint Prime = 16777619u;     // FNV prime
 
                 // Scramble the external seed to improve distribution.
-                uint mix = (uint)seed;
+                var mix = (uint)seed;
                 mix ^= mix >> 16; mix *= 0x7feb352d;
                 mix ^= mix >> 15; mix *= 0x846ca68b;
                 mix ^= mix >> 16;
 
                 // Start from FNV offset mixed with the scrambled seed.
-                uint hash = Offset ^ mix;
+                var hash = Offset ^ mix;
 
                 // FNV-1a over UTF-16 code units.
-                foreach (char ch in s)
+                foreach (var ch in s)
                 {
                     hash ^= ch;
                     hash *= Prime;
@@ -53,12 +53,12 @@ namespace BlackThunder.UniTest
                 throw new ArgumentException("minInclusive must be less than maxExclusive.");
 
             // Combine string + seed into a deterministic 32-bit value.
-            uint combinedSeed = (uint)GetDeterministicRandom(s, seed);
+            var combinedSeed = (uint)GetDeterministicRandom(s, seed);
 
             // Local XorShift32 PRNG (in-method, no external type).
             unchecked
             {
-                uint state = combinedSeed == 0 ? 2463534242u : combinedSeed;
+                var state = combinedSeed == 0 ? 2463534242u : combinedSeed;
 
                 // Local function capturing 'state'; performs 32-bit modular arithmetic.
                 uint NextUInt()
@@ -70,10 +70,11 @@ namespace BlackThunder.UniTest
                 }
 
                 // Draw an unbiased integer in [min, max) via rejection sampling (no modulo bias).
-                uint range = (uint)(maxExclusive - minInclusive);
-                uint threshold = uint.MaxValue - (uint.MaxValue % range);
+                var range = (uint)(maxExclusive - minInclusive);
+                var threshold = uint.MaxValue - (uint.MaxValue % range);
 
                 uint r;
+
                 do
                 {
                     r = NextUInt();
