@@ -1,0 +1,35 @@
+{
+    "name": "@blackthunder/unitest",
+    "version": "0.1.0",
+    "description": "Model-based test exploration and replay for Node.js and browsers.",
+    "type": "module",
+    "license": "MIT",
+    "engines": { "node": ">=22" },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/dove-creative/unitest.git",
+        "directory": "typescript"
+    },
+    "exports": {
+        ".": { "types": "./dist/index.d.ts", "import": "./dist/index.js" },
+        "./node": { "types": "./dist/node-output.d.ts", "import": "./dist/node-output.js" },
+        "./browser": { "types": "./dist/browser.d.ts", "import": "./dist/browser.js" }
+    },
+    "types": "./dist/index.d.ts",
+    "files": ["dist", "README.ko.md"],
+    "scripts": {
+        "build": "node scripts/prepare-build.mjs && tsc -p tsconfig.json && node scripts/copy-license.mjs",
+        "typecheck": "tsc -p tsconfig.json --noEmit",
+        "test": "node --test tests/unit/*.test.mjs tests/unitest/*.test.mjs",
+        "test:browser": "node --test tests/browser.test.mjs",
+        "test:package": "node --test tests/package.test.mjs",
+        "sample": "node samples/node.mjs",
+        "sample:browser": "node samples/serve.mjs",
+        "prepack": "npm run build"
+    },
+    "devDependencies": {
+        "@types/node": "22.20.5",
+        "playwright": "1.64.1",
+        "typescript": "7.0.2"
+    }
+}

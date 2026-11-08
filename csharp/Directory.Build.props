@@ -1,0 +1,13 @@
+<Project>
+  <PropertyGroup>
+    <LangVersion>9.0</LangVersion>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(VSTestResultsDirectory)' == ''">
+    <VSTestResultsDirectory Condition="'$(MSBuildProjectName)' == 'BlackThunder.UniTest.Tests.Unit'">$(MSBuildThisFileDirectory)../docs/Wiki.ko/Tests/Unit</VSTestResultsDirectory>
+    <VSTestResultsDirectory Condition="'$(MSBuildProjectName)' == 'BlackThunder.UniTest.Tests.Recursion'">$(MSBuildThisFileDirectory)../docs/Wiki.ko/Tests/UniTest</VSTestResultsDirectory>
+    <VSTestResultsDirectory Condition="'$(VSTestResultsDirectory)' == ''">$(MSBuildThisFileDirectory)../docs/Wiki.ko/Tests</VSTestResultsDirectory>
+  </PropertyGroup>
+</Project>

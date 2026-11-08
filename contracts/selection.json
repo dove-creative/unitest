@@ -1,0 +1,250 @@
+{
+    "hashes": [
+        {
+            "history": null,
+            "seed": 0,
+            "expected": 84696351
+        },
+        {
+            "history": "",
+            "seed": -2147483648,
+            "expected": 84696351
+        },
+        {
+            "history": "Start/next",
+            "seed": 0,
+            "expected": 1597194323
+        },
+        {
+            "history": "Start/Next",
+            "seed": 0,
+            "expected": -1832640781
+        },
+        {
+            "history": "시작/검증",
+            "seed": -991,
+            "expected": 2017013738
+        },
+        {
+            "history": "é",
+            "seed": 19,
+            "expected": -1873841502
+        },
+        {
+            "history": "é",
+            "seed": 19,
+            "expected": -417099211
+        },
+        {
+            "history": "😀/a",
+            "seed": 2147483647,
+            "expected": -984633724
+        },
+        {
+            "history": "",
+            "utf16": [
+                97,
+                55296,
+                47,
+                56320,
+                122
+            ],
+            "seed": -21,
+            "expected": 2013838871
+        }
+    ],
+    "ranges": [
+        {
+            "history": "a",
+            "seed": 0,
+            "minInclusive": -4,
+            "maxExclusive": -3,
+            "expected": -4
+        },
+        {
+            "history": "검증/😀",
+            "seed": -99,
+            "minInclusive": -400,
+            "maxExclusive": 200,
+            "expected": -234
+        },
+        {
+            "history": "Case/alpha",
+            "seed": 2147483647,
+            "minInclusive": -2147483648,
+            "maxExclusive": 2147483647,
+            "expected": 1005238659
+        },
+        {
+            "history": "",
+            "seed": 0,
+            "minInclusive": 0,
+            "maxExclusive": 1,
+            "expected": 0
+        },
+        {
+            "history": "A/a",
+            "seed": -3,
+            "minInclusive": -2147483648,
+            "maxExclusive": 1,
+            "expected": -1327629270
+        }
+    ],
+    "ordering": [
+        {
+            "ids": [
+                "a",
+                "A",
+                "z",
+                "Z",
+                "한",
+                "😀",
+                "é",
+                "é",
+                "a",
+                "same",
+                "same",
+                "ä",
+                "_"
+            ],
+            "expectedIndices": [
+                1,
+                3,
+                12,
+                0,
+                8,
+                7,
+                9,
+                10,
+                2,
+                11,
+                6,
+                4,
+                5
+            ]
+        },
+        {
+            "ids": [
+                "dup",
+                "z",
+                "dup",
+                "A",
+                "dup",
+                "🙂",
+                "á",
+                "a"
+            ],
+            "expectedIndices": [
+                3,
+                7,
+                0,
+                2,
+                4,
+                1,
+                6,
+                5
+            ]
+        }
+    ],
+    "paths": [
+        {
+            "ids": [
+                "a",
+                "A",
+                "z",
+                "Z",
+                "한",
+                "😀",
+                "é",
+                "é",
+                "a",
+                "same",
+                "same",
+                "ä",
+                "_"
+            ],
+            "seed": -19,
+            "depth": 8,
+            "expectedIndices": [
+                5,
+                12,
+                0,
+                3,
+                4,
+                3,
+                9
+            ]
+        },
+        {
+            "ids": [
+                "a",
+                "A",
+                "z",
+                "Z",
+                "한",
+                "😀",
+                "é",
+                "é",
+                "a",
+                "same",
+                "same",
+                "ä",
+                "_"
+            ],
+            "seed": 2147483647,
+            "depth": 6,
+            "expectedIndices": [
+                5,
+                5,
+                3,
+                3,
+                6
+            ]
+        },
+        {
+            "ids": [
+                "dup",
+                "z",
+                "dup",
+                "A",
+                "dup",
+                "🙂",
+                "á",
+                "a"
+            ],
+            "seed": -2147483648,
+            "depth": 10,
+            "expectedIndices": [
+                3,
+                3,
+                5,
+                5,
+                5,
+                4,
+                1,
+                7,
+                1
+            ]
+        },
+        {
+            "ids": [
+                "same",
+                "same",
+                "same"
+            ],
+            "seed": -1,
+            "depth": 10,
+            "expectedIndices": [
+                2,
+                0,
+                1,
+                2,
+                1,
+                2,
+                0,
+                0,
+                1
+            ]
+        }
+    ]
+}

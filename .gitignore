@@ -7,3 +7,6 @@ obj/
 .obsidian/
 *.suo
 *.user
+/typescript/dist/
+/typescript/node_modules/
+/typescript/*.tgz

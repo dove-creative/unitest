@@ -16,19 +16,21 @@ Use the [C# convention](blackthunder-conventions/conventions/02.%20dove%20CSharp
 
 Use the .NET 10 SDK. `Directory.Build.props` sets C# 9, disables nullable annotations, and disables implicit usings for all projects. The runtime targets `netstandard2.1`; tests and samples target `net10.0`.
 
-- Runtime: `src/BlackThunder.UniTest/BlackThunder.UniTest.csproj`
-- Unit tests: `tests/BlackThunder.UniTest.Tests.Unit/BlackThunder.UniTest.Tests.Unit.csproj`
-- Recursion tests: `tests/BlackThunder.UniTest.Tests.Recursion/BlackThunder.UniTest.Tests.Recursion.csproj`
-- Sample: `samples/BlackThunder.UniTest.Samples.csproj`
+- Runtime: `csharp/src/BlackThunder.UniTest/BlackThunder.UniTest.csproj`
+- Unit tests: `csharp/tests/BlackThunder.UniTest.Tests.Unit/BlackThunder.UniTest.Tests.Unit.csproj`
+- Recursion tests: `csharp/tests/BlackThunder.UniTest.Tests.Recursion/BlackThunder.UniTest.Tests.Recursion.csproj`
+- Sample: `csharp/samples/BlackThunder.UniTest.Samples.csproj`
 
 Tests and samples use source `ProjectReference` entries within this repository. Other repositories consume an exact stable `BlackThunder.UniTest` package from their own local feed.
 
 ```powershell
-dotnet restore BlackThunder.UniTest.sln
-dotnet build BlackThunder.UniTest.sln --configuration Release --no-restore -m:1
+dotnet restore csharp/BlackThunder.UniTest.sln
+dotnet build csharp/BlackThunder.UniTest.sln --configuration Release --no-restore -m:1
 ```
 
 ## Code and Documentation
+
+TypeScript uses Node.js 22 or later. From the repository root, install and build with `npm --prefix typescript ci` and `npm --prefix typescript run build`. Follow the [TypeScript guide](typescript/README.md) for browser, package, and sample verification. Both languages read the same [path selection vectors](contracts/selection.json).
 
 - Follow `.editorconfig` and `.gitattributes`; text files use LF line endings.
 - Write code comments and Git commit titles in English.
@@ -47,8 +49,8 @@ For documentation-only changes, inspect links, headings, code fences, blank line
 Agents select the verification scope according to [AGENTS.md](AGENTS.md): builds for behavior-preserving changes, affected tests for local behavior changes, and the full suite for cross-module, public API, build/dependency, release, or packaging changes. Long-running tests and tests requiring external services or equipment require confirmation first. CI continues to build and test on its configured triggers.
 
 ```powershell
-dotnet test BlackThunder.UniTest.sln --configuration Release --no-build --no-restore -m:1
-dotnet format whitespace BlackThunder.UniTest.sln --no-restore --verify-no-changes
+dotnet test csharp/BlackThunder.UniTest.sln --configuration Release --no-build --no-restore -m:1
+dotnet format whitespace csharp/BlackThunder.UniTest.sln --no-restore --verify-no-changes
 pwsh -File .github/scripts/verify-samples.ps1
 ```
 
@@ -62,7 +64,7 @@ After verification, commit the source before preparing a stable distribution pac
 
 ```powershell
 $sourceCommit = git rev-parse HEAD
-dotnet pack src/BlackThunder.UniTest/BlackThunder.UniTest.csproj --configuration Release -o artifacts/packages -p:RepositoryCommit=$sourceCommit
+dotnet pack csharp/src/BlackThunder.UniTest/BlackThunder.UniTest.csproj --configuration Release -o artifacts/packages -p:RepositoryCommit=$sourceCommit
 Get-FileHash artifacts/packages/BlackThunder.UniTest.0.4.0.nupkg -Algorithm SHA256
 ```
 

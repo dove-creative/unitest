@@ -113,6 +113,16 @@ Detailed boundary cases for worker races, shutdown waiting, and serialization ar
 
 ## Verified Results
 
+### After Moving C# and Applying the Shared Path Selection Rules
+
+On 2026-11-08 KST, all 655 baseline Release tests passed. After moving the projects and changing path selection, the Release build had zero warnings and errors. All 609 unit tests and 51 self-tests passed. The CLI checks covered all five sample scenarios, command errors, and interactive recovery.
+
+The sandboxed baseline attempt stopped because VSTest could not connect to its test host. The totals above count completed runs outside the sandbox.
+
+- [Shared path selection module verification](Unit/Path%20Selection/03.%20Results.md)
+- [Ordinary unit test TRX](../../Wiki.ko/Tests/Unit/user_DOVE-PC_2026-11-08_20_38_04_net10.0.trx)
+- [Self-test TRX](../../Wiki.ko/Tests/UniTest/user_DOVE-PC_2026-11-08_20_38_08_net10.0.trx)
+
 ### After Cleaning Up the Public API
 
 At 04:57 Korea time on 2026-11-07, the Release build and both full test projects were rerun after the following changes.

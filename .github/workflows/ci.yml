@@ -9,8 +9,8 @@ permissions:
   contents: read
 
 jobs:
-  test:
-    name: Build and test (${{ matrix.os }})
+  csharp:
+    name: C# (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     timeout-minutes: 20
     strategy:
@@ -27,13 +27,13 @@ jobs:
           dotnet-version: 10.0.x
 
       - name: Restore
-        run: dotnet restore BlackThunder.UniTest.sln
+        run: dotnet restore csharp/BlackThunder.UniTest.sln
 
       - name: Build
-        run: dotnet build BlackThunder.UniTest.sln --configuration Release --no-restore -m:1
+        run: dotnet build csharp/BlackThunder.UniTest.sln --configuration Release --no-restore -m:1
 
       - name: Test
-        run: dotnet test BlackThunder.UniTest.sln --configuration Release --no-build --no-restore -m:1 --logger trx
+        run: dotnet test csharp/BlackThunder.UniTest.sln --configuration Release --no-build --no-restore -m:1 --logger trx
 
       - name: Verify sample CLI
         shell: pwsh
@@ -49,3 +49,31 @@ jobs:
             docs/Wiki.ko/Tests/UniTest/**/*.trx
           if-no-files-found: warn
           retention-days: 7
+
+  typescript:
+    name: TypeScript (Node.js ${{ matrix.node }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        node: [22, 24]
+    defaults:
+      run:
+        working-directory: typescript
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+          cache: npm
+          cache-dependency-path: typescript/package-lock.json
+      - run: npm ci
+      - run: npm run build
+      - run: npm test
+      - if: matrix.node == 24
+        run: npx playwright install --with-deps chromium firefox webkit
+      - if: matrix.node == 24
+        run: npm run test:browser
+      - if: matrix.node == 24
+        run: npm run test:package

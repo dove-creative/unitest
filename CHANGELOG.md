@@ -8,6 +8,9 @@ The format follows Keep a Changelog, and version numbers follow Semantic Version
 
 ### Changed
 
+- Split the repository into independent C# and TypeScript implementations. TypeScript supports Node.js and browsers and ships as `@blackthunder/unitest`.
+- **Breaking (seeded paths):** hash original UTF-16 code units without uppercasing and order candidates by ordinal ID, with generation order for ties. C# and TypeScript now select the same continuous path for the same deterministic scenario and seed. Existing seeds can select a different path after upgrading.
+
 - Update shared conventions to `0567373`, refresh convention references, and standardize Markdown filenames, contents lists, and indentation. Preserve indented blank lines in Markdown editor settings.
 - **Breaking (0.4.0):** move the runtime namespace and assembly from `UniTest` to `BlackThunder.UniTest`. Keep the package ID `BlackThunder.UniTest` and the `netstandard2.1` target. Consumers must update imports, DLL references, and qualified type names and rebuild; no compatibility wrappers are included.
 - **Breaking (0.4.0):** rename `ID` to `Id` on Labs, Nodes, and `ILab`, `DefaultID` to `DefaultId`, and the Run parameter `executionIDs` to `executionIds`. Stored Lab ID strings, replay paths, and JSON fields remain unchanged.

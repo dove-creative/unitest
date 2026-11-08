@@ -33,8 +33,8 @@
 
 | 구분 | 코드 프로젝트 | 문서 위치 |
 | --- | --- | --- |
-| 일반 단위 테스트 | `tests/BlackThunder.UniTest.Tests.Unit` | `Unit/<대상>` |
-| UniTest 기반 자체 테스트 | `tests/BlackThunder.UniTest.Tests.Recursion` | `UniTest/<대상>` |
+| 일반 단위 테스트 | `csharp/tests/BlackThunder.UniTest.Tests.Unit` | `Unit/<대상>` |
+| UniTest 기반 자체 테스트 | `csharp/tests/BlackThunder.UniTest.Tests.Recursion` | `UniTest/<대상>` |
 | 전체 실행 요약 | 두 프로젝트의 통합 실행 | 이 문서 |
 | 통합 검증용 프로젝트 전체 TRX | 일반 테스트 / 자체 테스트 | `Unit/` / `UniTest/` 바로 아래 |
 | 모듈 단독 TRX·로그 | 실제 실행한 모듈 | `Unit/<대상>/` / `UniTest/<대상>/` 문서 옆 |
@@ -90,15 +90,15 @@ Model의 M01은 `Tests.Recursion`의 `ZeroRemainingCountReplay` 자체 테스트
 
 ```powershell
 $testRunStamp = Get-Date -Format 'yyyyMMdd-HHmmss'
-dotnet test tests/BlackThunder.UniTest.Tests.Unit/BlackThunder.UniTest.Tests.Unit.csproj --configuration Release --no-build --no-restore --filter 'FullyQualifiedName~BlackThunder.UniTest.Tests.Unit.LabTest|FullyQualifiedName~BlackThunder.UniTest.Tests.Unit.LabExtensionTest|FullyQualifiedName~BlackThunder.UniTest.Tests.Unit.ToUncontinuableTest' --results-directory docs/Wiki.ko/Tests/Unit/Lab --logger "trx;LogFileName=$testRunStamp-unit-lab.trx" 2>&1 | Tee-Object -FilePath "docs/Wiki.ko/Tests/Unit/Lab/$testRunStamp-unit-lab.log"
+dotnet test csharp/tests/BlackThunder.UniTest.Tests.Unit/BlackThunder.UniTest.Tests.Unit.csproj --configuration Release --no-build --no-restore --filter 'FullyQualifiedName~BlackThunder.UniTest.Tests.Unit.LabTest|FullyQualifiedName~BlackThunder.UniTest.Tests.Unit.LabExtensionTest|FullyQualifiedName~BlackThunder.UniTest.Tests.Unit.ToUncontinuableTest' --results-directory docs/Wiki.ko/Tests/Unit/Lab --logger "trx;LogFileName=$testRunStamp-unit-lab.trx" 2>&1 | Tee-Object -FilePath "docs/Wiki.ko/Tests/Unit/Lab/$testRunStamp-unit-lab.log"
 ```
 
 이 예시는 현재 소스의 Release 빌드가 준비된 경우에 사용한다.
 전체 프로젝트를 통합 검증할 때는 다음 명령을 사용한다.
 
 ```powershell
-dotnet build BlackThunder.UniTest.sln --configuration Release --no-restore -m:1
-dotnet test BlackThunder.UniTest.sln --configuration Release --no-build --no-restore -m:1 --logger trx
+dotnet build csharp/BlackThunder.UniTest.sln --configuration Release --no-restore -m:1
+dotnet test csharp/BlackThunder.UniTest.sln --configuration Release --no-build --no-restore -m:1 --logger trx
 ```
 
 통합 실행의 프로젝트 전체 TRX는 일반 테스트가 `Unit/`, 자체 테스트가 `UniTest/` 바로 아래에 저장한다.
@@ -112,6 +112,16 @@ dotnet test BlackThunder.UniTest.sln --configuration Release --no-build --no-res
 작업자 경쟁 조건, 종료 대기와 직렬화의 세부 경계 조건은 해당 일반 테스트 문서에서 관리한다.
 
 ## 확인된 결과
+
+### C# 디렉터리 이동과 공통 경로 선택 규칙 적용 후
+
+2026-11-08 한국 시간에 기준 Release 테스트 655개를 확인했다. 이동과 경로 선택 규칙 변경 후 Release 빌드는 경고 0개·오류 0개였고, 일반 테스트 609개와 자체 테스트 51개가 모두 통과했다. 샘플 CLI의 5개 시나리오와 명령 오류·대화형 복구 검증도 통과했다.
+
+샌드박스 안의 기준 실행은 VSTest 연결 제한으로 중단되었다. 위 테스트 수는 샌드박스 밖에서 완료한 실행만 집계한다.
+
+- [공통 경로 선택 모듈 검증](Unit/Path%20Selection/03.%20Results.md)
+- [일반 테스트 TRX](Unit/user_DOVE-PC_2026-11-08_20_38_04_net10.0.trx)
+- [자체 테스트 TRX](UniTest/user_DOVE-PC_2026-11-08_20_38_08_net10.0.trx)
 
 ### 공개 API 정리 후
 

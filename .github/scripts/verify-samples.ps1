@@ -5,7 +5,7 @@ param(
 
 $ErrorActionPreference = 'Stop'
 $repository = [System.IO.Path]::GetFullPath((Join-Path $PSScriptRoot '../..'))
-$sampleDirectory = Join-Path $repository "samples/bin/$Configuration/net10.0"
+$sampleDirectory = Join-Path $repository "csharp/samples/bin/$Configuration/net10.0"
 $verificationDirectory = Join-Path $repository ('artifacts/sample-verification/' + [guid]::NewGuid().ToString('N'))
 New-Item -ItemType Directory -Path $verificationDirectory -Force | Out-Null
 
